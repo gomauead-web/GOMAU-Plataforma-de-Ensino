@@ -505,7 +505,8 @@ export function Dashboard() {
     // Explicitly trigger service worker registration one more time to force Chrome metadata alignment
     if ("serviceWorker" in navigator) {
       try {
-        await navigator.serviceWorker.register("/sw.js");
+        const base = (window as any).pwaBasePath || "/";
+        await navigator.serviceWorker.register(`${base}sw.js`, { scope: base });
       } catch (swErr) {
         console.log("SW hot registration skip:", swErr);
       }
@@ -606,7 +607,7 @@ export function Dashboard() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Overlay de Instalação Automática Segura (Fora do Iframe) */}
+      {/* Overlay de Instalação Automática Segura (Para Mobile) */}
       {showAutoInstallOverlay && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#0A0E1A]/95 backdrop-blur-md">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.15)_0%,transparent_70%)] pointer-events-none"></div>
@@ -674,14 +675,6 @@ export function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          {!isInstalled && (
-            <button
-              onClick={handleForceInstall}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/35 rounded-xl hover:bg-[#D4AF37] hover:text-black hover:border-transparent transition-all text-xs font-black uppercase tracking-widest cursor-pointer shadow-md shadow-[#D4AF37]/10"
-            >
-              <Download size={14} /> Instalar Aplicativo
-            </button>
-          )}
           <button
             onClick={async () => {
               if (confirm("Deseja encerrar sua sessão?")) {
@@ -695,45 +688,6 @@ export function Dashboard() {
           </button>
         </div>
       </header>
-
-      {/* Banner de Instalação PWA de Altíssimo Destaque */}
-      {!isInstalled && (
-        <div className="bg-gradient-to-br from-[#0c1020] via-[#12192c] to-[#0c1020] border-2 border-[#D4AF37] p-6 rounded-3xl relative overflow-hidden shadow-[0_0_35px_rgba(212,175,55,0.25)] flex flex-col md:flex-row items-center justify-between gap-6 transition-all duration-300 hover:shadow-[0_0_50px_rgba(212,175,55,0.35)]">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-[#D4AF37]/10 rounded-full blur-3xl pointer-events-none"></div>
-
-          <div className="flex items-center gap-5 relative z-10 text-left">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#AA841B] flex items-center justify-center text-black shrink-0 shadow-[0_0_20px_rgba(212,175,55,0.4)] animate-bounce">
-              <Download size={28} className="stroke-[2.5]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[10px] text-[#D4AF37] font-bold uppercase tracking-widest font-sans">
-                  Acesso Otimizado para Celular
-                </span>
-              </div>
-              <h2 className="text-white sm:text-lg font-black uppercase tracking-widest font-cinzel mt-1">
-                Instale o Aplicativo G∴O∴M∴A∴U∴
-              </h2>
-              <p className="text-xs text-gray-400 mt-1 max-w-lg font-sans leading-relaxed">
-                Adicione o GOMAU diretamente à sua tela inicial para uma
-                experiência rápida, com carregamento instantâneo e total
-                estabilidade.
-              </p>
-            </div>
-          </div>
-
-          <div className="w-full md:w-auto shrink-0 relative z-10">
-            <button
-              onClick={handleForceInstall}
-              type="button"
-              className="w-full md:w-auto flex items-center justify-center gap-2.5 px-8 py-4 bg-[#D4AF37] text-black font-black rounded-2xl hover:bg-white hover:text-black hover:scale-[1.02] active:scale-[0.97] transition-all text-xs uppercase tracking-widest shadow-xl shadow-[#D4AF37]/20 cursor-pointer"
-            >
-              <Download size={15} className="stroke-[3]" /> INSTALAR AGORA
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Quadro de Aniversário do Próprio Membro (Temporário para data correta) */}
       {hasBirthdayToday && (

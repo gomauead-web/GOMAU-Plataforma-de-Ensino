@@ -8,28 +8,89 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="GOMAU" />
     <link rel="apple-touch-icon" href="/logotrad.png" />
-    <link rel="manifest" href="/manifest.json" />
     <title>G∴O∴M∴A∴U∴ - Grande Oriente Maçônico Universal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
-      // Registro imediato do Service Worker (sem aguardar o evento 'load') para ativação instantânea no Chrome
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-          .then((reg) => {
-            console.log('SW Ativado com Sucesso:', reg.scope);
-          })
-          .catch(err => console.log('SW reg error:', err));
-      }
+      (function() {
+        // Algoritmo robusto de auto-detecção do subdiretório físico da aplicação
+        let base = '/';
+        const pathParts = window.location.pathname.split('/');
+        const subroutes = ['login', 'gestor', 'library', 'contents', 'cursos', 'forum', 'requests', 'profile', 'calendar', 'mensalidade', 'cadeia-uniao', 'history'];
+        let baseSegments = [];
+        for (let i = 1; i < pathParts.length; i++) {
+          const seg = pathParts[i].toLowerCase();
+          if (subroutes.includes(seg) || !seg) {
+            break;
+          }
+          baseSegments.push(pathParts[i]);
+        }
+        base = '/' + baseSegments.join('/') + (baseSegments.length ? '/' : '');
+        window.pwaBasePath = base;
 
-      // Captura o evento de instalação logo no início para ser usado a qualquer momento
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        window.deferredPWAInstallPrompt = e;
-        // Dispara um evento personalizado indicando que o prompt está pronto
-        window.dispatchEvent(new CustomEvent('pwa-prompt-ready', { detail: e }));
-      });
+        // Corrige barras duplicadas acidentais
+        if (base.endsWith('//')) base = base.slice(0, -1);
+
+        console.log('[GOMAU Base URL]:', base);
+
+        // Cria o elemento link do manifesto dinamicamente com base no caminho correto
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = base + 'manifest.json';
+        document.head.appendChild(link);
+
+        // Registro imediato do Service Worker no escopo físico correspondente
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register(base + 'sw.js', { scope: base })
+            .then((reg) => {
+              console.log('Service Worker registrado com sucesso no escopo:', reg.scope);
+            })
+            .catch(err => console.log('Erro de SW ao registrar:', err));
+        }
+
+        // Função de disparo para instalação imediata
+        const triggerImmediateInstall = () => {
+          const e = window.deferredPWAInstallPrompt;
+          if (e) {
+            console.log('Conduzindo ativação direta e imediata do instalador por interação inicial do obreiro...');
+            try {
+              e.prompt();
+              e.userChoice.then((choiceResult) => {
+                console.log('Opção escolhida pelo usuário:', choiceResult.outcome);
+                if (choiceResult.outcome === 'accepted') {
+                  window.deferredPWAInstallPrompt = null;
+                }
+              });
+            } catch (err) {
+              console.log('Falha ao abrir instalador automático:', err);
+            }
+            cleanup();
+          }
+        };
+
+        const cleanup = () => {
+          document.removeEventListener('click', triggerImmediateInstall);
+          document.removeEventListener('touchstart', triggerImmediateInstall);
+          document.removeEventListener('pointerdown', triggerImmediateInstall);
+        };
+
+        // Captura o evento nativo de instalação
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          window.deferredPWAInstallPrompt = e;
+          // Dispara evento customizado para notificar componentes React montados depois
+          window.dispatchEvent(new CustomEvent('pwa-prompt-ready', { detail: e }));
+          
+          // Se o usuário já executou interações antes do evento do navegador disparar, executamos na hora
+          triggerImmediateInstall();
+        });
+
+        // Escuta qualquer interação inicial das mais comuns e leves do usuário para invocar o prompt nativo
+        document.addEventListener('click', triggerImmediateInstall, { once: true });
+        document.addEventListener('touchstart', triggerImmediateInstall, { once: true });
+        document.addEventListener('pointerdown', triggerImmediateInstall, { once: true });
+      })();
     </script>
   </head>
   <body>
