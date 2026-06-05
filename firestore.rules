@@ -1,0 +1,301 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net (Pillar 4 Phase 4.1)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- GLOBAL HELPER PRIVILEGES ---
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email.lower() == 'gomau.ead@gmail.com' || 
+        request.auth.token.email.lower() == 'calepi@gmail.com' ||
+        request.auth.token.email.lower() == 'calepe@gmail.com'
+      );
+    }
+
+    function isGestor() {
+      return isSignedIn() && (
+        isSuperAdmin() || 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'gestor')
+      );
+    }
+
+    function isRestrictedFaltas() {
+      return isSignedIn() && (
+        (request.auth.token.email != null && (
+          request.auth.token.email.lower() == 'diogo.mourapedroso@gmail.com' ||
+          request.auth.token.email.lower() == 'tazmaniacrvg@gmail.com'
+        )) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.cim == '3330' ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.cim == '331'
+        ))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // --- COLLECTIONS ---
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && (
+        isOwner(userId) || 
+        isGestor() || 
+        isRestrictedFaltas() || 
+        (resource != null && request.auth.token.email != null && (
+          (exists(request.path) && resource.data.email != null && resource.data.email.lower() == request.auth.token.email.lower()) ||
+          (exists(request.path) && resource.data.emailVinculado != null && resource.data.emailVinculado.lower() == request.auth.token.email.lower())
+        ))
+      );
+      
+      allow list: if isSignedIn();
+      
+      // Standard users cannot register their profiles as 'gestor'
+      allow create: if isSignedIn() && (
+        isGestor() || (
+          isOwner(userId) && request.resource.data.role == 'membro'
+        )
+      );
+
+      // standard users cannot escalate their role, status, cim, email, or grado
+      allow update: if isSignedIn() && (
+        isGestor() || (
+          isOwner(userId) && 
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'grau', 'status', 'cim', 'email'])
+        )
+      );
+
+      allow delete: if isGestor() || (isSignedIn() && userId != request.auth.uid && request.auth.token.email != null && (
+        (resource.data.email != null && resource.data.email.lower() == request.auth.token.email.lower()) ||
+        (resource.data.emailVinculado != null && resource.data.emailVinculado.lower() == request.auth.token.email.lower())
+      ));
+    }
+
+    match /grades/{gradeId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /contents/{contentId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /courses/{courseId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /progress/{progressId} {
+      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(progressId) && (
+        isGestor() ||
+        (resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId)
+      );
+    }
+
+    match /requests/{requestId} {
+      allow get: if isSignedIn() && isValidId(requestId) && (resource.data.userId == request.auth.uid || isGestor() || isRestrictedFaltas());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor() || isRestrictedFaltas());
+      
+      // Prevent standard users from auto-approving their advancement requests
+      allow create: if isSignedIn() && (
+        isGestor() || (
+          request.resource.data.userId == request.auth.uid &&
+          request.resource.data.status == 'pendente'
+        )
+      );
+
+      // Prevent standard users from changing request statuses or editing someone else's document ID
+      allow update: if isGestor() || (
+        resource.data.userId == request.auth.uid && 
+        resource.data.status == 'pendente' &&
+        request.resource.data.status == 'pendente' &&
+        request.resource.data.userId == resource.data.userId
+      );
+
+      allow delete: if isGestor() || (resource.data.userId == request.auth.uid && (resource.data.status == 'pendente' || resource.data.status == 'rejeitado'));
+    }
+
+    match /events/{eventId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+      
+      match /attendance/{attendanceId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if isGestor();
+      }
+    }
+
+    match /evolutionRules/{ruleId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /goals/{goalId} {
+      allow get: if isSignedIn() && isValidId(goalId) && (resource.data.userId == request.auth.uid || isGestor());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(goalId) && (
+        isGestor() || 
+        (resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid)
+      );
+      allow delete: if isSignedIn() && isValidId(goalId) && (isGestor() || resource.data.userId == request.auth.uid);
+    }
+
+    match /evaluations/{evaluationId} {
+      allow get: if isSignedIn() && isValidId(evaluationId) && (resource.data.userId == request.auth.uid || isGestor());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      
+      allow write: if isGestor();
+    }
+
+    match /history/{historyId} {
+      allow get: if isSignedIn() && isValidId(historyId) && (resource.data.userId == request.auth.uid || isGestor());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isGestor());
+      allow update: if isGestor();
+    }
+
+    match /courseProgress/{progressId} {
+      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(progressId) && (
+        isGestor() || 
+        (resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    match /reading_progress/{progressId} {
+      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(progressId) && (
+        isGestor() || 
+        (resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId)
+      );
+    }
+
+    match /settings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /library_items/{itemId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /configs/{configId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /forumTopics/{topicId} {
+      allow read: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      
+      // Author can update status/titles. Other users can ONLY increment replyCount
+      allow update: if isSignedIn() && (
+        isGestor() || 
+        (resource.data.authorId == request.auth.uid && request.resource.data.authorId == resource.data.authorId) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replyCount']))
+      );
+
+      allow delete: if isGestor() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+    }
+
+    match /forumReplies/{replyId} {
+      allow read: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && (isGestor() || resource.data.authorId == request.auth.uid);
+      allow delete: if isGestor() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+    }
+
+    match /forumInstructors/{instructorId} {
+      allow read: if isSignedIn();
+      allow list: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /accessLogs/{logId} {
+      allow get: if isGestor();
+      allow list: if isGestor();
+      allow create: if isSignedIn();
+      allow update, delete: if isGestor();
+    }
+
+    match /mensalidades/{paymentId} {
+      // Allow read if user is the owner or is a Gestor
+      allow get: if isSignedIn() && (resource == null || resource.data.uid == request.auth.uid || isGestor());
+      allow list: if isSignedIn() && (resource == null || resource.data.uid == request.auth.uid || isGestor());
+      
+      // Standard members must submit monthly payments with status 'em_analise' (Pillar 2 / Phase 4.2)
+      allow create: if isSignedIn() && (
+        isGestor() || (
+          request.resource.data.uid == request.auth.uid &&
+          request.resource.data.status == 'em_analise'
+        )
+      );
+
+      allow update: if isGestor();
+      allow delete: if isGestor();
+    }
+
+    match /cadeia_uniao/{requestId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && (request.resource.data.uid == request.auth.uid || request.resource.data.userId == request.auth.uid);
+      
+      // Author can edit fields. Sibling users can only increment vibration counters (Pillar 4 Phase 4.5)
+      allow update: if isSignedIn() && (
+        isGestor() ||
+        ((resource.data.uid == request.auth.uid || resource.data.userId == request.auth.uid) && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'category', 'isAnonymous', 'userName', 'updatedAt'])) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['vibrators', 'vibrantesCount'])
+      );
+
+      allow delete: if isGestor() || (isSignedIn() && (resource.data.uid == request.auth.uid || resource.data.userId == request.auth.uid));
+    }
+
+    match /library_notes/{noteId} {
+      allow get, list: if isSignedIn() && (resource == null || resource.data.uid == request.auth.uid);
+      allow create, update: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    match /birthday_messages/{messageId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.fromUserId == request.auth.uid;
+    }
+  }
+}

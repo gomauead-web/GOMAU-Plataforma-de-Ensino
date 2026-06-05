@@ -1,0 +1,480 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role and masonic grade information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "nome": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["membro", "gestor"] },
+        "grau": { "type": "string" },
+        "cpf": { "type": "string" },
+        "palavraSeguranca": { "type": "string" },
+        "palavraUpdatedAt": { "type": "string", "format": "date-time" },
+        "loja": { "type": "string" },
+        "rito": { "type": "string" },
+        "cim": { "type": "string" },
+        "dataIniciacao": { "type": "string" },
+        "cargo": { "type": "string" },
+        "status": { "type": "string" },
+        "telefone": { "type": "string" },
+        "endereco": { "type": "string" },
+        "dataNascimento": { "type": "string" },
+        "emailVinculado": { "type": "string" },
+        "cidade": { "type": "string" },
+        "uf": { "type": "string" },
+        "cep": { "type": "string" },
+        "bairro": { "type": "string" },
+        "rua": { "type": "string" },
+        "emergencia": { "type": "string" },
+        "foneEmergencia": { "type": "string" },
+        "qtdFilhos": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastOnline": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "nome", "email", "role", "createdAt"]
+    },
+    "Grade": {
+      "title": "Grade",
+      "description": "Masonic grade definitions and their requirements",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string" },
+        "ordem": { "type": "number" },
+        "requisitos": {
+          "type": "object",
+          "properties": {
+            "videosObrigatorios": { "type": "array", "items": { "type": "string" } },
+            "instrucoesObrigatorias": { "type": "array", "items": { "type": "string" } },
+            "quantidadePranchas": { "type": "number" },
+            "quantidadeComplementares": { "type": "number" }
+          }
+        }
+      },
+      "required": ["nome", "ordem", "requisitos"]
+    },
+    "Content": {
+      "title": "Content",
+      "description": "Educational material shared by files (video, PDF, etc)",
+      "type": "object",
+      "properties": {
+        "titulo": { "type": "string" },
+        "tipo": { "type": "string", "enum": ["video", "pdf", "texto", "instrucao", "reflexao"] },
+        "grauMinimo": { "type": "string" },
+        "obrigatorio": { "type": "boolean" },
+        "descricao": { "type": "string" },
+        "fileUrl": { "type": "string" },
+        "fileName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["titulo", "tipo", "grauMinimo", "obrigatorio", "fileUrl"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Courses with full content structure (Modules -> Units -> Lessons)",
+      "type": "object",
+      "properties": {
+        "titulo": { "type": "string" },
+        "descricao": { "type": "string" },
+        "cargaHoraria": { "type": "string" },
+        "grade": { "type": "string" },
+        "status": { "type": "string", "enum": ["rascunho", "ativo", "arquivado"] },
+        "modulos": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "titulo": { "type": "string" },
+              "unidades": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "titulo": { "type": "string" },
+                    "aulas": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "titulo": { "type": "string" },
+                          "conteudo": { "type": "string" },
+                          "exercicios": { "type": "array" }
+                        }
+                      }
+                    },
+                    "avaliacao": { "type": "object" }
+                  }
+                }
+              },
+              "avaliacao": { "type": "object" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["titulo", "descricao", "status"]
+    },
+    "GeneratorConfig": {
+      "title": "Generator Config",
+      "description": "Parameters for the AI Course Generator",
+      "type": "object",
+      "properties": {
+        "qtdModulos": { "type": "number" },
+        "qtdUnidadesPorModulo": { "type": "number" },
+        "qtdAulasPorUnidade": { "type": "number" },
+        "qtdExerciciosPorAula": {
+          "type": "object",
+          "properties": {
+            "discursivas": { "type": "number" },
+            "multiplaEscolha": { "type": "number" }
+          }
+        },
+        "qtdQuestoesAvaliacaoUnidade": {
+          "type": "object",
+          "properties": {
+            "discursivas": { "type": "number" },
+            "multiplaEscolha": { "type": "number" }
+          }
+        },
+        "qtdQuestoesAvaliacaoModulo": {
+          "type": "object",
+          "properties": {
+            "discursivas": { "type": "number" },
+            "multiplaEscolha": { "type": "number" }
+          }
+        },
+        "mediaAprovacao": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["qtdModulos", "mediaAprovacao"]
+    },
+    "SecurityConfig": {
+      "title": "Security Config",
+      "description": "Global security settings like the periodic Word",
+      "type": "object",
+      "properties": {
+        "palavraAtual": { "type": "string" },
+        "expiraEm": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Progress": {
+      "title": "Progress",
+      "description": "User progress through their current grade",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "grauAtual": { "type": "string" },
+        "videosConcluidos": { "type": "array", "items": { "type": "string" } },
+        "instrucoesConcluidas": { "type": "array", "items": { "type": "string" } },
+        "pranchasEnviadas": { "type": "number" },
+        "complementaresConcluidos": { "type": "number" },
+        "progressoTotal": { "type": "number" },
+        "status": { "type": "string", "enum": ["em_andamento", "apto"] }
+      },
+      "required": ["userId", "grauAtual", "progressoTotal", "status"]
+    },
+    "CourseProgress": {
+      "title": "Course Progress",
+      "description": "Tracking user results and current position in a Course (EAD)",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "courseId": { "type": "string" },
+        "completedLessons": { "type": "array", "items": { "type": "string" } },
+        "scores": { "type": "object" },
+        "lastAccessed": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "courseId"]
+    },
+    "Request": {
+      "title": "Request",
+      "description": "System requests (advancement, etc)",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "tipo": { "type": "string" },
+        "status": { "type": "string", "enum": ["pendente", "aprovado", "rejeitado"] },
+        "criadoEm": { "type": "string", "format": "date-time" },
+        "analisadoPor": { "type": "string" }
+      },
+      "required": ["userId", "tipo", "status", "criadoEm"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "System events",
+      "type": "object",
+      "properties": {
+        "titulo": { "type": "string" },
+        "descricao": { "type": "string" },
+        "data": { "type": "string", "format": "date-time" },
+        "criadoPor": { "type": "string" }
+      },
+      "required": ["titulo", "data", "criadoPor"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "User specific goals",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "descricao": { "type": "string" },
+        "status": { "type": "string" },
+        "progresso": { "type": "number" }
+      },
+      "required": ["userId", "descricao", "status", "progresso"]
+    },
+    "ForumTopic": {
+      "title": "Forum Topic",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorCim": { "type": "string" },
+        "targetDegree": { "type": "string", "enum": ["Aprendiz", "Companheiro", "Mestre"] },
+        "status": { "type": "string", "enum": ["Aberto", "Resolvido"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "replyCount": { "type": "number" }
+      },
+      "required": ["title", "description", "authorId", "targetDegree", "status"]
+    },
+    "ForumReply": {
+      "title": "Forum Reply",
+      "type": "object",
+      "properties": {
+        "topicId": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorCim": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["topicId", "authorId", "content"]
+    },
+    "ForumInstructor": {
+      "title": "Forum Instructor",
+      "type": "object",
+      "properties": {
+        "cim": { "type": "string" },
+        "nome": { "type": "string" },
+        "degrees": { "type": "array", "items": { "type": "string" } },
+        "addedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["cim", "nome", "degrees"]
+    },
+    "Evaluation": {
+      "title": "Evaluation",
+      "description": "Manager evaluation of a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "criterios": { "type": "object" },
+        "observacoes": { "type": "string" },
+        "criadoPor": { "type": "string" }
+      },
+      "required": ["userId", "criadoPor"]
+    },
+    "History": {
+      "title": "History",
+      "description": "Audit log for specific actions",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "tipoEvento": { "type": "string" },
+        "titulo": { "type": "string" },
+        "descricao": { "type": "string" },
+        "data": { "type": "string" },
+        "hora": { "type": "string" },
+        "autor": { "type": "string" },
+        "editado": { "type": "boolean" },
+        "editHistory": { "type": "array" }
+      },
+      "required": ["userId", "tipoEvento", "data", "autor"]
+    },
+    "EvolutionRule": {
+      "title": "Evolution Rule",
+      "description": "Requirements configured by managers for advancing from one grade to the next.",
+      "type": "object",
+      "properties": {
+        "grauOrigem": { "type": "string" },
+        "grauDestino": { "type": "string" },
+        "tempoMinimoMeses": { "type": "number" },
+        "quantidadePranchas": { "type": "number" },
+        "quantidadeInstrucoes": { "type": "number" },
+        "presencaMinima": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["grauOrigem", "grauDestino", "tempoMinimoMeses", "quantidadePranchas", "quantidadeInstrucoes", "presencaMinima"]
+    },
+    "MeetingSession": {
+      "title": "Meeting Session",
+      "description": "Active meeting session data including minutes and state",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string" },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "endedAt": { "type": "string", "format": "date-time" },
+        "minutes": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "concluded"] }
+      }
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Record of a user joining a meeting",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string" },
+        "userId": { "type": "string" },
+        "nome": { "type": "string" },
+        "cim": { "type": "string" },
+        "grau": { "type": "string" },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "AccessLog": {
+      "title": "Access Log",
+      "description": "Log of user logins on the platform",
+      "type": "object",
+      "properties": {
+        "cim": { "type": "string" },
+        "nome": { "type": "string" },
+        "email": { "type": "string" },
+        "uid": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "timestamp"]
+    },
+    "MonthlyPayment": {
+      "title": "Monthly Payment",
+      "description": "Monthly payment proofs and check status",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "userCim": { "type": "string" },
+        "mesRef": { "type": "string" },
+        "valor": { "type": "string" },
+        "comprovanteUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["em_analise", "aprovado", "rejeitado"] },
+        "comentarioGestor": { "type": "string" },
+        "dataEnvio": { "type": "string", "format": "date-time" },
+        "dataAnalise": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "mesRef", "valor", "comprovanteUrl", "status", "dataEnvio"]
+    },
+    "BirthdayMessage": {
+      "title": "Birthday Message",
+      "description": "Congratulatory messages sent to members on their birthday",
+      "type": "object",
+      "properties": {
+        "toUserId": { "type": "string" },
+        "fromUserId": { "type": "string" },
+        "fromUserName": { "type": "string" },
+        "fromUserGrau": { "type": "string" },
+        "message": { "type": "string" },
+        "sentAt": { "type": "string", "format": "date-time" },
+        "dateStr": { "type": "string" }
+      },
+      "required": ["toUserId", "fromUserId", "fromUserName", "message", "dateStr"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile data."
+    },
+    "/evolutionRules/{ruleId}": {
+      "schema": { "$ref": "#/entities/EvolutionRule" },
+      "description": "Grade advancement configurations."
+    },
+    "/grades/{gradeId}": {
+      "schema": { "$ref": "#/entities/Grade" },
+      "description": "Masonic grades definitions."
+    },
+    "/contents/{contentId}": {
+      "schema": { "$ref": "#/entities/Content" },
+      "description": "Educational material files."
+    },
+    "/courses/{courseId}": {
+      "schema": { "$ref": "#/entities/Course" },
+      "description": "Courses and registration links."
+    },
+    "/progress/{progressId}": {
+      "schema": { "$ref": "#/entities/Progress" },
+      "description": "Progress of a user within a grade."
+    },
+    "/courseProgress/{progressId}": {
+      "schema": { "$ref": "#/entities/CourseProgress" },
+      "description": "Progress of a user within a specific Course."
+    },
+    "/requests/{requestId}": {
+      "schema": { "$ref": "#/entities/Request" },
+      "description": "Requests made by the user."
+    },
+    "/events/{eventId}": {
+      "schema": { "$ref": "#/entities/Event" },
+      "description": "System events."
+    },
+    "/sessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/MeetingSession" },
+      "description": "Meeting session data."
+    },
+    "/sessions/{sessionId}/attendance/{attendanceId}": {
+      "schema": { "$ref": "#/entities/Attendance" },
+      "description": "Attendance list for a session."
+    },
+    "/goals/{goalId}": {
+      "schema": { "$ref": "#/entities/Goal" },
+      "description": "Goals of users."
+    },
+    "/evaluations/{evaluationId}": {
+      "schema": { "$ref": "#/entities/Evaluation" },
+      "description": "Evaluations performed by managers."
+    },
+    "/configs/generator": {
+      "schema": { "$ref": "#/entities/GeneratorConfig" },
+      "description": "AI Generator parameters."
+    },
+    "/configs/security": {
+      "schema": { "$ref": "#/entities/SecurityConfig" },
+      "description": "Global security settings (Periodic Word)."
+    },
+    "/history/{historyId}": {
+      "schema": { "$ref": "#/entities/History" },
+      "description": "Audit history of user actions."
+    },
+    "/forumTopics/{topicId}": {
+      "schema": { "$ref": "#/entities/ForumTopic" },
+      "description": "Forum topics created by users."
+    },
+    "/forumReplies/{replyId}": {
+      "schema": { "$ref": "#/entities/ForumReply" },
+      "description": "Replies to forum topics."
+    },
+    "/forumInstructors/{instructorId}": {
+      "schema": { "$ref": "#/entities/ForumInstructor" },
+      "description": "Instructors designated by Gestor to answer forum."
+    },
+    "/accessLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AccessLog" },
+      "description": "User login history."
+    },
+    "/mensalidades/{paymentId}": {
+      "schema": { "$ref": "#/entities/MonthlyPayment" },
+      "description": "Monthly payment records."
+    },
+    "/birthday_messages/{messageId}": {
+      "schema": { "$ref": "#/entities/BirthdayMessage" },
+      "description": "Messages sent to birthday celebrants."
+    }
+  }
+}

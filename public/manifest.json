@@ -1,0 +1,26 @@
+{
+  "name": "GOMAU - Plataforma Maçônica",
+  "short_name": "GOMAU",
+  "description": "Plataforma de Ensino e Gestão G∴O∴M∴A∴U∴",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0A0E1A",
+  "theme_color": "#D4AF37",
+  "icons": [
+    {
+      "src": "/logotrad.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logotrad.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
