@@ -6945,14 +6945,40 @@ export function GestorDashboard() {
 
                 <div className="flex flex-col gap-6">
                   {securityWords.map((loja, index) => (
-                    <div key={loja.prefixo} className="flex flex-col sm:flex-row gap-4 sm:items-end bg-[#0B0B0C] p-4 rounded-xl border border-[#1e293b]/50">
+                    <div key={index} className="flex flex-col sm:flex-row gap-4 sm:items-end bg-[#0B0B0C] p-4 rounded-xl border border-[#1e293b]/50 relative group">
                       <div className="flex-1">
                         <label className="text-xs text-gray-400 block mb-1">
-                          Loja
+                          Nome da Loja
                         </label>
-                        <div className="text-sm font-bold text-gray-200">
-                          {loja.nome} <span className="text-xs text-[#D4AF37]">(Prefixo CIM: {loja.prefixo})</span>
-                        </div>
+                        <input
+                          type="text"
+                          value={loja.nome}
+                          onChange={(e) => {
+                            const newWords = [...securityWords];
+                            newWords[index].nome = e.target.value;
+                            setSecurityWords(newWords);
+                          }}
+                          className="bg-black/50 border border-[#1e293b] rounded-lg px-4 py-2 text-white w-full"
+                          placeholder="Ex: União e Força"
+                        />
+                      </div>
+
+                      <div className="w-24 shrink-0">
+                        <label className="text-xs text-gray-400 block mb-1 text-center">
+                          Prefixo CIM
+                        </label>
+                        <input
+                          type="text"
+                          value={loja.prefixo}
+                          onChange={(e) => {
+                            const newWords = [...securityWords];
+                            newWords[index].prefixo = e.target.value;
+                            setSecurityWords(newWords);
+                          }}
+                          className="bg-black/50 border border-[#1e293b] rounded-lg px-4 py-2 text-white w-full text-center"
+                          placeholder="Ex: 01"
+                          maxLength={2}
+                        />
                       </div>
                       
                       <div className="flex-1">
@@ -6987,10 +7013,33 @@ export function GestorDashboard() {
                           className="bg-black/50 border border-[#1e293b] rounded-lg px-4 py-2 text-white w-full"
                         />
                       </div>
+
+                      <button
+                        onClick={() => {
+                          const newWords = [...securityWords];
+                          newWords.splice(index, 1);
+                          setSecurityWords(newWords);
+                        }}
+                        className="p-2 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors absolute right-2 top-2 sm:static sm:mb-1"
+                        title="Remover Loja"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
                   ))}
 
-                  <div className="flex justify-end mt-4">
+                  <div className="flex justify-between items-center mt-4 border-t border-[#1e293b] pt-6">
+                    <button
+                      onClick={() => {
+                        setSecurityWords([
+                          ...securityWords,
+                          { prefixo: "", nome: "", palavraAtual: "", expiraEm: "" }
+                        ]);
+                      }}
+                      className="bg-[#1e293b]/50 text-gray-300 px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-[#1e293b] hover:text-white transition-colors text-sm"
+                    >
+                      <Plus size={16} /> Adicionar Loja
+                    </button>
                     <button
                       onClick={saveSecurityWord}
                       disabled={savingSecurity}
