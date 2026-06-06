@@ -159,16 +159,34 @@ export function Login() {
     e.preventDefault();
     setLoading(true);
     try {
+      const userCim = String(tempUser.cim || user?.cim || '');
+      const lojaPrefix = userCim.substring(0, 2);
+
       let PALAVRA_SAGRADA = "FORTITUDO"; // Fallback inicial caso não exista no DB
       let DATA_EXPIRACAO = new Date("2026-08-13T23:59:59"); // 3 meses a contar do início do sistema
 
-      // 1. Buscar do Firestore (Não hardcoded conforme solicitado pelo Mestre)
+      // 1. Buscar do Firestore
       try {
          const configSnap = await getDoc(doc(db, 'configs', 'security'));
          if (configSnap.exists()) {
            const data = configSnap.data();
-           if (data.palavraAtual) PALAVRA_SAGRADA = data.palavraAtual;
-           if (data.expiraEm) DATA_EXPIRACAO = data.expiraEm.toDate();
+           
+           if (data.lojas && Array.isArray(data.lojas)) {
+             const matchedLoja = data.lojas.find((l: any) => l.prefixo === lojaPrefix);
+             
+             if (matchedLoja) {
+                PALAVRA_SAGRADA = matchedLoja.palavraAtual || "FORTITUDO";
+                if (matchedLoja.expiraEm) DATA_EXPIRACAO = matchedLoja.expiraEm.toDate();
+             } else {
+               // Fallback if the user's prefix isn't found in configs 
+               console.warn("Loja não configurada para este CIM. Usando fallback.");
+             }
+
+           } else if (data.palavraAtual) {
+              // Legacy support
+              PALAVRA_SAGRADA = data.palavraAtual;
+              if (data.expiraEm) DATA_EXPIRACAO = data.expiraEm.toDate();
+           }
          }
       } catch (dbErr) {
          console.warn("Using fallback word, couldn't fetch from DB", dbErr);
@@ -178,7 +196,7 @@ export function Login() {
 
       // 1. Verificar Expiração
       if (AGORA > DATA_EXPIRACAO) {
-        setError('A Palavra Sagrada do trimestre expirou. Contate o Gestor para receber a nova palavra.');
+        setError('A Palavra Sagrada do trimestre expirou para a sua Loja. Contate o Gestor para receber a nova palavra.');
         return;
       }
 
@@ -195,7 +213,7 @@ export function Login() {
       // Registrar o acesso do usuário no banco
       try {
         await addDoc(collection(db, 'accessLogs'), {
-          cim: tempUser.cim || user?.cim || '',
+          cim: userCim,
           nome: tempUser.nome || user?.nome || 'Desconhecido',
           email: tempUser.email || user?.email || '',
           uid: tempUser.uid || user?.uid || '',

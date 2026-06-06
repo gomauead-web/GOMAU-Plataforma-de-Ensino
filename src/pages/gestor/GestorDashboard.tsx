@@ -226,12 +226,13 @@ export function GestorDashboard() {
   });
   const [savingSettings, setSavingSettings] = useState(false);
 
-  // Data for Security Word
-  const [securityWord, setSecurityWord] = useState({
-    palavraAtual: "",
-    expiraEm: "",
-    id: "",
-  });
+  // Data for Security Words
+  const [securityWords, setSecurityWords] = useState<any[]>([
+    { prefixo: "01", nome: "União e Força", palavraAtual: "", expiraEm: "" },
+    { prefixo: "03", nome: "Sabedoria de Salomão 03", palavraAtual: "", expiraEm: "" },
+    { prefixo: "33", nome: "Jus Véritas 33", palavraAtual: "", expiraEm: "" },
+    { prefixo: "77", nome: "Arquitetos da Prosperidade 77", palavraAtual: "", expiraEm: "" },
+  ]);
   const [savingSecurity, setSavingSecurity] = useState(false);
 
   // Data for Membros
@@ -1284,10 +1285,27 @@ export function GestorDashboard() {
       const securitySnap = await getDoc(doc(db, "configs", "security"));
       if (securitySnap.exists()) {
         const data = securitySnap.data();
-        setSecurityWord({
-          palavraAtual: data.palavraAtual || "",
-          expiraEm: data.expiraEm?.toDate().toISOString().split("T")[0] || "",
-          id: "security",
+        setSecurityWords(prev => {
+          return prev.map(loja => {
+            if (data.lojas && Array.isArray(data.lojas)) {
+              const matchedLoja = data.lojas.find((l: any) => l.prefixo === loja.prefixo);
+              if (matchedLoja) {
+                return {
+                  ...loja,
+                  palavraAtual: matchedLoja.palavraAtual || "",
+                  expiraEm: matchedLoja.expiraEm ? new Date(matchedLoja.expiraEm.toDate()).toISOString().split("T")[0] : ""
+                };
+              }
+            } else if (data.palavraAtual) {
+              // Legacy support: fall back to the single global word if data.lojas is not yet populated
+              return {
+                ...loja,
+                palavraAtual: data.palavraAtual || "",
+                expiraEm: data.expiraEm ? data.expiraEm.toDate().toISOString().split("T")[0] : ""
+              };
+            }
+            return loja;
+          });
         });
       }
     } catch (err) {
@@ -1298,21 +1316,26 @@ export function GestorDashboard() {
   const seedInitialSecurity = async () => {
     try {
       const securitySnap = await getDoc(doc(db, "configs", "security"));
-      if (!securitySnap.exists()) {
+      if (!securitySnap.exists() || !(securitySnap.data() as any).lojas) {
         const threeMonthsFromNow = new Date();
         threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
 
-        await setDoc(doc(db, "configs", "security"), {
-          palavraAtual: "FORTITUDO",
-          expiraEm: threeMonthsFromNow,
-          updatedAt: serverTimestamp(),
-        });
+        const initialLojas = [
+          { prefixo: "01", nome: "União e Força", palavraAtual: "FORTITUDO", expiraEm: threeMonthsFromNow },
+          { prefixo: "03", nome: "Sabedoria de Salomão 03", palavraAtual: "FORTITUDO", expiraEm: threeMonthsFromNow },
+          { prefixo: "33", nome: "Jus Véritas 33", palavraAtual: "FORTITUDO", expiraEm: threeMonthsFromNow },
+          { prefixo: "77", nome: "Arquitetos da Prosperidade 77", palavraAtual: "FORTITUDO", expiraEm: threeMonthsFromNow },
+        ];
 
-        setSecurityWord({
-          palavraAtual: "FORTITUDO",
-          expiraEm: threeMonthsFromNow.toISOString().split("T")[0],
-          id: "security",
-        });
+        await setDoc(doc(db, "configs", "security"), {
+          lojas: initialLojas,
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+
+        setSecurityWords(initialLojas.map(l => ({
+          ...l,
+          expiraEm: l.expiraEm.toISOString().split("T")[0]
+        })));
       }
     } catch (err) {
       console.error("Erro ao semear segurança inicial:", err);
@@ -1358,18 +1381,20 @@ export function GestorDashboard() {
   const saveSecurityWord = async () => {
     setSavingSecurity(true);
     try {
+      const dbLojas = securityWords.map(l => ({
+        ...l,
+        expiraEm: l.expiraEm ? new Date(l.expiraEm) : null,
+      }));
+
       await setDoc(
         doc(db, "configs", "security"),
         {
-          palavraAtual: securityWord.palavraAtual,
-          expiraEm: securityWord.expiraEm
-            ? new Date(securityWord.expiraEm)
-            : null,
+          lojas: dbLojas,
           updatedAt: serverTimestamp(),
         },
         { merge: true },
       );
-      alert("Palavra Sagrada atualizada com sucesso!");
+      alert("Palavras Sagradas atualizadas com sucesso!");
     } catch (err: any) {
       console.error("Erro ao salvar palavra sagrada:", err);
       alert("Erro: " + err.message);
@@ -6902,7 +6927,7 @@ export function GestorDashboard() {
                 </div>
               </div>
 
-              {/* Periodic Security Word Section */}
+              {/* Periodic Security Word Section by Loja */}
               <div className="bg-[#1e293b]/20 border border-[#1e293b] rounded-xl p-6 mb-8 group hover:border-[#D4AF37]/50 transition-all">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-full bg-[#0A0E1A] border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37]">
@@ -6910,62 +6935,71 @@ export function GestorDashboard() {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-gray-200">
-                      Segurança de Acesso
+                      Segurança de Acesso por Loja
                     </h3>
                     <p className="text-[10px] uppercase tracking-widest text-[#D4AF37]">
-                      Palavra Sagrada do Trimestre
+                      Palavras Sagradas do Trimestre
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-6 items-end">
-                  <div className="flex flex-col gap-1 flex-1">
-                    <label className="text-xs text-gray-400">
-                      Palavra Sagrada Atual
-                    </label>
-                    <p className="text-[10px] text-gray-500 mb-2">
-                      Os membros precisarão digitar esta palavra exatamente para
-                      acessar o sistema.
-                    </p>
-                    <input
-                      type="text"
-                      value={securityWord.palavraAtual}
-                      onChange={(e) =>
-                        setSecurityWord({
-                          ...securityWord,
-                          palavraAtual: e.target.value,
-                        })
-                      }
-                      className="bg-[#0B0B0C] border border-[#1e293b] rounded-lg px-4 py-2 text-white w-full sm:w-64"
-                      placeholder="Ex: SILÊNCIO"
-                    />
+
+                <div className="flex flex-col gap-6">
+                  {securityWords.map((loja, index) => (
+                    <div key={loja.prefixo} className="flex flex-col sm:flex-row gap-4 sm:items-end bg-[#0B0B0C] p-4 rounded-xl border border-[#1e293b]/50">
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-400 block mb-1">
+                          Loja
+                        </label>
+                        <div className="text-sm font-bold text-gray-200">
+                          {loja.nome} <span className="text-xs text-[#D4AF37]">(Prefixo CIM: {loja.prefixo})</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-400 block mb-1">
+                          Palavra Sagrada (Case-Insensitive)
+                        </label>
+                        <input
+                          type="text"
+                          value={loja.palavraAtual}
+                          onChange={(e) => {
+                            const newWords = [...securityWords];
+                            newWords[index].palavraAtual = e.target.value;
+                            setSecurityWords(newWords);
+                          }}
+                          className="bg-black/50 border border-[#1e293b] rounded-lg px-4 py-2 text-white w-full"
+                          placeholder="Ex: FORTITUDO"
+                        />
+                      </div>
+
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-400 block mb-1">
+                          Data de Expiração
+                        </label>
+                        <input
+                          type="date"
+                          value={loja.expiraEm}
+                          onChange={(e) => {
+                            const newWords = [...securityWords];
+                            newWords[index].expiraEm = e.target.value;
+                            setSecurityWords(newWords);
+                          }}
+                          className="bg-black/50 border border-[#1e293b] rounded-lg px-4 py-2 text-white w-full"
+                        />
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="flex justify-end mt-4">
+                    <button
+                      onClick={saveSecurityWord}
+                      disabled={savingSecurity}
+                      className="bg-[#D4AF37] text-black px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform disabled:opacity-50"
+                    >
+                      <Save size={18} />{" "}
+                      {savingSecurity ? "Atualizando..." : "Salvar Todas Palavras"}
+                    </button>
                   </div>
-                  <div className="flex flex-col gap-1 flex-1">
-                    <label className="text-xs text-gray-400">
-                      Data de Expiração
-                    </label>
-                    <p className="text-[10px] text-gray-500 mb-2">
-                      Após esta data, a palavra atual não funcionará mais.
-                    </p>
-                    <input
-                      type="date"
-                      value={securityWord.expiraEm}
-                      onChange={(e) =>
-                        setSecurityWord({
-                          ...securityWord,
-                          expiraEm: e.target.value,
-                        })
-                      }
-                      className="bg-[#0B0B0C] border border-[#1e293b] rounded-lg px-4 py-2 text-white w-full sm:w-48"
-                    />
-                  </div>
-                  <button
-                    onClick={saveSecurityWord}
-                    disabled={savingSecurity}
-                    className="bg-[#D4AF37] text-black px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:scale-105 transition-transform disabled:opacity-50"
-                  >
-                    <Save size={16} />{" "}
-                    {savingSecurity ? "Atualizar" : "Salvar Palavra"}
-                  </button>
                 </div>
               </div>
 
