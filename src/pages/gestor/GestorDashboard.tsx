@@ -34,6 +34,7 @@ import {
   DollarSign,
   BarChart3,
   Library,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { db, storage, auth } from "../../lib/firebase";
@@ -257,6 +258,11 @@ export function GestorDashboard() {
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [isResetting, setIsResetting] = useState(false);
 
+  // States for Inconsistencies Scan
+  const [inconsistencies, setInconsistencies] = useState<{member: any, issues: string[]}[] | null>(null);
+  const [showInconsistenciesModal, setShowInconsistenciesModal] = useState(false);
+  const [isFixingLojas, setIsFixingLojas] = useState(false);
+
   // States for Smart Import
   const [showImportOptionsModal, setShowImportOptionsModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -266,6 +272,53 @@ export function GestorDashboard() {
   const [newMembersToImport, setNewMembersToImport] = useState<any[]>([]);
   const [showImportReview, setShowImportReview] = useState(false);
   const [excelEmails, setExcelEmails] = useState<Set<string>>(new Set());
+
+  // Helper for Loja by CIM
+  const getLojaNameByCIM = (cim: string) => {
+    if (!cim) return "---";
+    const prefix = String(cim).substring(0, 2);
+    const matched = securityWords.find(l => String(l.prefixo).padStart(2, "0") === prefix);
+    return matched ? matched.nome : "Loja Não Identificada";
+  };
+
+  const scanInconsistencies = () => {
+    const list = members.map(m => {
+        const issues = [];
+        const correctLoja = getLojaNameByCIM(m.cim || "");
+        if (!m.loja || m.loja !== correctLoja) issues.push(`Loja divergente (Atual: ${m.loja || "Nenhuma"} | Pelo CIM: ${correctLoja})`);
+        if (!m.cpf) issues.push("CPF ausente");
+        if (!m.cim) issues.push("CIM ausente");
+        if (!m.email) issues.push("E-mail primário ausente");
+        if (!m.dataIniciacao) issues.push("Data de iniciação ausente");
+        return { member: m, issues };
+    }).filter(x => x.issues.length > 0);
+    setInconsistencies(list);
+    setShowInconsistenciesModal(true);
+  };
+
+  const autoFixLojas = async () => {
+    if (!inconsistencies) return;
+    setIsFixingLojas(true);
+    let count = 0;
+    try {
+      for (const inc of inconsistencies) {
+        const correctLoja = getLojaNameByCIM(inc.member.cim || "");
+        if (inc.member.loja !== correctLoja && correctLoja !== "Loja Não Identificada") {
+          const userRef = doc(db, "users", inc.member.id);
+          await updateDoc(userRef, { loja: correctLoja, updatedAt: serverTimestamp() });
+          count++;
+        }
+      }
+      alert(`✅ ${count} cadastros tiveram suas Lojas corrigidas/sincronizadas com o CIM com sucesso!`);
+      setShowInconsistenciesModal(false);
+      // the snapshot listener will automatically update the members list
+    } catch (err: any) {
+      console.error(err);
+      alert("Erro ao corrigir lojas: " + err.message);
+    } finally {
+      setIsFixingLojas(false);
+    }
+  };
 
   // Mask Helpers
   const maskCPF = (value: string) => {
@@ -725,7 +778,7 @@ export function GestorDashboard() {
             .toString()
             .trim(),
           status: normalizedStatus,
-          loja: row["Loja"] || row["LOJA"] || row["loja"] || "Jus Veritas 33",
+          loja: getLojaNameByCIM((row["CIM"] || row["cim"] || "").toString().trim()),
           rito: row["Rito"] || row["RITO"] || row["rito"] || "Emulação",
           telefone: maskPhone(
             (
@@ -1021,7 +1074,7 @@ export function GestorDashboard() {
             ...member,
             role: existing?.role || "membro",
             grau: member.grau || existing?.grau || "Aprendiz",
-            loja: member.loja || existing?.loja || "Jus Veritas 33",
+            loja: getLojaNameByCIM(member.cim),
             rito: member.rito || existing?.rito || "Emulação",
             dataCadastro:
               existing?.dataCadastro || new Date().toISOString().split("T")[0],
@@ -1087,7 +1140,7 @@ export function GestorDashboard() {
         nome: editingMember.nome || "",
         grau: editingMember.grau || "Aprendiz",
         role: editingMember.role || "membro",
-        loja: editingMember.loja || "Jus Veritas 33",
+        loja: getLojaNameByCIM(editingMember.cim),
         rito: editingMember.rito || "Emulação",
         cim: editingMember.cim || "",
         cargo: editingMember.cargo || "Membro",
@@ -1381,10 +1434,13 @@ export function GestorDashboard() {
   const saveSecurityWord = async () => {
     setSavingSecurity(true);
     try {
-      const dbLojas = securityWords.map(l => ({
-        ...l,
-        expiraEm: l.expiraEm ? new Date(l.expiraEm) : null,
-      }));
+      const dbLojas = securityWords.map(l => {
+        const { isNew, isEditing, ...rest } = l;
+        return {
+          ...rest,
+          expiraEm: rest.expiraEm ? new Date(rest.expiraEm) : null,
+        };
+      });
 
       await setDoc(
         doc(db, "configs", "security"),
@@ -1394,6 +1450,12 @@ export function GestorDashboard() {
         },
         { merge: true },
       );
+      
+      setSecurityWords(prev => prev.map(l => {
+        const { isNew, isEditing, ...rest } = l;
+        return rest;
+      }));
+
       alert("Palavras Sagradas atualizadas com sucesso!");
     } catch (err: any) {
       console.error("Erro ao salvar palavra sagrada:", err);
@@ -1899,12 +1961,13 @@ export function GestorDashboard() {
           // Actually, let's just make sure it exists
         }
 
+        const correctLoja = getLojaNameByCIM(member.cim);
         if (
-          member.loja !== "Jus Veritas 33" &&
+          member.loja !== correctLoja &&
           member.role !== "admin" &&
           member.role !== "gestor"
         ) {
-          updates.loja = "Jus Veritas 33";
+          updates.loja = correctLoja;
           needsUpdate = true;
         }
 
@@ -2184,7 +2247,7 @@ export function GestorDashboard() {
           // Se já existir, NÃO sobrescrever campos fixos como role ou dataCadastro se já tiverem valor
           role: existing?.role || "membro",
           email: targetEmail,
-          loja: "Jus Veritas 33",
+          loja: getLojaNameByCIM(newMemberManual.cim),
           rito: "Emulação",
           status: existing?.status || "Ativo",
           dataCadastro:
@@ -2916,6 +2979,14 @@ export function GestorDashboard() {
                         {importing ? "..." : "Excel"}
                       </button>
                       <button
+                        onClick={() => scanInconsistencies()}
+                        className="bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 px-3 py-2 rounded-lg flex items-center gap-2 text-xs font-bold transition-all flex-1 sm:flex-none justify-center cursor-pointer"
+                        title="Varrer e mostrar inconsistências no cadastro de membros"
+                      >
+                        <AlertTriangle size={14} />
+                        Inconsistências
+                      </button>
+                      <button
                         onClick={() => setShowExportModal(true)}
                         className="bg-[#D4AF37]/15 hover:bg-[#D4AF37]/30 text-[#D4AF37] border border-[#D4AF37]/40 px-3 py-2 rounded-lg flex items-center gap-2 text-xs font-bold transition-all flex-1 sm:flex-none justify-center cursor-pointer"
                         title="Exportar base de membros por filtro de grau"
@@ -3098,6 +3169,83 @@ export function GestorDashboard() {
                             <FileSpreadsheet size={16} />
                             BAIXAR PLANILHA
                           </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Inconsistencies Modal */}
+                  {showInconsistenciesModal && inconsistencies && (
+                    <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+                      <div className="bg-[#1e293b] border border-[#D4AF37]/40 rounded-2xl max-w-3xl w-full p-6 shadow-[0_0_50px_rgba(212,175,55,0.25)] flex flex-col max-h-[85vh] animate-in zoom-in duration-300">
+                        <div className="flex flex-col items-center text-center gap-3 mb-6 shrink-0">
+                          <div className="w-14 h-14 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center text-red-500">
+                            <AlertTriangle size={32} />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-black text-white uppercase tracking-tighter">
+                              Relatório de Inconsistências
+                            </h3>
+                            <p className="text-red-400 text-[10px] font-bold uppercase tracking-widest mt-1">
+                              {inconsistencies.length} Membro(s) com pendências
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="overflow-y-auto pr-2 space-y-4 mb-6 custom-scrollbar">
+                          {inconsistencies.length === 0 ? (
+                            <div className="text-center text-gray-400 p-8 border border-[#1e293b] rounded-xl bg-black/30">
+                              <p className="text-sm font-medium">Nenhuma inconsistência encontrada!</p>
+                              <p className="text-xs mt-1">Todos os cadastros estão corretos e alinhados.</p>
+                            </div>
+                          ) : (
+                            inconsistencies.map((inc, i) => (
+                              <div key={i} className="bg-[#0A0E1A]/80 border border-[#1e293b] p-4 rounded-xl hover:border-red-500/30 transition-colors">
+                                <div className="flex items-center justify-between mb-3 border-b border-[#1e293b] pb-2">
+                                  <h4 className="font-bold text-white text-sm">{inc.member.nome || "Membro sem nome"}</h4>
+                                  <span className="text-[10px] font-mono text-gray-500 bg-[#1e293b]/50 px-2 py-1 rounded">
+                                    CIM: {inc.member.cim || "N/A"}
+                                  </span>
+                                </div>
+                                <ul className="space-y-1.5">
+                                  {inc.issues.map((issue, j) => (
+                                    <li key={j} className="text-xs text-gray-300 flex items-start gap-2">
+                                      <span className="text-red-500 mt-0.5">•</span>
+                                      <span dangerouslySetInnerHTML={{ __html: issue.replace(/Loja divergente/g, '<strong class="text-red-400">Loja divergente</strong>') }}></span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))
+                          )}
+                        </div>
+
+                        <div className="flex justify-between items-center shrink-0 pt-4 border-t border-[#1e293b]">
+                          <button
+                            onClick={() => setShowInconsistenciesModal(false)}
+                            className="px-6 py-2 bg-[#1e293b] hover:bg-white/10 text-white font-bold rounded-lg transition-all border border-[#1e293b] cursor-pointer"
+                          >
+                            Fechar
+                          </button>
+                          
+                          {inconsistencies.some(inc => inc.issues.some(i => i.includes("Loja divergente"))) && (
+                            <button
+                              onClick={autoFixLojas}
+                              disabled={isFixingLojas}
+                              className="px-6 py-2 bg-[#D4AF37] hover:scale-105 text-black font-bold rounded-lg transition-all flex items-center gap-2 disabled:opacity-50"
+                              title="Corrige automaticamente todas as Lojas divergentes com base no prefixo CIM"
+                            >
+                              {isFixingLojas ? (
+                                <>
+                                  <Loader2 size={16} className="animate-spin" /> Corrigindo...
+                                </>
+                              ) : (
+                                <>
+                                  <AlertTriangle size={16} /> Corrigir Lojas
+                                </>
+                              )}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -3744,7 +3892,7 @@ export function GestorDashboard() {
                                     Loja
                                   </span>
                                   <span className="text-sm font-medium text-gray-300">
-                                    {viewingMember.loja}
+                                    {getLojaNameByCIM(viewingMember.cim)}
                                   </span>
                                 </div>
                                 <div className="bg-black/30 p-2 rounded-lg">
@@ -4095,14 +4243,10 @@ export function GestorDashboard() {
                                 </label>
                                 <input
                                   type="text"
-                                  value={editingMember.loja}
-                                  onChange={(e) =>
-                                    setEditingMember({
-                                      ...editingMember,
-                                      loja: e.target.value,
-                                    })
-                                  }
-                                  className="bg-[#0B0B0C] border border-[#1e293b] rounded-lg px-4 py-2 text-white"
+                                  value={getLojaNameByCIM(editingMember.cim)}
+                                  disabled
+                                  className="bg-black/50 border border-[#1e293b] rounded-lg px-4 py-2 text-gray-500 cursor-not-allowed"
+                                  title="A Loja é determinada automaticamente pelos 2 primeiros dígitos do CIM."
                                 />
                               </div>
 
@@ -6946,40 +7090,64 @@ export function GestorDashboard() {
                 <div className="flex flex-col gap-6">
                   {securityWords.map((loja, index) => (
                     <div key={index} className="flex flex-col sm:flex-row gap-4 sm:items-end bg-[#0B0B0C] p-4 rounded-xl border border-[#1e293b]/50 relative group">
-                      <div className="flex-1">
-                        <label className="text-xs text-gray-400 block mb-1">
-                          Nome da Loja
-                        </label>
-                        <input
-                          type="text"
-                          value={loja.nome}
-                          onChange={(e) => {
-                            const newWords = [...securityWords];
-                            newWords[index].nome = e.target.value;
-                            setSecurityWords(newWords);
-                          }}
-                          className="bg-black/50 border border-[#1e293b] rounded-lg px-4 py-2 text-white w-full"
-                          placeholder="Ex: União e Força"
-                        />
-                      </div>
+                      {loja.isNew || loja.isEditing ? (
+                        <>
+                          <div className="flex-1">
+                            <label className="text-xs text-gray-400 block mb-1">
+                              Nome da Loja
+                            </label>
+                            <input
+                              type="text"
+                              value={loja.nome}
+                              onChange={(e) => {
+                                const newWords = [...securityWords];
+                                newWords[index].nome = e.target.value;
+                                setSecurityWords(newWords);
+                              }}
+                              className="bg-black/50 border border-[#1e293b] rounded-lg px-4 py-2 text-white w-full"
+                              placeholder="Ex: União e Força"
+                            />
+                          </div>
 
-                      <div className="w-24 shrink-0">
-                        <label className="text-xs text-gray-400 block mb-1 text-center">
-                          Prefixo CIM
-                        </label>
-                        <input
-                          type="text"
-                          value={loja.prefixo}
-                          onChange={(e) => {
-                            const newWords = [...securityWords];
-                            newWords[index].prefixo = e.target.value;
-                            setSecurityWords(newWords);
-                          }}
-                          className="bg-black/50 border border-[#1e293b] rounded-lg px-4 py-2 text-white w-full text-center"
-                          placeholder="Ex: 01"
-                          maxLength={2}
-                        />
-                      </div>
+                          <div className="w-24 shrink-0">
+                            <label className="text-xs text-gray-400 block mb-1 text-center">
+                              Prefixo CIM
+                            </label>
+                            <input
+                              type="text"
+                              value={loja.prefixo}
+                              onChange={(e) => {
+                                const newWords = [...securityWords];
+                                newWords[index].prefixo = e.target.value;
+                                setSecurityWords(newWords);
+                              }}
+                              className="bg-black/50 border border-[#1e293b] rounded-lg px-4 py-2 text-white w-full text-center"
+                              placeholder="Ex: 01"
+                              maxLength={2}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex-1 min-w-[200px] mb-1">
+                          <label className="text-xs text-gray-400 block mb-1">Nome da Loja</label>
+                          <div className="flex items-center gap-2">
+                            <div className="text-sm font-bold text-gray-200 truncate">
+                              {loja.nome} <span className="text-xs text-[#D4AF37]">(Prefixo CIM: {loja.prefixo})</span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                const newWords = [...securityWords];
+                                newWords[index].isEditing = true;
+                                setSecurityWords(newWords);
+                              }}
+                              className="text-gray-500 hover:text-[#D4AF37] transition-colors pb-1"
+                              title="Editar Nome/Prefixo"
+                            >
+                              <Edit2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       
                       <div className="flex-1">
                         <label className="text-xs text-gray-400 block mb-1">
@@ -7033,7 +7201,7 @@ export function GestorDashboard() {
                       onClick={() => {
                         setSecurityWords([
                           ...securityWords,
-                          { prefixo: "", nome: "", palavraAtual: "", expiraEm: "" }
+                          { prefixo: "", nome: "", palavraAtual: "", expiraEm: "", isNew: true }
                         ]);
                       }}
                       className="bg-[#1e293b]/50 text-gray-300 px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-[#1e293b] hover:text-white transition-colors text-sm"
