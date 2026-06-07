@@ -214,6 +214,12 @@ Ao fazer login com a conta Google, o sistema exige:
 
 ## 5. Changelog e Histórico de Evolução
 
+- **2026-06-07 (Módulo Multi-Loja Avançado, Mensalidades Customizáveis por Oficinas e Atualização no Valuation):**
+    1. **Mensalidades Customizadas por Loja**: Implementado suporte a faturamento individualizado para cada congregação/oficina maçônica cadastrada na plataforma. Agora, o gestor define o valor de mensalidade correspondente para cada Loja no portal de configurações, e o sistema atualiza dinamicamente as cobranças apresentadas na Tesouraria e no Perfil do Obreiro de acordo com a Loja a qual pertence.
+    2. **Varredura e Padronização de Nomes de Lojas**: Desenvolvida a rotina inteligente "Corrigir Lojas" que escaneia toda a base de dados do Firestore a fim de unificar as grafias de lojas de forma ortograficamente precisa baseada no prefixo de cadastro (ex: corrigindo instâncias de "Jus Veritas 33" para "Jus Véritas 33" com acento).
+    3. **Personalização e Identificação de Oficinas**: Adicionados crachás e marcadores visuais detalhando o pertencimento da Loja em tempo real nos cards de pagamento e mensagens com os tesoureiros oficiais da Administração Maçônica via WhatsApp.
+    4. **Atualização do Valuation de Licenciamento GOMAU**: Inclusão oficial do módulo de Federação Multi-Lojas Inteligente no dashboard de Valuation do Gestor com precificação de valor de mercado adicional estimado em R$ 11.500,00, elevando o valor global de implantação da plataforma para R$ 147.000,00.
+
 - **2026-06-04 (Auditoria Completa de Segurança e Regras Fortress):**
     1. **Bloqueio de Escalação de Privilégios**: Restringida a possibilidade de usuários comuns alterarem campos críticos (`role`, `grau`, `status`, `cim` e `email`) em seu perfil no Firestore via client SDK. Apenas gestores podem modificar esses campos cruciais.
     2. **Validação de Avanço e Status de Solicitação**: Correção na criação e atualização de `/requests/{requestId}` e `/mensalidades/{paymentId}`, forçando estados de `'pendente'` e `'em_analise'` para obreiros sem privilégio de gestor, impedindo auto-aprovação.

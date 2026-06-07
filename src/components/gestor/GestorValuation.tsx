@@ -249,6 +249,22 @@ export function GestorValuation() {
              <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Adicional Ativo</div>
           </div>
         </div>
+
+        <div className="bg-[#0A0E1A] p-6 rounded-xl border border-dashed border-[#D4AF37]/35 flex flex-col gap-4 shadow-xl hover:border-[#D4AF37]/60 transition-colors">
+          <div className="flex items-center gap-3">
+             <div className="p-3 rounded-lg bg-[#1e293b] text-[#D4AF37]">
+                 <TrendingUp size={24} />
+             </div>
+             <h3 className="font-bold text-[#D4AF37] uppercase tracking-wide text-sm">Multi-Lojas Inteligente</h3>
+          </div>
+          <p className="text-xs text-gray-400 leading-relaxed font-sans">
+             Arquitetura de isolamento e governança multi-oficina. Inclui regras de validação por prefixo CIM, palavras sagradas independentes por congregação, faturamento e mensalidades individualizadas por Loja.
+          </p>
+          <div className="mt-auto">
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 11.500,00</div>
+             <div className="text-[10px] text-[#D4AF37] font-bold uppercase mt-1 tracking-widest font-sans">Adicional Ativado</div>
+          </div>
+        </div>
       </div>
 
       <div className="bg-gradient-to-r from-[#D4AF37]/10 to-transparent border-l-4 border-[#D4AF37] p-8 rounded-r-xl mt-4">
@@ -260,7 +276,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 135.500,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 147.000,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>

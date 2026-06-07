@@ -115,11 +115,6 @@ export function Layout({ children }: { children: ReactNode }) {
     { icon: Shield, label: 'Área Gestor', path: '/gestor' },
   ];
 
-  const bottomItems = [
-    { icon: Settings, label: 'Configurações', path: '/settings' },
-    { icon: HelpCircle, label: 'Ajuda', path: '/help' },
-  ];
-
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-[#05070A]/40 text-[#E5E7EB] font-sans relative overflow-hidden">
       {/* Mobile Header - Now Sticky */}
@@ -173,13 +168,9 @@ export function Layout({ children }: { children: ReactNode }) {
           )}
 
           <div className="mt-auto pt-4 border-t border-[#D4AF37]/15 flex flex-col gap-1">
-            {bottomItems.map((item) => (
-               <NavItem key={item.path} item={item} />
-            ))}
-            
             <button 
               onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-lg transition-colors mt-4 cursor-pointer"
+              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-lg transition-colors cursor-pointer"
             >
               <LogOut size={18} />
               Sair

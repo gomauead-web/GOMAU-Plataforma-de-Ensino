@@ -116,6 +116,7 @@ export function ProfilePage() {
     pixKey: "calepe@gmail.com",
     pixName: "Grande Oriente Maçônico (GOMA)",
     amount: "100.00",
+    lodgeName: "",
     instructions:
       "Por favor, realize a transferência pix correspondente à mensalidade do mês de referência. Após pagar, clique em Confirmar Pagamento para notificar o Tesoureiro e atualizar seu status.",
   });
@@ -128,16 +129,53 @@ export function ProfilePage() {
         // Carrega configurações da tesouraria
         const confRef = doc(db, "configs", "treasury");
         const confSnap = await getDoc(confRef);
+        let baseAmount = "100.00";
+        let instructionsText = "";
         if (confSnap.exists()) {
           const data = confSnap.data() as any;
-          setTreasuryInfo((prev) => ({
-            ...prev,
-            pixKey: data.pixKey || prev.pixKey,
-            pixName: data.pixName || prev.pixName,
-            amount: data.amount || prev.amount,
-            instructions: data.instructions || prev.instructions,
-          }));
+          baseAmount = data.amount || "100.00";
+          instructionsText = data.instructions || "";
         }
+
+        let finalAmount = baseAmount;
+        let lodgeNameText = user.loja || "";
+
+        // Query configs/security to fetch the Lodges and match dynamic monthly fee
+        try {
+          const securitySnap = await getDoc(doc(db, "configs", "security"));
+          if (securitySnap.exists()) {
+            const data = securitySnap.data();
+            if (data.lojas && Array.isArray(data.lojas)) {
+              const matchedLoja = data.lojas.find((l: any) => {
+                if (user.loja && l.nome && l.nome.toLowerCase().trim() === user.loja.toLowerCase().trim()) {
+                  return true;
+                }
+                if (user.cim && l.prefixo === String(user.cim).substring(0, 2)) {
+                  return true;
+                }
+                return false;
+              });
+
+              if (matchedLoja) {
+                lodgeNameText = matchedLoja.nome;
+                if (matchedLoja.mensalidade !== undefined && matchedLoja.mensalidade !== null && matchedLoja.mensalidade !== "") {
+                  finalAmount = String(matchedLoja.mensalidade);
+                }
+              }
+            }
+          }
+        } catch (errSec) {
+          console.error("Erro ao carregar valor da mensalidade customizada da loja no perfil:", errSec);
+        }
+
+        setTreasuryInfo(prev => ({
+          ...prev,
+          pixKey: confSnap.exists() ? (confSnap.data() as any).pixKey || prev.pixKey : prev.pixKey,
+          pixName: confSnap.exists() ? (confSnap.data() as any).pixName || prev.pixName : prev.pixName,
+          instructions: instructionsText || prev.instructions,
+          amount: finalAmount,
+          lodgeName: lodgeNameText
+        }));
 
         // Carrega mensalidades enviadas pelo obreiro sem orderBy composto para evitar dependência de índices
         const q = query(
@@ -178,6 +216,7 @@ export function ProfilePage() {
         userName: user.nome || "",
         userEmail: user.email || "",
         userCim: user.cim || "",
+        loja: user.loja || treasuryInfo.lodgeName || "",
         mesRef: treasuryMonth,
         valor: targetValor,
         comprovanteUrl: "",
@@ -192,6 +231,7 @@ export function ProfilePage() {
         `Olá Tesoureiro, acabei de realizar o pagamento da minha contribuição mensal!\n\n` +
         `• Nome: ${user.nome || "Nobre Irmão"}\n` +
         `• CIM: ${user.cim || "N/A"}\n` +
+        `• Oficina: ${user.loja || treasuryInfo.lodgeName || "N/A"}\n` +
         `• Competência: ${treasuryMonth}\n` +
         `• Pix em nome de: ${treasuryRemetentePix.trim()}\n` +
         `• Valor: R$ ${targetValor}\n\n` +
@@ -1281,8 +1321,13 @@ export function ProfilePage() {
                     <span className="text-[10px] text-gray-500 uppercase font-bold block mb-1">
                       Valor da Contribuição
                     </span>
-                    <span className="text-white text-base font-semibold">
+                    <span className="text-white text-base font-semibold flex items-center gap-2 flex-wrap">
                       R$ {treasuryInfo.amount || "100,00"}
+                      {treasuryInfo.lodgeName && (
+                        <span className="text-[10px] bg-[#D4AF37]/20 text-[#D4AF37] px-2 py-0.5 rounded-full font-semibold border border-[#D4AF37]/30">
+                          {treasuryInfo.lodgeName}
+                        </span>
+                      )}
                     </span>
                   </div>
                   <div>

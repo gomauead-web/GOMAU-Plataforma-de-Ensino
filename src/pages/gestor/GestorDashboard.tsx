@@ -229,10 +229,10 @@ export function GestorDashboard() {
 
   // Data for Security Words
   const [securityWords, setSecurityWords] = useState<any[]>([
-    { prefixo: "01", nome: "União e Força", palavraAtual: "", expiraEm: "" },
-    { prefixo: "03", nome: "Sabedoria de Salomão 03", palavraAtual: "", expiraEm: "" },
-    { prefixo: "33", nome: "Jus Véritas 33", palavraAtual: "", expiraEm: "" },
-    { prefixo: "77", nome: "Arquitetos da Prosperidade 77", palavraAtual: "", expiraEm: "" },
+    { prefixo: "01", nome: "União e Força", palavraAtual: "", expiraEm: "", mensalidade: 35 },
+    { prefixo: "03", nome: "Sabedoria de Salomão 03", palavraAtual: "", expiraEm: "", mensalidade: 35 },
+    { prefixo: "33", nome: "Jus Véritas 33", palavraAtual: "", expiraEm: "", mensalidade: 35 },
+    { prefixo: "77", nome: "Arquitetos da Prosperidade 77", palavraAtual: "", expiraEm: "", mensalidade: 35 },
   ]);
   const [savingSecurity, setSavingSecurity] = useState(false);
 
@@ -1338,28 +1338,27 @@ export function GestorDashboard() {
       const securitySnap = await getDoc(doc(db, "configs", "security"));
       if (securitySnap.exists()) {
         const data = securitySnap.data();
-        setSecurityWords(prev => {
-          return prev.map(loja => {
-            if (data.lojas && Array.isArray(data.lojas)) {
-              const matchedLoja = data.lojas.find((l: any) => l.prefixo === loja.prefixo);
-              if (matchedLoja) {
+        if (data.lojas && Array.isArray(data.lojas)) {
+          setSecurityWords(data.lojas.map((l: any) => ({
+            ...l,
+            mensalidade: l.mensalidade !== undefined ? Number(l.mensalidade) : 35,
+            expiraEm: l.expiraEm ? (l.expiraEm.toDate ? new Date(l.expiraEm.toDate()).toISOString().split("T")[0] : new Date(l.expiraEm).toISOString().split("T")[0]) : ""
+          })));
+        } else {
+          setSecurityWords(prev => {
+            return prev.map(loja => {
+              if (data.palavraAtual) {
                 return {
                   ...loja,
-                  palavraAtual: matchedLoja.palavraAtual || "",
-                  expiraEm: matchedLoja.expiraEm ? new Date(matchedLoja.expiraEm.toDate()).toISOString().split("T")[0] : ""
+                  palavraAtual: data.palavraAtual || "",
+                  expiraEm: data.expiraEm ? data.expiraEm.toDate().toISOString().split("T")[0] : "",
+                  mensalidade: 35
                 };
               }
-            } else if (data.palavraAtual) {
-              // Legacy support: fall back to the single global word if data.lojas is not yet populated
-              return {
-                ...loja,
-                palavraAtual: data.palavraAtual || "",
-                expiraEm: data.expiraEm ? data.expiraEm.toDate().toISOString().split("T")[0] : ""
-              };
-            }
-            return loja;
+              return loja;
+            });
           });
-        });
+        }
       }
     } catch (err) {
       console.error(err);
@@ -1374,10 +1373,10 @@ export function GestorDashboard() {
         threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
 
         const initialLojas = [
-          { prefixo: "01", nome: "União e Força", palavraAtual: "FORTITUDO", expiraEm: threeMonthsFromNow },
-          { prefixo: "03", nome: "Sabedoria de Salomão 03", palavraAtual: "FORTITUDO", expiraEm: threeMonthsFromNow },
-          { prefixo: "33", nome: "Jus Véritas 33", palavraAtual: "FORTITUDO", expiraEm: threeMonthsFromNow },
-          { prefixo: "77", nome: "Arquitetos da Prosperidade 77", palavraAtual: "FORTITUDO", expiraEm: threeMonthsFromNow },
+          { prefixo: "01", nome: "União e Força", palavraAtual: "FORTITUDO", expiraEm: threeMonthsFromNow, mensalidade: 35 },
+          { prefixo: "03", nome: "Sabedoria de Salomão 03", palavraAtual: "FORTITUDO", expiraEm: threeMonthsFromNow, mensalidade: 35 },
+          { prefixo: "33", nome: "Jus Véritas 33", palavraAtual: "FORTITUDO", expiraEm: threeMonthsFromNow, mensalidade: 35 },
+          { prefixo: "77", nome: "Arquitetos da Prosperidade 77", palavraAtual: "FORTITUDO", expiraEm: threeMonthsFromNow, mensalidade: 35 },
         ];
 
         await setDoc(doc(db, "configs", "security"), {
@@ -1387,7 +1386,8 @@ export function GestorDashboard() {
 
         setSecurityWords(initialLojas.map(l => ({
           ...l,
-          expiraEm: l.expiraEm.toISOString().split("T")[0]
+          expiraEm: l.expiraEm.toISOString().split("T")[0],
+          mensalidade: 35
         })));
       }
     } catch (err) {
@@ -1438,6 +1438,7 @@ export function GestorDashboard() {
         const { isNew, isEditing, ...rest } = l;
         return {
           ...rest,
+          mensalidade: rest.mensalidade !== undefined && rest.mensalidade !== "" ? Number(rest.mensalidade) : 35,
           expiraEm: rest.expiraEm ? new Date(rest.expiraEm) : null,
         };
       });
@@ -7182,6 +7183,24 @@ export function GestorDashboard() {
                         />
                       </div>
 
+                      <div className="w-24 shrink-0">
+                        <label className="text-xs text-gray-400 block mb-1 text-center font-bold text-[#D4AF37]">
+                          Mensalidade
+                        </label>
+                        <input
+                          type="number"
+                          value={loja.mensalidade !== undefined ? loja.mensalidade : 35}
+                          onChange={(e) => {
+                            const newWords = [...securityWords];
+                            newWords[index].mensalidade = e.target.value === "" ? "" : Number(e.target.value);
+                            setSecurityWords(newWords);
+                          }}
+                          className="bg-black/50 border border-[#D4AF37]/30 rounded-lg px-2 py-2 text-white w-full text-center focus:border-[#D4AF37] focus:outline-none"
+                          placeholder="R$ 35"
+                          min="0"
+                        />
+                      </div>
+
                       <button
                         onClick={() => {
                           const newWords = [...securityWords];
@@ -7201,7 +7220,7 @@ export function GestorDashboard() {
                       onClick={() => {
                         setSecurityWords([
                           ...securityWords,
-                          { prefixo: "", nome: "", palavraAtual: "", expiraEm: "", isNew: true }
+                          { prefixo: "", nome: "", palavraAtual: "", expiraEm: "", mensalidade: 35, isNew: true }
                         ]);
                       }}
                       className="bg-[#1e293b]/50 text-gray-300 px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-[#1e293b] hover:text-white transition-colors text-sm"
