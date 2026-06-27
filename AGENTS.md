@@ -4,7 +4,7 @@ Você está trabalhando na Plataforma Maçônica "G∴O∴M∴A∴U∴".
 Sempre que fizer uma alteração em funcionalidades, regras de negócio ou estrutura do banco de dados (Firestore), você DEVE obrigatoriamente manter atualizados os seguintes arquivos:
 
 1. `MANUAL_MESTRE_GOMAU.md`
-2. `CLONE_PROMPT_GOMAU.md` (se aplicável ao prompt mestre)
+2. `CLONE_PROMPT_GOMAU.md` (Você DEVE manter as instruções do prompt atualizadas e SEMPRE atualizar os CÓDIGOS FONTES que estão no final do arquivo).
 3. `INTEGRACAO_CURSOS.md` (se envolver módulos de cursos ou LMS)
 
 Além disso, sempre que você criar, inserir, atualizar, editar ou excluir qualquer funcionalidade que agregue valor comercial à plataforma, você DEVE AUTOMATICAMENTE atualizar o Valuation do sistema no arquivo `src/components/gestor/GestorValuation.tsx` adicionando ou modificando os cards correspondentes e recalculando o valor global.

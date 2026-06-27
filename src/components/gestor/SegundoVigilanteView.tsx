@@ -5,7 +5,11 @@ import {
   getDoc,
   setDoc,
   addDoc,
-  collection
+  collection,
+  query,
+  orderBy,
+  limit,
+  onSnapshot
 } from "firebase/firestore";
 import {
   Shield,
@@ -19,7 +23,8 @@ import {
   Phone,
   User,
   Zap,
-  Send
+  Send,
+  Eye
 } from "lucide-react";
 
 interface SegundoVigilanteViewProps {
@@ -81,6 +86,7 @@ export default function SegundoVigilanteView({ members, currentUser }: SegundoVi
   });
 
   const [sendingNotification, setSendingNotification] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   // Load roster config from Firestore
   useEffect(() => {
@@ -104,6 +110,20 @@ export default function SegundoVigilanteView({ members, currentUser }: SegundoVi
       }
     };
     fetchConfig();
+  }, []);
+
+  // Subscribe to recent notifications
+  useEffect(() => {
+    const q = query(
+      collection(db, "officersNotifications"),
+      orderBy("timestamp", "desc"),
+      limit(5)
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setNotifications(notifs);
+    });
+    return () => unsubscribe();
   }, []);
 
   // Update boilerplate template message content
@@ -402,6 +422,7 @@ export default function SegundoVigilanteView({ members, currentUser }: SegundoVi
 
       {/* Messaging and Reminders Panel */}
       <div className="bg-[#0f172a] border border-[#D4AF37]/30 rounded-xl overflow-hidden shadow-2xl">
+        {/* ... existing messaging panel content ... */}
         <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] border-b border-[#D4AF37]/30 px-6 py-4 flex items-center gap-3">
           <div className="bg-[#D4AF37]/10 p-2 rounded-lg border border-[#D4AF37]/30">
             <MessageSquare className="text-[#D4AF37]" size={20} />
@@ -519,6 +540,71 @@ export default function SegundoVigilanteView({ members, currentUser }: SegundoVi
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Notifications Tracking Panel */}
+      <div className="bg-[#0f172a] border border-[#D4AF37]/30 rounded-xl overflow-hidden shadow-2xl">
+        <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] border-b border-[#D4AF37]/30 px-6 py-4 flex items-center gap-3">
+          <div className="bg-[#D4AF37]/10 p-2 rounded-lg border border-[#D4AF37]/30">
+            <Eye className="text-[#D4AF37]" size={20} />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-100">
+              Monitoramento de Confirmações
+            </h3>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Acompanhe em tempo real quais oficiais confirmaram a ciência dos alertas enviados na plataforma.
+            </p>
+          </div>
+        </div>
+        <div className="p-6">
+          {notifications.length === 0 ? (
+            <div className="text-center text-gray-500 py-8 text-sm">
+              Nenhuma notificação recente encontrada.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {notifications.map(notif => {
+                const date = new Date(notif.timestamp).toLocaleString("pt-BR");
+                const totalTargets = notif.targets?.length || 0;
+                const readCount = notif.readBy?.length || 0;
+                const allRead = totalTargets > 0 && totalTargets === readCount;
+                
+                return (
+                  <div key={notif.id} className="bg-black/30 border border-[#1e293b] rounded-lg p-4 flex flex-col gap-3">
+                    <div className="flex justify-between items-start">
+                      <div className="text-sm text-gray-300 whitespace-pre-wrap flex-1 mr-4">
+                        <span className="text-[#D4AF37] font-bold text-xs block mb-1">
+                          Enviado em {date}
+                        </span>
+                        {notif.message.length > 100 ? notif.message.substring(0, 100) + '...' : notif.message}
+                      </div>
+                      <div className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${allRead ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                        {allRead ? <Check size={12} /> : <Clock size={12} />}
+                        {readCount} / {totalTargets} Confirmados
+                      </div>
+                    </div>
+                    
+                    <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {notif.targets?.map((targetCim: string, idx: number) => {
+                        const member = members.find(m => m.cim?.toString() === targetCim);
+                        const name = member ? member.nome : `CIM ${targetCim}`;
+                        const isRead = notif.readBy?.includes(targetCim);
+                        
+                        return (
+                          <div key={idx} className={`text-xs px-3 py-2 rounded-lg border flex items-center justify-between ${isRead ? 'bg-emerald-950/20 border-emerald-900/50 text-emerald-400' : 'bg-red-950/20 border-red-900/50 text-red-400'}`}>
+                            <span className="truncate pr-2 font-medium" title={name}>{name}</span>
+                            {isRead ? <Check size={14} className="shrink-0" /> : <Clock size={14} className="shrink-0 opacity-70" />}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
