@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, query, getDocs, where, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
+import { collection, query, getDocs, where, addDoc, serverTimestamp, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { handleFirestoreError, OperationType } from '../lib/errorHandler';
-import { BookOpen, FileText, PlayCircle, Grid, Play, Lock, Compass, Landmark, Upload, Link, X, Download, ShieldAlert, ChevronDown } from 'lucide-react';
+import { BookOpen, FileText, PlayCircle, Grid, Play, Lock, Compass, Landmark, Upload, Link, X, Download, ShieldAlert, ChevronDown, Edit2, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { SessionTimer } from '../components/Layout';
 
@@ -318,6 +318,8 @@ export function ContentPage() {
   const [pranchaFile, setPranchaFile] = useState<File | null>(null);
   const [submittingPrancha, setSubmittingPrancha] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [editingPranchaId, setEditingPranchaId] = useState<string | null>(null);
+  const [deletingPranchaId, setDeletingPranchaId] = useState<string | null>(null);
   const [viewingPdf, setViewingPdf] = useState<ContentItem | null>(null);
 
   const [userNotes, setUserNotes] = useState<{ [itemId: string]: string }>({});
@@ -445,36 +447,54 @@ export function ContentPage() {
         } catch (uploadErr) {
           console.warn("Upload falhou, usando link se disponível:", uploadErr);
           if (!pranchaLink.trim()) {
-            throw new Error("Falha no upload do arquivo e nenhum link alternativo foi fornecido. Verifique se o Storage está ativado no seu Firebase (clique no botão Upgrade no console).");
+            throw new Error("Falha no upload do arquivo e nenhum link alternativo foi fornecido. Verifique se o Storage está ativado no seu Firebase.");
           }
         }
       }
 
-      const newDoc = await addDoc(collection(db, 'requests'), {
-        userId: user.uid,
-        userName: user.nome,
-        tipo: 'Envio de Prancha',
-        titulo: pranchaTitle,
-        numero: pranchaNumero,
-        temaCentral: pranchaTema,
-        simbolosPrincipais: pranchaSimbolos,
-        descricao: pranchaText,
-        arquivoUrl: arquivoUrl || null,
-        status: 'pendente',
-        criadoEm: serverTimestamp()
-      });
-      setPranchas([...pranchas, { 
-        id: newDoc.id, 
-        titulo: pranchaTitle, 
-        numero: pranchaNumero,
-        temaCentral: pranchaTema,
-        simbolosPrincipais: pranchaSimbolos,
-        descricao: pranchaText, 
-        arquivoUrl: arquivoUrl || null, 
-        status: 'pendente', 
-        criadoEm: new Date() 
-      }]);
+      if (editingPranchaId) {
+        const pranchaRef = doc(db, 'requests', editingPranchaId);
+        const updateData: any = {
+          titulo: pranchaTitle,
+          numero: pranchaNumero,
+          temaCentral: pranchaTema,
+          simbolosPrincipais: pranchaSimbolos,
+          descricao: pranchaText,
+        };
+        if (arquivoUrl) {
+          updateData.arquivoUrl = arquivoUrl;
+        }
+        await updateDoc(pranchaRef, updateData);
+        setPranchas(pranchas.map(p => p.id === editingPranchaId ? { ...p, ...updateData } : p));
+      } else {
+        const newDoc = await addDoc(collection(db, 'requests'), {
+          userId: user.uid,
+          userName: user.nome,
+          tipo: 'Envio de Prancha',
+          titulo: pranchaTitle,
+          numero: pranchaNumero,
+          temaCentral: pranchaTema,
+          simbolosPrincipais: pranchaSimbolos,
+          descricao: pranchaText,
+          arquivoUrl: arquivoUrl || null,
+          status: 'pendente',
+          criadoEm: serverTimestamp()
+        });
+        setPranchas([...pranchas, { 
+          id: newDoc.id, 
+          titulo: pranchaTitle, 
+          numero: pranchaNumero,
+          temaCentral: pranchaTema,
+          simbolosPrincipais: pranchaSimbolos,
+          descricao: pranchaText, 
+          arquivoUrl: arquivoUrl || null, 
+          status: 'pendente', 
+          criadoEm: new Date() 
+        }]);
+      }
+      
       setShowPranchaModal(false);
+      setEditingPranchaId(null);
       setPranchaTitle('');
       setPranchaNumero('Pr∴ 01');
       setPranchaTema('');
@@ -487,6 +507,32 @@ export function ContentPage() {
     } finally {
       setSubmittingPrancha(false);
       setUploadProgress(null);
+    }
+  };
+
+  const handleEditPrancha = (prancha: any) => {
+    setEditingPranchaId(prancha.id);
+    setPranchaTitle(prancha.titulo || '');
+    setPranchaNumero(prancha.numero || 'Pr∴ 01');
+    setPranchaTema(prancha.temaCentral || '');
+    setPranchaSimbolos(prancha.simbolosPrincipais || '');
+    setPranchaText(prancha.descricao || '');
+    setPranchaLink(prancha.arquivoUrl || '');
+    setPranchaFile(null);
+    setShowPranchaModal(true);
+  };
+
+  const handleDeletePrancha = async (pranchaId: string) => {
+    if (!confirm("Tem certeza que deseja excluir esta prancha? Esta ação não pode ser desfeita.")) return;
+    
+    setDeletingPranchaId(pranchaId);
+    try {
+      await deleteDoc(doc(db, 'requests', pranchaId));
+      setPranchas(pranchas.filter(p => p.id !== pranchaId));
+    } catch (err: any) {
+      alert("Erro ao excluir prancha: " + err.message);
+    } finally {
+      setDeletingPranchaId(null);
     }
   };
 
@@ -702,7 +748,17 @@ export function ContentPage() {
             <div className="flex flex-col gap-6">
               <div className="flex justify-between items-center sm:flex-row flex-col gap-4">
                 <p className="text-gray-400 text-sm">Aqui estão as pranchas que você enviou para o gestor da sua loja.</p>
-                <button onClick={() => setShowPranchaModal(true)} className="bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-black px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-transform hover:scale-105 shadow-[0_0_15px_rgba(212,175,55,0.3)]">
+                <button onClick={() => {
+                   setEditingPranchaId(null);
+                   setPranchaTitle('');
+                   setPranchaNumero('Pr∴ 01');
+                   setPranchaTema('');
+                   setPranchaSimbolos('');
+                   setPranchaText('');
+                   setPranchaLink('');
+                   setPranchaFile(null);
+                   setShowPranchaModal(true);
+                }} className="bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-black px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-transform hover:scale-105 shadow-[0_0_15px_rgba(212,175,55,0.3)]">
                   <FileText size={18} /> Enviar Prancha
                 </button>
               </div>
@@ -746,13 +802,32 @@ export function ContentPage() {
                              </div>
                           </div>
                         
-                        {prancha.arquivoUrl && (
-                           <div className="mt-4 sm:mt-0 w-full sm:w-auto flex justify-end">
-                             <a href={prancha.arquivoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-bold text-gray-300 bg-[#1e293b]/50 border border-[#1e293b] px-5 py-2 rounded-lg hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition-colors">
-                                <Link size={14} /> Link Anexado
-                             </a>
-                           </div>
-                        )}
+                        <div className="mt-4 sm:mt-0 w-full sm:w-auto flex justify-end gap-2 flex-wrap sm:flex-nowrap">
+                           {prancha.arquivoUrl && (
+                                <a href={prancha.arquivoUrl} target="_blank" rel="noopener noreferrer" title="Link Anexado" className="flex items-center justify-center text-sm font-bold text-gray-300 bg-[#1e293b]/50 border border-[#1e293b] p-2 sm:px-5 sm:py-2 rounded-lg hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition-colors">
+                                   <Link size={14} className="sm:mr-2" /> <span className="hidden sm:inline">Link Anexado</span>
+                                </a>
+                           )}
+                           {(prancha.status === 'pendente' || prancha.status === 'em_analise') && (
+                             <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleEditPrancha(prancha)}
+                                  className="p-2 sm:px-4 sm:py-2 flex items-center justify-center gap-2 rounded-lg border border-[#1e293b] text-gray-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition-all bg-[#1e293b]/50"
+                                  title="Editar"
+                                >
+                                   <Edit2 size={14} /> <span className="hidden sm:inline text-sm">Editar</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDeletePrancha(prancha.id)}
+                                  disabled={deletingPranchaId === prancha.id}
+                                  className="p-2 sm:px-4 sm:py-2 flex items-center justify-center gap-2 rounded-lg border border-[#1e293b] text-red-400 hover:text-red-300 hover:border-red-500/50 transition-all bg-[#1e293b]/50 disabled:opacity-50"
+                                  title="Excluir"
+                                >
+                                   <Trash2 size={14} /> <span className="hidden sm:inline text-sm">{deletingPranchaId === prancha.id ? 'Excluindo...' : 'Excluir'}</span>
+                                </button>
+                             </div>
+                           )}
+                        </div>
                      </div>
                   ))}
                 </div>
@@ -779,8 +854,8 @@ export function ContentPage() {
       {showPranchaModal && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-[#0F172A] border border-[#1e293b] rounded-2xl p-8 max-w-xl w-full">
-            <h2 className="text-2xl font-semibold text-[#D4AF37] mb-2 font-sans">Enviar Nova Prancha</h2>
-            <p className="text-gray-400 mb-6 text-sm">Preencha os dados da sua prancha para análise do Gestor.</p>
+            <h2 className="text-2xl font-semibold text-[#D4AF37] mb-2 font-sans">{editingPranchaId ? 'Editar Prancha' : 'Enviar Nova Prancha'}</h2>
+            <p className="text-gray-400 mb-6 text-sm">{editingPranchaId ? 'Altere os dados da sua prancha para análise.' : 'Preencha os dados da sua prancha para análise do Gestor.'}</p>
             
             <form onSubmit={handleSendPrancha} className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -848,6 +923,7 @@ export function ContentPage() {
                     <span className="text-sm">{pranchaFile ? pranchaFile.name : 'Anexar Arquivo'}</span>
                     <input type="file" accept=".pdf,.doc,.docx,.txt" className="hidden" onChange={(e) => setPranchaFile(e.target.files ? e.target.files[0] : null)} />
                   </label>
+                  <p className="text-xs text-gray-500 mt-2">Formatos: PDF, DOC, DOCX. Max: 10MB. {editingPranchaId ? 'Se selecionado, este arquivo substituirá o anterior.' : ''}</p>
                </div>
                <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">OU Link Externo (Google Drive, Dropbox, etc)</label>
@@ -864,9 +940,9 @@ export function ContentPage() {
                </div>
                
                <div className="flex justify-end gap-3 mt-4">
-                  <button type="button" onClick={() => setShowPranchaModal(false)} className="px-5 py-2.5 rounded-lg text-gray-400 hover:bg-[#1e293b] transition-colors font-medium">Cancelar</button>
+                  <button type="button" onClick={() => { setShowPranchaModal(false); setEditingPranchaId(null); }} className="px-5 py-2.5 rounded-lg text-gray-400 hover:bg-[#1e293b] transition-colors font-medium">Cancelar</button>
                   <button type="submit" disabled={submittingPrancha || !pranchaTitle} className="bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-black px-6 py-2.5 rounded-lg font-semibold flex items-center gap-2 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed">
-                     {submittingPrancha ? (uploadProgress ? `Enviando (${uploadProgress}%)...` : 'Enviando...') : 'Enviar Prancha'}
+                     {submittingPrancha ? (uploadProgress ? `Enviando (${uploadProgress}%)...` : 'Enviando...') : (editingPranchaId ? 'Salvar Alterações' : 'Enviar Prancha')}
                   </button>
                </div>
             </form>

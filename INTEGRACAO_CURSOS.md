@@ -1,37 +1,44 @@
-# Estudo de Integração: G∴O∴M∴A∴U∴ & Plataforma de Cursos Externa
+# Evolução do EAD: Arquitetura Nativa (Mestre-IA) G∴O∴M∴A∴U∴
 
-**Data:** 11/05/2026
-**Status:** Aguardando comando "Integração"
+**Data de Atualização:** 2026-06-26
+**Status:** Módulo de IA Nativo Implementado. Integração Externa (Iframe) Cancelada.
 
-## 1. O Cenário
-O proprietário possui duas ferramentas distintas no ecossistema Gemini AI Studio:
-1.  **Plataforma Maçônica (Esta):** Gestão de membros, evolução, pranchas e administrativo.
-2.  **Gerador de Cursos (Externa):** Criação e exibição de cursos dinâmicos.
-    - URL Root: `https://ais-pre-ez63mpaawuwnam5r5jq3m7-106517683243.us-east5.run.app/library`
-    - URL Curso Exemplo: `https://ais-pre-ez63mpaawuwnam5r5jq3m7-106517683243.us-east5.run.app/course/UohPegsEPV83KJBrtTqv`
+## 1. O Cenário Inicial vs Decisão Final
 
-## 2. Necessidades Detectadas
-- Exibir os cursos da ferramenta externa dentro desta plataforma maçônica.
-- Impedir que o aluno acesse menus ou outras áreas da ferramenta de cursos (foco apenas no player do curso).
-- Sincronizar o progresso: Cursos concluídos na ferramenta externa devem impactar automaticamente a evolução (Checklist de Grau) do membro nesta plataforma.
-- Filtrar cursos por Grau Maçônico.
+Originalmente (conforme doc de 11/05/2026), havia uma proposta de integrar uma plataforma de cursos externa via `<iframe>` ou Shared Database. No entanto, por razões de **Segurança Maçônica (Triplo Portal)**, **Isolamento de Dados (Privacy)** e **Experiência do Usuário Centralizada**, a decisão de engenharia foi pivotar para uma solução **100% nativa (In-House)**.
 
-## 3. Estratégias Propostas (Resumo para Decisão)
+Ao invés de conectar com um sistema terceiro, foi construído do zero o motor **Gerador de Cursos (Mestre-IA)** diretamente dentro da Área do Gestor da Plataforma GOMAU.
 
-### Opção A: Embedding via Iframe com Parâmetros (Lightweight)
-- **Como:** Inserir o curso via `<iframe>` usando uma rota customizada na ferramenta externa (ex: `/course/:id?mode=embed`) que esconda barras de navegação via CSS.
-- **Prós:** Visualmente integrado, rápido de implementar.
-- **Contras:** Sincronização de progresso depende de disparos de Webhook ou compartilhamento de Firestore.
+## 2. A Nova Arquitetura de EAD Nativo
 
-### Opção B: Integração via Shared Database (Recomendada)
-- **Como:** Como ambas as ferramentas pertencem ao mesmo dono, podemos configurar a ferramenta Maçônica para ler diretamente a coleção `courses` e `userProgress` do projeto Firebase da ferramenta de cursos.
-- **Prós:** Sincronização em tempo real (Real-time). O membro termina o curso lá e o checklist aqui marca "concluído" instantaneamente.
-- **Contras:** Requer configuração de multitenancy ou permissões Cross-Project no Google Cloud.
+A plataforma agora possui seu próprio LMS (Learning Management System) integrado organicamente ao Firestore e autenticação dos irmãos.
 
-### Opção C: API de Sincronização (Workflow)
-- **Como:** A ferramenta de cursos dispara um evento para a ferramenta Maçônica quando um curso é finalizado.
-- **Prós:** Arquitetura limpa.
-- **Contras:** Maior esforço de desenvolvimento em ambas as pontas.
+### 2.1. O Motor Generativo de Cursos (CourseGenerator.tsx)
 
-## 4. Próximos Passos
-Ao receber o comando **"Integração"**, o assistente irá sugerir o plano técnico detalhado para a **Opção B**, garantindo que a carteira de identidade e a evolução do membro sejam o centro da experiência.
+- O Gestor acessa a aba EAD/Cursos na Área Administrativa.
+- Preenche os parâmetros: **Tema Místico** e **Grau Mínimo** de restrição.
+- A plataforma aciona diretamente a API `@google/genai` (Modelo `gemini-3.1-pro-preview`).
+- **Prompt Estruturado (JSON Mode):** O Mestre-IA atua gerando todo o currículo do curso: Título, Carga Horária, Lista de Aulas (renderizadas no front com suporte pleno a Markdown para formatações ocultistas/simbólicas) e um Quiz avaliativo final de 5 perguntas (array options e correctIndex).
+- O retorno JSON é instantaneamente salvo na coleção `courses` do Firestore.
+
+### 2.2. A Visão do Obreiro (CursosExternos.tsx e CursoDetail.tsx)
+
+- No Dashboard ou Menu lateral, o irmão acessa a aba "EAD".
+- A interface de listagem (`CursosExternos.tsx`) oculta os cursos que requerem um grau superior ao do irmão (Filtro por `minGrau`).
+- Ao entrar num curso (`CursoDetail.tsx`), a UI se divide em Sidebar (Aulas) e Body (Conteúdo Markdown).
+- Botões de "Marcar como Concluída" avançam o progresso, salvando no array `aulasConcluidas` dentro da coleção `courseProgress`.
+
+### 2.3. Sincronização Progressiva e Gamificação
+
+- Como os dados rodam no mesmo ecossistema (Firebase), quando o aluno finaliza o Quiz e tira a nota de aprovação (min. 7), o documento `courseProgress` tem seu `status` alterado para `concluido`.
+- Automaticamente, o Dashboard principal e o perfil do usuário leem esse progresso, e se houver Regras de Evolução (para passagem de grau) que exijam "N Cursos Concluídos", isso já é computado nativamente.
+- O Histórico/Timeline (`HistoryPage`) também registra a glória da conclusão.
+
+## 3. Benefícios da Solução Nativa Adotada
+
+- **Zero Atrito:** Sem necessidade de Webhooks ou CORS. Tudo transita via Firestore SDK.
+- **Fidelidade Visual:** A UI EAD respeita a estética Imperial Midnight (Black & Gold) original da ferramenta, mantendo imersão total.
+- **Performance:** Os cursos são cacheados e carregados muito mais rapidamente do que via Iframes (onde perderíamos controle de navegação e UX mobile).
+- **Gamificação Segura:** Sem risco de APIs forjadas atualizando o progresso; as Security Rules do Firestore protegem o documento `courseProgress`.
+
+**Fim do arquivo original de Integração:** Este módulo superou a proposta anterior e hoje se configura como um dos pilares mais inovadores da EdTech maçônica global.

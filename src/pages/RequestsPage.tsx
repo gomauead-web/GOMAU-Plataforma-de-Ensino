@@ -18,6 +18,9 @@ interface RequestItem {
   analisadoEm?: any;
   comentarioGestor?: string | null;
   arquivoUrl?: string | null;
+  numero?: string;
+  temaCentral?: string;
+  simbolosPrincipais?: string;
 }
 
 export function RequestsPage() {
@@ -119,12 +122,25 @@ export function RequestsPage() {
 
       if (editingId) {
         const reqRef = doc(db, 'requests', editingId);
-        await updateDoc(reqRef, {
-          tipo,
+        
+        const updatePayload: any = {
+          tipo: tipo === 'Prancha (Resumo/Estudo)' ? 'Envio de Prancha' : tipo,
           descricao,
-          arquivoUrl: arquivoUrl || null,
           updatedAt: serverTimestamp()
-        });
+        };
+        
+        if (arquivoUrl) {
+          updatePayload.arquivoUrl = arquivoUrl;
+        }
+
+        if (tipo === 'Prancha (Resumo/Estudo)') {
+          updatePayload.numero = pranchaNumero;
+          updatePayload.temaCentral = pranchaTema;
+          updatePayload.simbolosPrincipais = pranchaSimbolos;
+          updatePayload.titulo = 'Envio de Prancha';
+        }
+        
+        await updateDoc(reqRef, updatePayload);
         
         await addDoc(collection(db, 'history'), {
            userId: user.uid,
@@ -207,9 +223,18 @@ export function RequestsPage() {
   };
 
   const handleEdit = (req: RequestItem) => {
-    setTipo(req.tipo);
+    setTipo(req.tipo === 'Envio de Prancha' ? 'Prancha (Resumo/Estudo)' : req.tipo);
     setDescricao(req.descricao);
     setPranchaLink(req.arquivoUrl || '');
+    if (req.tipo === 'Envio de Prancha') {
+      setPranchaNumero(req.numero || 'Pr∴ 01');
+      setPranchaTema(req.temaCentral || '');
+      setPranchaSimbolos(req.simbolosPrincipais || '');
+    } else {
+      setPranchaNumero('Pr∴ 01');
+      setPranchaTema('');
+      setPranchaSimbolos('');
+    }
     setEditingId(req.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

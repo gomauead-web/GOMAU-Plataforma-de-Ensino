@@ -385,6 +385,30 @@
         "dateStr": { "type": "string" }
       },
       "required": ["toUserId", "fromUserId", "fromUserName", "message", "dateStr"]
+    },
+    "AdminPermission": {
+      "title": "Admin Permission",
+      "description": "Delegated folder access permissions for specific masonic CIMs",
+      "type": "object",
+      "properties": {
+        "cim": { "type": "string" },
+        "pasta": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["cim", "pasta"]
+    },
+    "OfficersNotification": {
+      "title": "Officers Notification",
+      "description": "Reminders and broadcast messages sent within the administrative folder",
+      "type": "object",
+      "properties": {
+        "targets": { "type": "array", "items": { "type": "string" } },
+        "message": { "type": "string" },
+        "sender": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "readBy": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["targets", "message", "sender", "timestamp"]
     }
   },
   "firestore": {
@@ -475,6 +499,14 @@
     "/birthday_messages/{messageId}": {
       "schema": { "$ref": "#/entities/BirthdayMessage" },
       "description": "Messages sent to birthday celebrants."
+    },
+    "/adminPermissions/{permissionId}": {
+      "schema": { "$ref": "#/entities/AdminPermission" },
+      "description": "Delegated permissions for admin panel."
+    },
+    "/officersNotifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/OfficersNotification" },
+      "description": "Platform reminders/notifications sent to designated officers."
     }
   }
 }

@@ -96,7 +96,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const userEmail = (user?.email || auth.currentUser?.email || '').toLowerCase().trim();
   const isOwner = ['gomau.ead@gmail.com', 'calepi@gmail.com', 'calepe@gmail.com'].includes(userEmail);
-  const canAccessGestor = isMaster || user?.role === 'gestor' || user?.cim === '3330' || user?.cim === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail);
+  const canAccessGestor = isMaster || user?.role === 'gestor' || user?.cim === '3330' || user?.cim === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user?.delegatedPastas && user.delegatedPastas.length > 0);
 
   const navItems = [
     { icon: Home, label: 'Dashboard', path: '/' },
@@ -108,7 +108,6 @@ export function Layout({ children }: { children: ReactNode }) {
     { icon: FileText, label: 'Solicitações', path: '/requests' },
     { icon: Calendar, label: 'Calendário', path: '/calendar' },
     { icon: History, label: 'Histórico', path: '/history' },
-    { icon: DollarSign, label: 'Tesouraria', path: '/mensalidade' },
   ];
 
   const adminItems = [
@@ -234,16 +233,6 @@ export function Layout({ children }: { children: ReactNode }) {
           <span className="text-[10px] font-medium">Estudos</span>
         </NavLink>
         <NavLink
-          to="/mensalidade"
-          className={({ isActive }) => cn(
-            "flex flex-col items-center justify-center flex-1 py-1 gap-1 transition-all",
-            isActive ? "text-[#D4AF37]" : "text-gray-500"
-          )}
-        >
-          <DollarSign size={18} />
-          <span className="text-[10px] font-medium">Tesouraria</span>
-        </NavLink>
-        <NavLink
           to="/cadeia-uniao"
           className={({ isActive }) => cn(
             "flex flex-col items-center justify-center flex-1 py-1 gap-1 transition-all",
@@ -313,7 +302,6 @@ export function Layout({ children }: { children: ReactNode }) {
                   { icon: FileText, label: 'Solicitações', path: '/requests' },
                   { icon: Calendar, label: 'Calendário', path: '/calendar' },
                   { icon: History, label: 'Histórico', path: '/history' },
-                  { icon: DollarSign, label: 'Tesouraria', path: '/mensalidade' },
                   { icon: User, label: 'Meu Perfil', path: '/profile' }
                 ].map((item) => {
                   const isActive = location.pathname === item.path;

@@ -35,6 +35,7 @@ import {
   BarChart3,
   Library,
   AlertTriangle,
+  Shield,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { db, storage, auth } from "../../lib/firebase";
@@ -63,6 +64,8 @@ import { GestorLibrary } from "../../components/gestor/GestorLibrary";
 import { GestorTreasury } from "../../components/gestor/GestorTreasury";
 import { GestorValuation } from "../../components/gestor/GestorValuation";
 import { DataManagement } from "../../components/gestor/DataManagement";
+import AdminPermissionsManager from "../../components/gestor/AdminPermissionsManager";
+import SegundoVigilanteView from "../../components/gestor/SegundoVigilanteView";
 import * as XLSX from "xlsx";
 
 import { SessionTimer } from "../../components/Layout";
@@ -87,9 +90,17 @@ export function GestorDashboard() {
       )) &&
     user?.role !== "gestor" &&
     !isOwner;
-  const [activeTab, setActiveTab] = useState(
-    isRestrictedFaltas ? "solicitacoes" : "dashboard",
-  );
+
+  const isMaster = ["gomau.ead@gmail.com", "calepi@gmail.com", "calepe@gmail.com"].includes(userEmail) || user?.role === "gestor";
+  const isDelegatedUser = !isMaster && user?.role !== 'gestor' && !isRestrictedFaltas && user?.delegatedPastas && user.delegatedPastas.length > 0;
+
+  const initialActiveTab = isRestrictedFaltas
+    ? "solicitacoes"
+    : isDelegatedUser
+    ? "segundo_vigilante"
+    : "dashboard";
+
+  const [activeTab, setActiveTab] = useState(initialActiveTab);
 
   // Filtros de Data para Relatório de Faltas
   const [dataInicioRelatorio, setDataInicioRelatorio] = useState("");
@@ -240,6 +251,41 @@ export function GestorDashboard() {
   const [members, setMembers] = useState<any[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [viewingMember, setViewingMember] = useState<any | null>(null);
+  const [viewingMemberLastAccess, setViewingMemberLastAccess] = useState<any>(null);
+  const [viewingMemberLogs, setViewingMemberLogs] = useState<any[]>([]);
+
+  const handleViewMember = async (member: any) => {
+    setViewingMember(member);
+    setViewingMemberLastAccess(null);
+    setViewingMemberLogs([]);
+    try {
+      let qLogs;
+      if (member.uid) {
+         qLogs = query(
+           collection(db, "accessLogs"),
+           where("uid", "==", member.uid),
+           orderBy("timestamp", "desc"),
+           limit(10)
+         );
+      } else {
+         qLogs = query(
+           collection(db, "accessLogs"),
+           where("cim", "==", member.cim || member.CIM || ""),
+           orderBy("timestamp", "desc"),
+           limit(10)
+         );
+      }
+      const snap = await getDocs(qLogs);
+      if (!snap.empty) {
+        const logs = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
+        setViewingMemberLastAccess(logs[0]);
+        setViewingMemberLogs(logs);
+      }
+    } catch (e) {
+      console.warn("Erro ao buscar logs de acesso", e);
+    }
+  };
+
   const [importing, setImporting] = useState(false);
   const [editingMember, setEditingMember] = useState<any | null>(null);
   const [updatingMember, setUpdatingMember] = useState(false);
@@ -395,10 +441,8 @@ export function GestorDashboard() {
     { id: "solicitacoes", label: "Aprovações", icon: CheckCircle },
     { id: "eventos", label: "Eventos", icon: Calendar },
     { id: "membros", label: "Membros", icon: Users },
+    { id: "segundo_vigilante", label: "2° Vigilante", icon: Shield },
     { id: "forum", label: "Fórum / Instrutores", icon: MessageSquare },
-    ...(isOwner
-      ? [{ id: "tesouraria", label: "Tesouraria", icon: DollarSign }]
-      : []),
     { id: "configuracoes", label: "Configurações", icon: Settings },
     ...(isOwner
       ? [{ id: "avaliacao", label: "Valuation do Sistema", icon: BarChart3 }]
@@ -407,6 +451,13 @@ export function GestorDashboard() {
 
   const tabs = isRestrictedFaltas
     ? baseTabs.filter((t) => t.id === "solicitacoes")
+    : isDelegatedUser
+    ? baseTabs.filter((t) => {
+        return (user?.delegatedPastas || []).some((pasta: string) => {
+          const mappedId = pasta.toLowerCase().includes("2") ? "segundo_vigilante" : pasta.toLowerCase().replace(/\s+/g, "_");
+          return t.id === mappedId;
+        });
+      })
     : baseTabs;
 
   useEffect(() => {
@@ -3975,6 +4026,26 @@ export function GestorDashboard() {
                                     {viewingMember.email}
                                   </span>
                                 </div>
+                                <div className="flex flex-col">
+                                  <span className="text-[10px] text-[#D4AF37] uppercase font-bold">
+                                    Último Acesso
+                                  </span>
+                                  <span className="text-gray-300 text-sm font-medium">
+                                    {viewingMemberLastAccess?.timestamp 
+                                      ? new Date(
+                                          viewingMemberLastAccess.timestamp.seconds * 1000 || 
+                                          (viewingMemberLastAccess.timestamp.toDate && viewingMemberLastAccess.timestamp.toDate().getTime()) || 
+                                          Date.now()
+                                        ).toLocaleString('pt-BR') 
+                                      : viewingMember.lastLogin 
+                                        ? new Date(
+                                            viewingMember.lastLogin.seconds * 1000 || 
+                                            (viewingMember.lastLogin.toDate && viewingMember.lastLogin.toDate().getTime()) || 
+                                            Date.now()
+                                          ).toLocaleString('pt-BR')
+                                        : "Nunca acessou"}
+                                  </span>
+                                </div>
                               </div>
                             </div>
 
@@ -4080,6 +4151,45 @@ export function GestorDashboard() {
                               <span className="text-sm text-gray-500 italic">
                                 Nenhuma condecoração atribuída ainda.
                               </span>
+                            )}
+                          </div>
+
+                          {/* Histórico de Acessos */}
+                          <div className="bg-[#0A0E1A] p-6 rounded-2xl border border-[#D4AF37]/20 mt-6">
+                            <h4 className="text-base font-bold text-[#D4AF37] mb-4 flex items-center gap-2">
+                              <Key size={18} /> Histórico de Acessos Recentes
+                            </h4>
+                            {!viewingMemberLogs || viewingMemberLogs.length === 0 ? (
+                              <p className="text-sm text-gray-500 italic">
+                                Nenhum log de acesso recente encontrado para este Irmão.
+                              </p>
+                            ) : (
+                              <div className="space-y-3">
+                                {viewingMemberLogs.map((log: any, idx: number) => (
+                                  <div
+                                    key={log.id || idx}
+                                    className="text-xs flex justify-between border-b border-[#1e293b] pb-2 items-center"
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="text-gray-300">
+                                        {log.action || "Login realizado"}
+                                      </span>
+                                      <span className="text-gray-500 font-mono text-[10px]">
+                                        {log.ip || "IP Oculto"}
+                                      </span>
+                                    </div>
+                                    <span className="text-[#D4AF37] font-mono">
+                                      {log.timestamp
+                                        ? new Date(
+                                            log.timestamp.seconds * 1000 ||
+                                            (log.timestamp.toDate && log.timestamp.toDate().getTime()) ||
+                                            Date.now()
+                                          ).toLocaleString("pt-BR")
+                                        : "---"}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
                             )}
                           </div>
 
@@ -5260,7 +5370,7 @@ export function GestorDashboard() {
                                 <td className="py-4 px-4 text-right">
                                   <div className="flex justify-end gap-1">
                                     <button
-                                      onClick={() => setViewingMember(member)}
+                                      onClick={() => handleViewMember(member)}
                                       className="p-1 sm:p-2 text-gray-500 hover:text-[#D4AF37] hover:bg-[#D4AF37]/10 rounded-lg transition-all"
                                       title="Visualizar ficha completa"
                                     >
@@ -6751,8 +6861,14 @@ export function GestorDashboard() {
 
           {activeTab === "avaliacao" && <GestorValuation />}
 
+          {activeTab === "segundo_vigilante" && (
+            <SegundoVigilanteView members={members} currentUser={user} />
+          )}
+
           {activeTab === "configuracoes" && (
             <div className="flex flex-col gap-8">
+              <AdminPermissionsManager members={members} />
+
               <DataManagement />
 
               <div className="flex justify-between items-center mb-6">

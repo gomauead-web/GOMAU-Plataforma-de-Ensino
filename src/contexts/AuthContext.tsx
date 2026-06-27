@@ -43,6 +43,7 @@ export interface AppUser {
   frequencia?: number;
   visitas?: number;
   condecoracoes?: string[];
+  delegatedPastas?: string[];
 }
 
 interface AuthContextType {
@@ -135,8 +136,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const dbUser = docSnap.data();
                 const role = (isMaster || dbUser.role === 'gestor') ? 'gestor' : 'membro';
                 
-                updateUserWithCache({ email: cleanEmail || dbUser.email || dbUser.emailVinculado || '', ...dbUser, uid: firebaseUser.uid, role } as AppUser);
-                setLoading(false);
+                const baseUser = { email: cleanEmail || dbUser.email || dbUser.emailVinculado || '', ...dbUser, uid: firebaseUser.uid, role } as AppUser;
+                
+                if (dbUser.cim) {
+                  const cimStr = dbUser.cim.toString().trim();
+                  const qDelegations = query(collection(db, 'adminPermissions'), where('cim', '==', cimStr));
+                  getDocs(qDelegations).then((delegationSnap) => {
+                    const delegatedPastas = delegationSnap.docs.map(d => d.data().pasta);
+                    updateUserWithCache({ ...baseUser, delegatedPastas });
+                    setLoading(false);
+                  }).catch((err) => {
+                    console.warn("Erro ao buscar delegações:", err);
+                    updateUserWithCache({ ...baseUser, delegatedPastas: [] });
+                    setLoading(false);
+                  });
+                } else {
+                  updateUserWithCache({ ...baseUser, delegatedPastas: [] });
+                  setLoading(false);
+                }
               }
             };
 
@@ -229,8 +246,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (docSnap.exists()) {
                   const dbUser = docSnap.data();
                   const role = (isMaster || dbUser.role === 'gestor') ? 'gestor' : 'membro';
-                  updateUserWithCache({ email: cleanEmail || dbUser.email || dbUser.emailVinculado || '', ...dbUser, uid: firebaseUser.uid, role } as AppUser);
-                  setLoading(false);
+                  const baseUser = { email: cleanEmail || dbUser.email || dbUser.emailVinculado || '', ...dbUser, uid: firebaseUser.uid, role } as AppUser;
+
+                  if (dbUser.cim) {
+                    const cimStr = dbUser.cim.toString().trim();
+                    const qDelegations = query(collection(db, 'adminPermissions'), where('cim', '==', cimStr));
+                    getDocs(qDelegations).then((delegationSnap) => {
+                      const delegatedPastas = delegationSnap.docs.map(d => d.data().pasta);
+                      updateUserWithCache({ ...baseUser, delegatedPastas });
+                      setLoading(false);
+                    }).catch((err) => {
+                      console.warn("Erro ao buscar delegações:", err);
+                      updateUserWithCache({ ...baseUser, delegatedPastas: [] });
+                      setLoading(false);
+                    });
+                  } else {
+                    updateUserWithCache({ ...baseUser, delegatedPastas: [] });
+                    setLoading(false);
+                  }
                 }
               }, (err: any) => {
                 console.error("Firestore onSnapshot Error:", err);
@@ -252,6 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   rito: 'Emulação',
                   cargo: 'Mestre Instalado',
                   cim: '',
+                  delegatedPastas: [],
                   createdAt: serverTimestamp() as any
                 };
                 try {

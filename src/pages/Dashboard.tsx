@@ -18,6 +18,7 @@ import {
   Sparkles,
   MessageSquare,
   Download,
+  Shield,
 } from "lucide-react";
 import {
   collection,
@@ -30,6 +31,9 @@ import {
   getDoc,
   addDoc,
   serverTimestamp,
+  onSnapshot,
+  updateDoc,
+  arrayUnion,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useNavigate } from "react-router-dom";
@@ -62,6 +66,52 @@ export function Dashboard() {
     Record<string, boolean>
   >({});
   const [receivedMessages, setReceivedMessages] = useState<any[]>([]);
+  const [officerAlerts, setOfficerAlerts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!user?.cim) return;
+    const userCimStr = user.cim.toString().trim();
+    if (!userCimStr) return;
+
+    const q = query(
+      collection(db, "officersNotifications"),
+      orderBy("timestamp", "desc")
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snap) => {
+        const allAlerts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const active = allAlerts.filter((alert: any) => {
+          const targets = alert.targets || [];
+          const readBy = alert.readBy || [];
+          return targets.includes(userCimStr) && !readBy.includes(userCimStr);
+        });
+        setOfficerAlerts(active);
+      },
+      (err) => {
+        console.warn("Erro ao carregar alertas de oficiais:", err);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user?.cim]);
+
+  const handleAcknowledgeAlert = async (alertId: string) => {
+    if (!user?.cim) return;
+    const userCimStr = user.cim.toString().trim();
+    try {
+      const alertRef = doc(db, "officersNotifications", alertId);
+      await updateDoc(alertRef, {
+        readBy: arrayUnion(userCimStr)
+      });
+      setOfficerAlerts(prev => prev.filter(a => a.id !== alertId));
+      toast.success("Alerta confirmado com sucesso!");
+    } catch (e) {
+      console.error("Erro ao confirmar alerta:", e);
+      toast.error("Erro ao confirmar alerta.");
+    }
+  };
 
   const [settings, setSettings] = useState<any>(null);
   const [loadingDecCriteria, setLoadingDecCriteria] = useState(true);
@@ -688,6 +738,46 @@ export function Dashboard() {
           </button>
         </div>
       </header>
+
+      {/* Alertas de Oficiais da Loja */}
+      {officerAlerts.length > 0 && (
+        <div id="officers-alerts-container" className="flex flex-col gap-4 mb-8 mt-4 animate-fade-in">
+          {officerAlerts.map((alert) => (
+            <div
+              key={alert.id}
+              className="bg-gradient-to-r from-amber-950/20 to-[#0F172A] border-l-4 border-[#D4AF37] p-5 rounded-r-xl border border-y-[#D4AF37]/30 border-r-[#D4AF37]/30 shadow-lg shadow-[#D4AF37]/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            >
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37] flex items-center justify-center shrink-0 mt-0.5 shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                  <Shield size={18} className="animate-pulse" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-[#D4AF37] tracking-wider uppercase">
+                      {alert.sender || "Oficial ∴"}
+                    </span>
+                    <span className="text-[10px] text-gray-500 font-medium">
+                      • {alert.timestamp ? new Date(alert.timestamp).toLocaleDateString("pt-BR") + " " + new Date(alert.timestamp).toLocaleTimeString("pt-BR", {hour: '2-digit', minute:'2-digit'}) : "Agora"}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-black text-white mt-1 uppercase tracking-wide">
+                    Você tem uma convocação / escala!
+                  </h3>
+                  <p className="text-xs text-gray-300 mt-1.5 whitespace-pre-line leading-relaxed font-medium">
+                    {alert.message}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleAcknowledgeAlert(alert.id)}
+                className="shrink-0 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-black font-black px-4 py-2 rounded-lg text-[11px] uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-md shadow-[#D4AF37]/10 cursor-pointer self-end sm:self-center"
+              >
+                Ciente & Confirmar
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Quadro de Aniversário do Próprio Membro (Temporário para data correta) */}
       {hasBirthdayToday && (
