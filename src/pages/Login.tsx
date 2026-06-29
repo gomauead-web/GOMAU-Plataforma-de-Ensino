@@ -5,6 +5,7 @@ import { auth, db } from '../lib/firebase';
 import { LogIn, Shield, Key, UserCheck, HelpCircle, Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { MASTER_ADMINS } from '../constants';
 
 type LoginPhase = 'google' | 'age' | 'cpf' | 'word';
 
@@ -210,15 +211,20 @@ export function Login() {
       setError(null);
       sessionStorage.setItem('ritual_completed', 'true');
 
-      // Registrar o acesso do usuário no banco
+      // Registrar o acesso do usuário no banco (proteção de tokens: não logar acessos de owners)
       try {
-        await addDoc(collection(db, 'accessLogs'), {
-          cim: userCim,
-          nome: tempUser.nome || user?.nome || 'Desconhecido',
-          email: tempUser.email || user?.email || '',
-          uid: tempUser.uid || user?.uid || '',
-          timestamp: serverTimestamp()
-        });
+        const currentUserEmail = (tempUser.email || user?.email || '').toLowerCase().trim();
+        const isMaster = MASTER_ADMINS.includes(currentUserEmail);
+        
+        if (!isMaster) {
+          await addDoc(collection(db, 'accessLogs'), {
+            cim: userCim,
+            nome: tempUser.nome || user?.nome || 'Desconhecido',
+            email: tempUser.email || user?.email || '',
+            uid: tempUser.uid || user?.uid || '',
+            timestamp: serverTimestamp()
+          });
+        }
       } catch (logErr) {
         console.warn("Erro ao registrar accessLog:", logErr);
       }

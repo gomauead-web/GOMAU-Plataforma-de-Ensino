@@ -235,6 +235,9 @@ Ao fazer login com a conta Google, o sistema exige:
 
 ---
 
+## Documentação Expandida
+- **DOCUMENTACAO_DETALHADA_SISTEMA.md**: Para um raio-X completo, contendo o mapeamento exaustivo tela a tela, regras de negócio minuciosas (Bastidores, Regras Ocultas, Precedências), consulte este arquivo recém-gerado.
+
 ## 5. Changelog e Histórico de Evolução
 
 - **2026-06-07 (Módulo Multi-Loja Avançado, Mensalidades Customizáveis por Oficinas e Atualização no Valuation):**
@@ -503,6 +506,11 @@ Ao fazer login com a conta Google, o sistema exige:
   5. **Heartbeat Imediato**: O sistema agora registra a presença do usuário no exato momento do login, eliminando o atraso de 2 minutos que existia anteriormente.
   6. **Clicks Interativos**: O contador de usuários online abre um modal detalhado com Nome, Grau e CIM de cada Ir∴ conectado, facilitando a verificação de quem está ativo.
   7. **Interface Limpa**: Removidas estatísticas redundantes da aba de Membros, focando aquela tela exclusivamente no gerenciamento e edição de cadastros.
+- **2026-06-27 (Update - Security Audit & Otimização de Performance):**
+  1. **Fechamento de Brecha Global**: Auditoria avançada de segurança (OWASP) identificou e corrigiu o "Global Safety Net" no `firestore.rules` que expunha o banco de dados. Regras estritas de leitura/escrita foram impostas.
+  2. **Refatoração de Performance no React**: Aplicado `useMemo` na camada de autenticação (`AuthContext.tsx`) para evitar renderizações cíclicas excessivas, reduzindo o consumo de memória (prevenção de memory leaks).
+  3. **Proteção Anti-Custos e DB Queries**: Aplicado limites de leituras em painéis pesados (como telemetria) para blindagem financeira de chamadas Firestore.
+  4. **Atualização Oficial do Valuation**: Incorporação da Auditoria de Segurança, valorada em R$ 10.500,00, elevando o **Valor Global Estimado (Valuation) da Plataforma para R$ 193.500,00**.
 - **2026-05-15 (Earlier Today):** **Integridade de Dados e Combate à Duplicidade**:
   1. **Anti-Duplicidade de Importação**: O sistema de importação de Excel foi reestruturado para usar o e-mail do Ir∴ como identificador único (ID) do documento Firestore. Isso impede que re-importar a mesma planilha crie registros duplicados aleatórios.
   2. **Autolimpeza Pós-Login**: Reforçado o mecanismo de `AuthContext` que detecta se um usuário possui múltiplos registros (e-mail vs UID). Agora, ao logar, o sistema migra os dados para o oficial e apaga automaticamente todos os registros órfãos ou duplicados encontrados.
@@ -528,6 +536,10 @@ Ao fazer login com a conta Google, o sistema exige:
 - **2026-06-27 (Update - SLA Monitoramento Real-Time de Oficiais):**
   1. **Monitoramento Real-Time (SLA)**: Adicionado painel de acompanhamento em tempo real no Dashboard do 2º Vigilante. O sistema agora mapeia e conta sincronicamente quais oficiais já leram/confirmaram as convocações e alertas, dividindo visualmente a lista entre "Lidos (Verdes)" e "Pendentes (Vermelhos)" para acompanhamento e cobrança antes de acionar os suplentes.
   2. **Atualização Oficial do Valuation**: Incorporação do módulo de rastreamento síncrono de notificações de oficiais (SLA), valorado em R$ 5.500,00. Isso eleva oficialmente o **Valor Global Estimado (Valuation) da Plataforma para R$ 175.000,00**.
+- **2026-06-27 (Update - Módulo de Telemetria & Engajamento):**
+  1. **Dashboard Analítico (Zero-Cost Reads)**: Criação de uma aba de Telemetria nativa no painel de Gestão. Utiliza funções modernas do Firebase (`getCountFromServer`) para extrair a métrica de acessos Totais, Mensais, Semanais e Diários custando apenas 1 leitura no banco para cada contagem (Extrema eficiência de custos).
+  2. **Ranking de Engajamento e Gráficos**: Implementado o motor de ranqueamento dos "5 Irmãos Mais Ativos" e um gráfico visual de tendências de acesso (utilizando `recharts`) nos últimos 30 dias.
+  3. **Atualização Oficial do Valuation**: Inclusão do módulo de Telemetria Avançada valorado em R$ 8.000,00, elevando o **Valor Global Estimado (Valuation) da Plataforma para R$ 183.000,00**.
 - **2026-06-25:** Adicionada a funcionalidade de consulta de **Último Acesso e Histórico Recente de Acessos** diretamente na ficha do Membro, dentro do modal "Ver Detalhes" no painel de Gerenciamento de Membros (Área do Gestor). Essa nova funcionalidade busca automaticamente no registro do membro ou nos `accessLogs` os últimos 10 logins do Irmão, exibindo-os numa lista organizada dentro da visualização da ficha, facilitando o acompanhamento de frequência na plataforma sem a necessidade de buscar manualmente na lista de logs diários.
 - **2026-06-16:** Ocultada a opção do menu de Tesouraria tanto para visualização dos membros no menu fixo, quanto para o painel de administração da Área do Gestor, desativando a visualização dos módulos de finanças da interface.
 - **2026-06-14:** Implementação da **Gestão Própria de Pranchas Pendentes**. Adicionado botão de Editar e Excluir pranchas diretamente na tela "Minhas Pranchas" para trabalhos com status "pendente" ou "em_analise".

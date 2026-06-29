@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // 1. Global Safety Net (Pillar 4 Phase 4.1)
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
 
     // --- GLOBAL HELPER PRIVILEGES ---

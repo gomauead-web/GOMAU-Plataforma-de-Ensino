@@ -93,6 +93,22 @@ export function GestorValuation() {
         <div className="bg-[#0A0E1A] p-6 rounded-xl border border-[#1e293b] flex flex-col gap-4 shadow-xl hover:border-[#D4AF37]/50 transition-colors">
           <div className="flex items-center gap-3">
              <div className="p-3 rounded-lg bg-[#1e293b] text-[#D4AF37]">
+                <Shield size={24} />
+             </div>
+             <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm">Security Audit & Otimização de Performance</h3>
+          </div>
+          <p className="text-xs text-gray-500 leading-relaxed">
+             Auditoria profunda cobrindo OWASP Top 10, proteção do Firestore com regras estritas (Global Safety Net fechada), refatoração de contextos (memoization) para evitar memory leaks e reduzir re-renders, proteção anti-custo e otimização de DB Queries.
+          </p>
+          <div className="mt-auto">
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 10.500,00</div>
+             <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Estimativa Base</div>
+          </div>
+        </div>
+
+        <div className="bg-[#0A0E1A] p-6 rounded-xl border border-[#1e293b] flex flex-col gap-4 shadow-xl hover:border-[#D4AF37]/50 transition-colors">
+          <div className="flex items-center gap-3">
+             <div className="p-3 rounded-lg bg-[#1e293b] text-[#D4AF37]">
                 <TrendingUp size={24} />
              </div>
              <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm">Tesouraria & Finanças</h3>
@@ -313,6 +329,22 @@ export function GestorValuation() {
              <div className="text-[10px] text-[#D4AF37] font-bold uppercase mt-1 tracking-widest">Adicional Ativado</div>
           </div>
         </div>
+
+        <div className="bg-[#0A0E1A] p-6 rounded-xl border border-[#1e293b] flex flex-col gap-4 shadow-xl hover:border-[#D4AF37]/50 transition-colors">
+          <div className="flex items-center gap-3">
+             <div className="p-3 rounded-lg bg-[#1e293b] text-[#D4AF37]">
+                <BarChart3 size={24} />
+             </div>
+             <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm">Telemetria & Engajamento</h3>
+          </div>
+          <p className="text-xs text-gray-500 leading-relaxed">
+             Módulo de monitoramento ativo, com painéis agregados, contagem inteligente no Firebase (zero-cost) e rankeamento de uso para acompanhamento analítico do engajamento dos membros.
+          </p>
+          <div className="mt-auto">
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 8.000,00</div>
+             <div className="text-[10px] text-[#D4AF37] font-bold uppercase mt-1 tracking-widest">Módulo Agregado</div>
+          </div>
+        </div>
       </div>
 
       <div className="bg-gradient-to-r from-[#D4AF37]/10 to-transparent border-l-4 border-[#D4AF37] p-8 rounded-r-xl mt-4">
@@ -324,7 +356,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 175.000,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 183.000,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>

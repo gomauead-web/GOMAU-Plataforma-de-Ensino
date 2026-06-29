@@ -36,6 +36,7 @@ import {
   Library,
   AlertTriangle,
   Shield,
+  Activity,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { db, storage, auth } from "../../lib/firebase";
@@ -63,6 +64,7 @@ import { ForumConfigTab } from "./ForumConfigTab";
 import { GestorLibrary } from "../../components/gestor/GestorLibrary";
 import { GestorTreasury } from "../../components/gestor/GestorTreasury";
 import { GestorValuation } from "../../components/gestor/GestorValuation";
+import { TelemetryView } from "../../components/gestor/TelemetryView";
 import { DataManagement } from "../../components/gestor/DataManagement";
 import AdminPermissionsManager from "../../components/gestor/AdminPermissionsManager";
 import SegundoVigilanteView from "../../components/gestor/SegundoVigilanteView";
@@ -442,6 +444,7 @@ export function GestorDashboard() {
     { id: "eventos", label: "Eventos", icon: Calendar },
     { id: "membros", label: "Membros", icon: Users },
     { id: "segundo_vigilante", label: "2° Vigilante", icon: Shield },
+    { id: "telemetria", label: "Telemetria", icon: Activity },
     { id: "forum", label: "Fórum / Instrutores", icon: MessageSquare },
     { id: "configuracoes", label: "Configurações", icon: Settings },
     ...(isOwner
@@ -6860,6 +6863,8 @@ export function GestorDashboard() {
           {activeTab === "tesouraria" && <GestorTreasury />}
 
           {activeTab === "avaliacao" && <GestorValuation />}
+
+          {activeTab === "telemetria" && <TelemetryView />}
 
           {activeTab === "segundo_vigilante" && (
             <SegundoVigilanteView members={members} currentUser={user} />
