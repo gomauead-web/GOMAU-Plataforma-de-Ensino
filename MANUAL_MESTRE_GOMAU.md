@@ -240,6 +240,11 @@ Ao fazer login com a conta Google, o sistema exige:
 
 ## 5. Changelog e Histórico de Evolução
 
+- **2026-06-29 (Adição de Cargo ao Painel do 2º Vigilante & Atualização no Valuation):**
+  1. **Novo Cargo Configurável (Secr∴)**: Adicionada a posição de Secretário (Secr∴) ao painel unificado dos Oficiais da Loja no menu do 2º Vigilante. O novo cargo conta com as mesmas funcionalidades avançadas de lookup automático de membros por CIM, ativação de suplentes em standby, convocações direcionadas via WhatsApp e monitoramento real-time de recebimento da pauta (ciência/read receipts).
+  2. **Refatoração do State e Seletores de Transmissão**: Integrado o novo papel no estado inicial de gerenciamento do painel (`INITIAL_ROLES_STATE`), nas chaves oficiais de listagem (`ROLES_KEYS`) e no mapa de disparos de notificações em lote no frontend.
+  3. **Atualização Oficial do Valuation**: Atribuição orçamentária para a nova melhoria, adicionando R$ 1.000,00 de valorização tecnológica nominal no card de Oficiais da Loja & 2º Vigilante (passando de R$ 13.500,00 para R$ 14.500,00), elevando o **Valor Global Estimado (Valuation) da Plataforma para R$ 194.500,00** e unificando as métricas e chaves de faturamento do dashboard do Gestor.
+
 - **2026-06-07 (Módulo Multi-Loja Avançado, Mensalidades Customizáveis por Oficinas e Atualização no Valuation):**
   1. **Mensalidades Customizadas por Loja**: Implementado suporte a faturamento individualizado para cada congregação/oficina maçônica cadastrada na plataforma. Agora, o gestor define o valor de mensalidade correspondente para cada Loja no portal de configurações, e o sistema atualiza dinamicamente as cobranças apresentadas na Tesouraria e no Perfil do Obreiro de acordo com a Loja a qual pertence.
   2. **Varredura e Padronização de Nomes de Lojas**: Desenvolvida a rotina inteligente "Corrigir Lojas" que escaneia toda a base de dados do Firestore a fim de unificar as grafias de lojas de forma ortograficamente precisa baseada no prefixo de cadastro (ex: corrigindo instâncias de "Jus Veritas 33" para "Jus Véritas 33" com acento).

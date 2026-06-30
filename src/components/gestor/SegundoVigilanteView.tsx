@@ -51,6 +51,7 @@ const INITIAL_ROLES_STATE: Record<string, OfficerRoleState> = {
   d1: { cim: "", nome: "", telefone: "", suplenteCim: "", suplenteNome: "", suplenteTelefone: "", suplenteAtivo: false },
   d2: { cim: "", nome: "", telefone: "", suplenteCim: "", suplenteNome: "", suplenteTelefone: "", suplenteAtivo: false },
   dc: { cim: "", nome: "", telefone: "", suplenteCim: "", suplenteNome: "", suplenteTelefone: "", suplenteAtivo: false },
+  secr: { cim: "", nome: "", telefone: "", suplenteCim: "", suplenteNome: "", suplenteTelefone: "", suplenteAtivo: false },
 };
 
 const ROLES_KEYS = [
@@ -62,6 +63,7 @@ const ROLES_KEYS = [
   { key: "d1", label: "1º D ∴" },
   { key: "d2", label: "2º D ∴" },
   { key: "dc", label: "D∴C∴" },
+  { key: "secr", label: "Secr∴" },
 ];
 
 export default function SegundoVigilanteView({ members, currentUser }: SegundoVigilanteViewProps) {
@@ -83,6 +85,7 @@ export default function SegundoVigilanteView({ members, currentUser }: SegundoVi
     d1: true,
     d2: true,
     dc: true,
+    secr: true,
   });
 
   const [sendingNotification, setSendingNotification] = useState(false);

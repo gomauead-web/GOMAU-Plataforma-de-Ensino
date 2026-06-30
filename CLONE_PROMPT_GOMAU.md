@@ -3917,10 +3917,10 @@ export function GestorValuation() {
              <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm">Oficiais da Loja & 2º Vigilante</h3>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-             Gestão independente de 8 cargos ritualísticos, titulares/suplentes em standby, envio de pautas, convocações individuais via WhatsApp e painel de confirmação retroativa.
+             Gestão independente de 9 cargos ritualísticos (incluindo o Secr∴), titulares/suplentes em standby, envio de pautas, convocações individuais via WhatsApp e painel de confirmação retroativa.
           </p>
           <div className="mt-auto">
-             <div className="text-[#D4AF37] font-bold text-lg">R$ 13.500,00</div>
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 14.500,00</div>
              <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Adicional Ativo</div>
           </div>
         </div>
@@ -3983,7 +3983,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 183.000,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 194.500,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>
@@ -4130,6 +4130,7 @@ const INITIAL_ROLES_STATE: Record<string, OfficerRoleState> = {
   d1: { cim: "", nome: "", telefone: "", suplenteCim: "", suplenteNome: "", suplenteTelefone: "", suplenteAtivo: false },
   d2: { cim: "", nome: "", telefone: "", suplenteCim: "", suplenteNome: "", suplenteTelefone: "", suplenteAtivo: false },
   dc: { cim: "", nome: "", telefone: "", suplenteCim: "", suplenteNome: "", suplenteTelefone: "", suplenteAtivo: false },
+  secr: { cim: "", nome: "", telefone: "", suplenteCim: "", suplenteNome: "", suplenteTelefone: "", suplenteAtivo: false },
 };
 
 const ROLES_KEYS = [
@@ -4141,6 +4142,7 @@ const ROLES_KEYS = [
   { key: "d1", label: "1º D ∴" },
   { key: "d2", label: "2º D ∴" },
   { key: "dc", label: "D∴C∴" },
+  { key: "secr", label: "Secr∴" },
 ];
 
 export default function SegundoVigilanteView({ members, currentUser }: SegundoVigilanteViewProps) {
@@ -4162,6 +4164,7 @@ export default function SegundoVigilanteView({ members, currentUser }: SegundoVi
     d1: true,
     d2: true,
     dc: true,
+    secr: true,
   });
 
   const [sendingNotification, setSendingNotification] = useState(false);

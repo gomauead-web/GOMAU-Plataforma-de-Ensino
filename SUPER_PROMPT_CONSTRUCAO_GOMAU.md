@@ -1,18 +1,4 @@
-# 🚀 SUPER PROMPT DE RECONSTRUÇÃO COMPLETA - PLATAFORMA G∴O∴M∴A∴U∴
-
-Este é um arquivo mestre contendo TODA a documentação pedagógica, técnica, mapeamento de bastidores, regras de segurança, manuais de engenharia de construção e 100% dos códigos-fonte de todos os arquivos da plataforma G∴O∴M∴A∴U∴.
-
-Alimente este prompt em uma Inteligência Artificial para recriar a plataforma de ponta a ponta com fidelidade de 100% de design, lógica, segurança e regras maçônicas.
-
----
-
-
-
-================================================================================
-📖 CONTEÚDO DO ARQUIVO COMPONENTE: MANUAL_MESTRE_GOMAU.md
-================================================================================
-
-# Manual Mestre: G∴O∴M∴A∴U∴ (Grande Oriente Maçônico Universal)
+# 🚀 SUPER PROMPT DE RECONSTRUÇÃO COMPLETA - PLATAFORMA G∴O∴M∴A∴U∴\n\nEste é um arquivo mestre contendo TODA a documentação pedagógica, técnica, mapeamento de bastidores, regras de segurança, manuais de engenharia de construção e 100% dos códigos-fonte de todos os arquivos da plataforma G∴O∴M∴A∴U∴.\n\nAlimente este prompt em uma Inteligência Artificial para recriar a plataforma de ponta a ponta com fidelidade de 100% de design, lógica, segurança e regras maçônicas.\n\n---\n\n\n\n================================================================================\n📖 CONTEÚDO DO ARQUIVO COMPONENTE: MANUAL_MESTRE_GOMAU.md\n================================================================================\n\n# Manual Mestre: G∴O∴M∴A∴U∴ (Grande Oriente Maçônico Universal)
 
 Este é o documento definitivo e "Caixa Preta" da plataforma. Ele contém instruções técnicas para reprodução, guias de uso passo a passo para membros e gestores, e a inteligência de negócios do sistema.
 
@@ -253,6 +239,11 @@ Ao fazer login com a conta Google, o sistema exige:
 - **DOCUMENTACAO_DETALHADA_SISTEMA.md**: Para um raio-X completo, contendo o mapeamento exaustivo tela a tela, regras de negócio minuciosas (Bastidores, Regras Ocultas, Precedências), consulte este arquivo recém-gerado.
 
 ## 5. Changelog e Histórico de Evolução
+
+- **2026-06-29 (Adição de Cargo ao Painel do 2º Vigilante & Atualização no Valuation):**
+  1. **Novo Cargo Configurável (Secr∴)**: Adicionada a posição de Secretário (Secr∴) ao painel unificado dos Oficiais da Loja no menu do 2º Vigilante. O novo cargo conta com as mesmas funcionalidades avançadas de lookup automático de membros por CIM, ativação de suplentes em standby, convocações direcionadas via WhatsApp e monitoramento real-time de recebimento da pauta (ciência/read receipts).
+  2. **Refatoração do State e Seletores de Transmissão**: Integrado o novo papel no estado inicial de gerenciamento do painel (`INITIAL_ROLES_STATE`), nas chaves oficiais de listagem (`ROLES_KEYS`) e no mapa de disparos de notificações em lote no frontend.
+  3. **Atualização Oficial do Valuation**: Atribuição orçamentária para a nova melhoria, adicionando R$ 1.000,00 de valorização tecnológica nominal no card de Oficiais da Loja & 2º Vigilante (passando de R$ 13.500,00 para R$ 14.500,00), elevando o **Valor Global Estimado (Valuation) da Plataforma para R$ 194.500,00** e unificando as métricas e chaves de faturamento do dashboard do Gestor.
 
 - **2026-06-07 (Módulo Multi-Loja Avançado, Mensalidades Customizáveis por Oficinas e Atualização no Valuation):**
   1. **Mensalidades Customizadas por Loja**: Implementado suporte a faturamento individualizado para cada congregação/oficina maçônica cadastrada na plataforma. Agora, o gestor define o valor de mensalidade correspondente para cada Loja no portal de configurações, e o sistema atualiza dinamicamente as cobranças apresentadas na Tesouraria e no Perfil do Obreiro de acordo com a Loja a qual pertence.
@@ -584,15 +575,7 @@ Ao fazer login com a conta Google, o sistema exige:
 - **2026-05-10:** Implementação de campos detalhados em Pranchas e rastreabilidade total de data/hora (Pedidos e Respostas).
 - **2026-05-09:** Sistema de Cropper de Imagem para Avatares e CIM.
 - **2026-05-07:** Lançamento da Carteira de Identidade Maçônica (CIM) Digital.
-
-
-
-
-================================================================================
-📖 CONTEÚDO DO ARQUIVO COMPONENTE: DOCUMENTACAO_DETALHADA_SISTEMA.md
-================================================================================
-
-# 🏛️ Plataforma G∴O∴M∴A∴U∴ - Mapeamento Detalhado e Arquitetura Global
+\n\n\n\n================================================================================\n📖 CONTEÚDO DO ARQUIVO COMPONENTE: DOCUMENTACAO_DETALHADA_SISTEMA.md\n================================================================================\n\n# 🏛️ Plataforma G∴O∴M∴A∴U∴ - Mapeamento Detalhado e Arquitetura Global
 
 Este documento é a **Bíblia Arquitetural e Funcional** do sistema G∴O∴M∴A∴U∴. Ele detalha CADA TELA, OPÇÃO, CAMPO, REGRA DE NEGÓCIO E MECANISMO DE BASTIDORES presente na plataforma. Elaborado após profunda auditoria de sistema.
 
@@ -738,15 +721,7 @@ A aplicação utiliza a técnica de **"Global Safety Net" fechada**.
 ---
 
 > **Resumo Geral:** A plataforma G∴O∴M∴A∴U∴ não é apenas um portal visual; é um **ERP maçônico de alta complexidade**, mesclando gamificação educacional, telemetria analítica severa, blindagem hierárquica por graus e um backend de self-healing (autolimpeza). Cada tela foi projetada com precedências restritas ditadas tanto pela liturgia maçônica quanto pelas melhores práticas de segurança de software corporativo (DevSecOps e OWASP).
-
-
-
-
-================================================================================
-📖 CONTEÚDO DO ARQUIVO COMPONENTE: MANUAL_CONSTRUCAO_SISTEMA.md
-================================================================================
-
-# 🏗️ Manual de Construção e Engenharia - Plataforma G∴O∴M∴A∴U∴
+\n\n\n\n================================================================================\n📖 CONTEÚDO DO ARQUIVO COMPONENTE: MANUAL_CONSTRUCAO_SISTEMA.md\n================================================================================\n\n# 🏗️ Manual de Construção e Engenharia - Plataforma G∴O∴M∴A∴U∴
 
 Este manual é um guia técnico de engenharia de software para reconstruir, manter e escalar a **Plataforma Maçônica G∴O∴M∴A∴U∴** do absoluto zero. Ele documenta todas as decisões de arquitetura, configurações de ambiente, modelagem de dados no Firestore, lógica de algoritmos complexos, diretrizes de segurança (OWASP) e otimização de performance empregadas no projeto.
 
@@ -1197,15 +1172,7 @@ Para compilar e colocar o sistema em ambiente de produção (Cloud Run ou static
 3.  **Deploy das regras do Firestore:** Toda vez que houver alteração de escopo, atualize as regras usando a ferramenta do painel administrativo ou CLI: `firebase deploy --only firestore:rules`.
 
 Este manual estabelece o **State-of-the-Art** de engenharia de software empregado na Plataforma G∴O∴M∴A∴U∴, garantindo que qualquer arquiteto ou desenvolvedor possa replicá-la com total maestria e sem pontos cegos técnicos.
-
-
-
-
-================================================================================
-📖 CONTEÚDO DO ARQUIVO COMPONENTE: INTEGRACAO_CURSOS.md
-================================================================================
-
-# Evolução do EAD: Arquitetura Nativa (Mestre-IA) G∴O∴M∴A∴U∴
+\n\n\n\n================================================================================\n📖 CONTEÚDO DO ARQUIVO COMPONENTE: INTEGRACAO_CURSOS.md\n================================================================================\n\n# Evolução do EAD: Arquitetura Nativa (Mestre-IA) G∴O∴M∴A∴U∴
 
 **Data de Atualização:** 2026-06-26
 **Status:** Módulo de IA Nativo Implementado. Integração Externa (Iframe) Cancelada.
@@ -1249,15 +1216,7 @@ A plataforma agora possui seu próprio LMS (Learning Management System) integrad
 - **Gamificação Segura:** Sem risco de APIs forjadas atualizando o progresso; as Security Rules do Firestore protegem o documento `courseProgress`.
 
 **Fim do arquivo original de Integração:** Este módulo superou a proposta anterior e hoje se configura como um dos pilares mais inovadores da EdTech maçônica global.
-
-
-
-
-================================================================================
-📖 CONTEÚDO DO ARQUIVO COMPONENTE: CODIGOS_MIGRACAO_GOMAU.md
-================================================================================
-
-# 📜 CÓDIGOS COMPLETOS DE MIGRAÇÃO - G∴O∴M∴A∴U∴
+\n\n\n\n================================================================================\n📖 CONTEÚDO DO ARQUIVO COMPONENTE: CODIGOS_MIGRACAO_GOMAU.md\n================================================================================\n\n# 📜 CÓDIGOS COMPLETOS DE MIGRAÇÃO - G∴O∴M∴A∴U∴
 
 Este documento contém o código-fonte integral, exato e sem resumos dos arquivos solicitados para migração e controle da plataforma.
 
@@ -16850,15 +16809,7 @@ export default async function getCroppedImg(
 
 ---
 
-
-
-
-
-================================================================================
-📖 CONTEÚDO DO ARQUIVO COMPONENTE: CLONE_PROMPT_GOMAU.md
-================================================================================
-
-# Prompt Mestre de Clonagem e Especificação Técnica: G∴O∴M∴A∴U∴
+\n\n\n\n================================================================================\n📖 CONTEÚDO DO ARQUIVO COMPONENTE: CLONE_PROMPT_GOMAU.md\n================================================================================\n\n# Prompt Mestre de Clonagem e Especificação Técnica: G∴O∴M∴A∴U∴
 
 Este documento é a especificação técnica absoluta, completa e exaustiva para clonar a **Plataforma Maçônica G∴O∴M∴A∴U∴**.
 O objetivo deste arquivo é alimentar uma Inteligência Artificial Sênior de Engenharia (como Gemini, Claude, ChatGPT, etc.) para recriar **100% da plataforma, linha por linha, com toda a sua arquitetura, frontend, backend no Firebase, regras de negócio, gamificação, motores de inteligência artificial e interfaces dinâmicas**, sem perder nenhuma regra de negócio oculta.
@@ -20777,10 +20728,10 @@ export function GestorValuation() {
              <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm">Oficiais da Loja & 2º Vigilante</h3>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-             Gestão independente de 8 cargos ritualísticos, titulares/suplentes em standby, envio de pautas, convocações individuais via WhatsApp e painel de confirmação retroativa.
+             Gestão independente de 9 cargos ritualísticos (incluindo o Secr∴), titulares/suplentes em standby, envio de pautas, convocações individuais via WhatsApp e painel de confirmação retroativa.
           </p>
           <div className="mt-auto">
-             <div className="text-[#D4AF37] font-bold text-lg">R$ 13.500,00</div>
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 14.500,00</div>
              <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Adicional Ativo</div>
           </div>
         </div>
@@ -20843,7 +20794,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 183.000,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 194.500,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>
@@ -20990,6 +20941,7 @@ const INITIAL_ROLES_STATE: Record<string, OfficerRoleState> = {
   d1: { cim: "", nome: "", telefone: "", suplenteCim: "", suplenteNome: "", suplenteTelefone: "", suplenteAtivo: false },
   d2: { cim: "", nome: "", telefone: "", suplenteCim: "", suplenteNome: "", suplenteTelefone: "", suplenteAtivo: false },
   dc: { cim: "", nome: "", telefone: "", suplenteCim: "", suplenteNome: "", suplenteTelefone: "", suplenteAtivo: false },
+  secr: { cim: "", nome: "", telefone: "", suplenteCim: "", suplenteNome: "", suplenteTelefone: "", suplenteAtivo: false },
 };
 
 const ROLES_KEYS = [
@@ -21001,6 +20953,7 @@ const ROLES_KEYS = [
   { key: "d1", label: "1º D ∴" },
   { key: "d2", label: "2º D ∴" },
   { key: "dc", label: "D∴C∴" },
+  { key: "secr", label: "Secr∴" },
 ];
 
 export default function SegundoVigilanteView({ members, currentUser }: SegundoVigilanteViewProps) {
@@ -21022,6 +20975,7 @@ export default function SegundoVigilanteView({ members, currentUser }: SegundoVi
     d1: true,
     d2: true,
     dc: true,
+    secr: true,
   });
 
   const [sendingNotification, setSendingNotification] = useState(false);
@@ -39068,5 +39022,4 @@ export function GestorDashboard() {
 
 ```
 
-
-
+\n\n
