@@ -1,0 +1,161 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerified() && (
+        request.auth.token.email == "tazmaniacrvg@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "adminPremium")
+      );
+    }
+
+    function getUserGrau() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.grauMaconico;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation for User
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'grauMaconico', 'role', 'createdAt', 'updatedAt']) &&
+             data.email is string && data.email.size() <= 256 &&
+             data.grauMaconico is number &&
+             data.role in ['aluno', 'adminPremium'] &&
+             data.createdAt is number &&
+             data.updatedAt is number;
+    }
+
+    match /users/{userId} {
+      allow get: if isVerified() && (request.auth.uid == userId || isAdmin());
+      // No list for users to prevent PII leak
+      allow create: if isVerified() && request.auth.uid == userId && isValidId(userId) && isValidUser(incoming()) && incoming().role == 'aluno' && incoming().grauMaconico == 1; // Can only create as aluno with grau 1
+      allow update: if isVerified() && (request.auth.uid == userId || isAdmin()) && isValidUser(incoming()) && (
+        (isAdmin()) ||
+        (request.auth.uid == userId && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'updatedAt']) && incoming().displayName is string && incoming().displayName.size() <= 128)
+      );
+    }
+
+    // Validation for Course
+    function isValidCourse(data) {
+      return data.keys().hasAll(['title', 'createdBy', 'createdAt', 'updatedAt', 'grauPermitido', 'status', 'type']) &&
+             data.title is string && data.title.size() <= 256 &&
+             data.createdBy is string && data.createdBy.size() <= 128 &&
+             data.createdAt is number &&
+             data.updatedAt is number &&
+             data.grauPermitido is number &&
+             data.status in ['rascunho', 'publicado', 'arquivado'] &&
+             data.type in ['curso', 'livro', 'curso_livro'];
+    }
+
+    match /courses/{courseId} {
+      allow read: if isVerified() && isValidId(courseId) && (isAdmin() || (existing().status == 'publicado' && existing().grauPermitido <= getUserGrau()));
+      allow list: if isVerified() && (isAdmin() || (resource.data.status == 'publicado' && resource.data.grauPermitido <= getUserGrau()));
+      allow create: if isAdmin() && isValidId(courseId) && isValidCourse(incoming()) && incoming().createdBy == request.auth.uid;
+      allow update: if isAdmin() && isValidId(courseId) && isValidCourse(incoming()) && incoming().createdBy == existing().createdBy;
+      allow delete: if isAdmin() && isValidId(courseId);
+
+      // Validation for Module
+      function isValidModule(data) {
+        return data.keys().hasAll(['courseId', 'title', 'order', 'createdAt']) &&
+               data.courseId is string && data.courseId.size() <= 128 &&
+               data.title is string && data.title.size() <= 256 &&
+               data.order is number &&
+               data.createdAt is number;
+      }
+
+      match /modules/{moduleId} {
+        allow read: if isVerified() && isValidId(courseId) && isValidId(moduleId) && (isAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+        allow list: if isVerified() && isValidId(courseId) && (isAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+        allow create: if isAdmin() && isValidId(courseId) && isValidId(moduleId) && isValidModule(incoming()) && incoming().courseId == courseId;
+        allow update: if isAdmin() && isValidId(courseId) && isValidId(moduleId) && isValidModule(incoming()) && incoming().courseId == existing().courseId;
+        allow delete: if isAdmin() && isValidId(courseId) && isValidId(moduleId);
+
+        // Validation for Unit
+        function isValidUnit(data) {
+          return data.keys().hasAll(['moduleId', 'title', 'order', 'createdAt']) &&
+                 data.moduleId is string && data.moduleId.size() <= 128 &&
+                 data.title is string && data.title.size() <= 256 &&
+                 data.order is number &&
+                 data.createdAt is number;
+        }
+
+        match /units/{unitId} {
+          allow read: if isVerified() && isValidId(courseId) && isValidId(moduleId) && isValidId(unitId) && (isAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+          allow list: if isVerified() && isValidId(courseId) && isValidId(moduleId) && (isAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+          allow create: if isAdmin() && isValidId(courseId) && isValidId(moduleId) && isValidId(unitId) && isValidUnit(incoming()) && incoming().moduleId == moduleId;
+          allow update: if isAdmin() && isValidId(courseId) && isValidId(moduleId) && isValidId(unitId) && isValidUnit(incoming()) && incoming().moduleId == existing().moduleId;
+          allow delete: if isAdmin() && isValidId(courseId) && isValidId(moduleId) && isValidId(unitId);
+
+          // Validation for Lesson
+          function isValidLesson(data) {
+            return data.keys().hasAll(['unitId', 'title', 'order', 'content', 'createdAt']) &&
+                   data.unitId is string && data.unitId.size() <= 128 &&
+                   data.title is string && data.title.size() <= 256 &&
+                   data.order is number &&
+                   data.content is string && data.content.size() <= 1048576 && // up to 1MB
+                   data.createdAt is number;
+          }
+
+          match /lessons/{lessonId} {
+            allow read: if isVerified() && isValidId(courseId) && isValidId(moduleId) && isValidId(unitId) && isValidId(lessonId) && (isAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+            allow list: if isVerified() && isValidId(courseId) && isValidId(moduleId) && isValidId(unitId) && (isAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+            allow create: if isAdmin() && isValidId(courseId) && isValidId(moduleId) && isValidId(unitId) && isValidId(lessonId) && isValidLesson(incoming()) && incoming().unitId == unitId;
+            allow update: if isAdmin() && isValidId(courseId) && isValidId(moduleId) && isValidId(unitId) && isValidId(lessonId) && isValidLesson(incoming()) && incoming().unitId == existing().unitId;
+            allow delete: if isAdmin() && isValidId(courseId) && isValidId(moduleId) && isValidId(unitId) && isValidId(lessonId);
+          }
+        }
+      }
+    }
+
+    // Validation for Attempt
+    function isValidAttempt(data) {
+      return data.keys().hasAll(['userId', 'courseId', 'score', 'passed', 'createdAt']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.courseId is string && data.courseId.size() <= 128 &&
+             data.score is number &&
+             data.passed is bool &&
+             data.createdAt is number;
+    }
+
+    match /attempts/{attemptId} {
+      allow read, list: if isVerified() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isVerified() && isValidId(attemptId) && isValidAttempt(incoming()) && incoming().userId == request.auth.uid;
+      // No updates or deletes for attempts
+    }
+
+    // Validation for Progress
+    function isValidProgress(data) {
+      return data.keys().hasAll(['userId', 'courseId', 'updatedAt']) &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.courseId is string && data.courseId.size() <= 128 &&
+             data.updatedAt is number;
+    }
+
+    match /progress/{progressId} {
+      allow read, list: if isVerified() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isVerified() && isValidId(progressId) && isValidProgress(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isVerified() && isValidId(progressId) && isValidProgress(incoming()) && incoming().userId == existing().userId && incoming().userId == request.auth.uid;
+    }
+  }
+}

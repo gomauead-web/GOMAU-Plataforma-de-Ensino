@@ -96,6 +96,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const userEmail = (user?.email || auth.currentUser?.email || '').toLowerCase().trim();
   const isOwner = ['gomau.ead@gmail.com', 'calepi@gmail.com', 'calepe@gmail.com'].includes(userEmail);
+  const isPremiumAdmin = userEmail === 'tazmaniacrvg@gmail.com' || user?.role === 'adminPremium';
   const canAccessGestor = isMaster || user?.role === 'gestor' || user?.cim === '3330' || user?.cim === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user?.delegatedPastas && user.delegatedPastas.length > 0);
 
   const navItems = [
@@ -104,6 +105,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { icon: Sparkles, label: 'Cadeia de União', path: '/cadeia-uniao' },
     { icon: BookOpen, label: 'Conteúdos', path: '/contents' },
     { icon: GraduationCap, label: 'Cursos EAD', path: '/cursos' },
+    { icon: BookOpen, label: 'Câmara de Estudos', path: '/estudos' },
     { icon: MessageSquare, label: 'Fórum de Estudos', path: '/forum' },
     { icon: FileText, label: 'Solicitações', path: '/requests' },
     { icon: Calendar, label: 'Calendário', path: '/calendar' },
@@ -113,6 +115,10 @@ export function Layout({ children }: { children: ReactNode }) {
   const adminItems = [
     { icon: Shield, label: 'Área Gestor', path: '/gestor' },
   ];
+  
+  if (isPremiumAdmin) {
+    adminItems.push({ icon: Target, label: 'Câmara de Criação', path: '/criacao' });
+  }
 
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-[#05070A]/40 text-[#E5E7EB] font-sans relative overflow-hidden">

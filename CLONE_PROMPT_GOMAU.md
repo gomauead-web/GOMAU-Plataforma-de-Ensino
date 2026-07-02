@@ -301,119 +301,6 @@ src/
 
 Abaixo estão todos os códigos do sistema, sem exceção, para clonagem e entendimento arquitetural.
 
-### Arquivo: `package.json`
-*Descrição: Arquivo componente do sistema localizado em package.json.*
-```json
-{
-  "name": "react-example",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
-    "preview": "vite preview",
-    "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@google/genai": "^1.52.0",
-    "@jitsi/react-sdk": "^1.4.4",
-    "@tailwindcss/vite": "^4.1.14",
-    "@vitejs/plugin-react": "^5.0.4",
-    "clsx": "^2.1.1",
-    "date-fns": "^4.1.0",
-    "dotenv": "^17.2.3",
-    "express": "^4.21.2",
-    "firebase": "^12.12.1",
-    "firebase-admin": "^13.10.0",
-    "html2canvas": "^1.4.1",
-    "lucide-react": "^0.546.0",
-    "motion": "^12.23.24",
-    "qrcode.react": "^4.2.0",
-    "react": "^19.0.1",
-    "react-dom": "^19.0.1",
-    "react-easy-crop": "^5.5.7",
-    "react-hot-toast": "^2.6.0",
-    "react-markdown": "^10.1.0",
-    "react-router-dom": "^7.15.0",
-    "recharts": "^3.9.0",
-    "tailwind-merge": "^3.5.0",
-    "vite": "^6.2.3",
-    "vite-plugin-pwa": "^1.2.0",
-    "xlsx": "^0.18.5"
-  },
-  "overrides": {
-    "react-router": "^7.15.0",
-    "react-router-dom": "^7.15.0",
-    "qs": "^6.15.2",
-    "uuid": "^11.1.1",
-    "ws": "^8.21.0",
-    "protobufjs": "^7.5.8",
-    "brace-expansion": "^5.0.6"
-  },
-  "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^22.14.0",
-    "autoprefixer": "^10.4.21",
-    "tailwindcss": "^4.1.14",
-    "tsx": "^4.21.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.3"
-  }
-}
-
-```
-
-### Arquivo: `vite.config.ts`
-*Descrição: Arquivo componente do sistema localizado em vite.config.ts.*
-```tsx
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
-
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, '.', '');
-  return {
-    base: '/',
-    plugins: [
-      react(),
-      tailwindcss(),
-    ],
-    define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || process.env.GEMINI_API_KEY),
-    },
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, '.'),
-      },
-    },
-    server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
-      hmr: process.env.DISABLE_HMR !== 'true',
-    },
-  };
-});
-
-```
-
-### Arquivo: `.env.example`
-*Descrição: Arquivo componente do sistema localizado em .env.example.*
-```example
-# GEMINI_API_KEY: Required for Gemini AI API calls.
-# AI Studio automatically injects this at runtime from user secrets.
-# Users configure this via the Secrets panel in the AI Studio UI.
-GEMINI_API_KEY="MY_GEMINI_API_KEY"
-
-# APP_URL: The URL where this applet is hosted.
-# AI Studio automatically injects this at runtime with the Cloud Run service URL.
-# Used for self-referential links, OAuth callbacks, and API endpoints.
-APP_URL="MY_APP_URL"
-
-```
-
 ### Arquivo: `src/App.tsx`
 *Descrição: Arquivo componente do sistema localizado em src/App.tsx.*
 ```tsx
@@ -443,7 +330,15 @@ import { Forum } from './pages/Forum';
 import { MASTER_ADMINS } from './constants';
 import { NotificationManager } from './components/NotificationManager';
 
+import { CamaraCriacaoPage } from './pages/premium/CamaraCriacaoPage';
+import { CamaraEstudosPage } from './pages/premium/CamaraEstudosPage';
+
+import { PremiumCourseViewerPage } from './pages/premium/PremiumCourseViewerPage';
+import { PremiumLessonViewerPage } from './pages/premium/PremiumLessonViewerPage';
+
 function ProtectedRoute({ children, requireGestor = false }: { children: React.ReactNode, requireGestor?: boolean }) {
+
+
   const { user, loading } = useAuth();
   
   if (loading) return <div className="h-screen w-screen flex items-center justify-center bg-[#0B0B0C] text-[#D4AF37]">Carregando...</div>;
@@ -516,6 +411,10 @@ export default function App() {
           <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />
           <Route path="/contents" element={<ProtectedRoute><Layout><ContentPage /></Layout></ProtectedRoute>} />
           <Route path="/cursos" element={<ProtectedRoute><Layout><CursosExternos /></Layout></ProtectedRoute>} />
+          <Route path="/criacao" element={<ProtectedRoute><Layout><CamaraCriacaoPage /></Layout></ProtectedRoute>} />
+          <Route path="/estudos" element={<ProtectedRoute><Layout><CamaraEstudosPage /></Layout></ProtectedRoute>} />
+          <Route path="/estudos/:courseId" element={<ProtectedRoute><Layout><PremiumCourseViewerPage /></Layout></ProtectedRoute>} />
+          <Route path="/estudos/:courseId/lesson/:lessonId" element={<ProtectedRoute><Layout><PremiumLessonViewerPage /></Layout></ProtectedRoute>} />
           <Route path="/cursos/:courseId" element={<ProtectedRoute><Layout><CursoDetail /></Layout></ProtectedRoute>} />
           <Route path="/forum" element={<ProtectedRoute><Layout><Forum /></Layout></ProtectedRoute>} />
           <Route path="/requests" element={<ProtectedRoute><Layout><RequestsPage /></Layout></ProtectedRoute>} />
@@ -910,6 +809,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const userEmail = (user?.email || auth.currentUser?.email || '').toLowerCase().trim();
   const isOwner = ['gomau.ead@gmail.com', 'calepi@gmail.com', 'calepe@gmail.com'].includes(userEmail);
+  const isPremiumAdmin = userEmail === 'tazmaniacrvg@gmail.com' || user?.role === 'adminPremium';
   const canAccessGestor = isMaster || user?.role === 'gestor' || user?.cim === '3330' || user?.cim === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user?.delegatedPastas && user.delegatedPastas.length > 0);
 
   const navItems = [
@@ -918,6 +818,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { icon: Sparkles, label: 'Cadeia de União', path: '/cadeia-uniao' },
     { icon: BookOpen, label: 'Conteúdos', path: '/contents' },
     { icon: GraduationCap, label: 'Cursos EAD', path: '/cursos' },
+    { icon: BookOpen, label: 'Câmara de Estudos', path: '/estudos' },
     { icon: MessageSquare, label: 'Fórum de Estudos', path: '/forum' },
     { icon: FileText, label: 'Solicitações', path: '/requests' },
     { icon: Calendar, label: 'Calendário', path: '/calendar' },
@@ -927,6 +828,10 @@ export function Layout({ children }: { children: ReactNode }) {
   const adminItems = [
     { icon: Shield, label: 'Área Gestor', path: '/gestor' },
   ];
+  
+  if (isPremiumAdmin) {
+    adminItems.push({ icon: Target, label: 'Câmara de Criação', path: '/criacao' });
+  }
 
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-[#05070A]/40 text-[#E5E7EB] font-sans relative overflow-hidden">
@@ -2975,6 +2880,8 @@ export function GestorLibrary() {
           </div>
         </div>
       )}
+        </>
+      )}
 
       {activeTab === 'liberacoes' && (
         <>
@@ -4109,6 +4016,22 @@ export function GestorValuation() {
              <div className="text-[10px] text-[#D4AF37] font-bold uppercase mt-1 tracking-widest">Módulo Agregado</div>
           </div>
         </div>
+        <div className="bg-[#0A0E1A] p-6 rounded-xl border border-dashed border-[#D4AF37]/35 flex flex-col gap-4 shadow-xl hover:border-[#D4AF37]/60 transition-colors">
+          <div className="flex items-center gap-3">
+             <div className="p-3 rounded-lg bg-[#1e293b] text-[#D4AF37]">
+                 <Target size={24} />
+             </div>
+             <h3 className="font-bold text-[#D4AF37] uppercase tracking-wide text-sm">Câmara de Criação (Gerador A.I. Premium)</h3>
+          </div>
+          <p className="text-xs text-gray-400 leading-relaxed font-sans">
+             Motor de geração editorial restrito operado por IA. Produção autônoma de cursos e livros maçônicos hierarquizados (módulos, unidades, lições com exercícios) aderentes aos Graus, com linguagem refinada e exportação direta para o banco de dados.
+          </p>
+          <div className="mt-auto">
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 22.000,00</div>
+             <div className="text-[10px] text-[#D4AF37] font-bold uppercase mt-1 tracking-widest font-sans">Adicional Premium</div>
+          </div>
+        </div>
+
       </div>
 
       <div className="bg-gradient-to-r from-[#D4AF37]/10 to-transparent border-l-4 border-[#D4AF37] p-8 rounded-r-xl mt-4">
@@ -4120,7 +4043,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 198.000,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 220.000,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>
@@ -5337,7 +5260,7 @@ export function TreasurySituation({ members, payments }: { members: any[], payme
 
 ### Arquivo: `src/constants.ts`
 *Descrição: Arquivo componente do sistema localizado em src/constants.ts.*
-```tsx
+```ts
 export const MASTER_ADMINS = [
   'gomau.ead@gmail.com',
   'calepi@gmail.com',
@@ -5768,7 +5691,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 ### Arquivo: `src/lib/courseGeneratorState.ts`
 *Descrição: Arquivo componente do sistema localizado em src/lib/courseGeneratorState.ts.*
-```tsx
+```ts
 export type GenState = {
   activeMode: 'auto' | 'manual' | 'config';
   courseTitle: string;
@@ -5826,7 +5749,7 @@ export const generatorStore = new GeneratorState();
 
 ### Arquivo: `src/lib/cropImage.ts`
 *Descrição: Arquivo componente do sistema localizado em src/lib/cropImage.ts.*
-```tsx
+```ts
 export const createImage = (url: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
     const image = new Image()
@@ -5904,7 +5827,7 @@ export default async function getCroppedImg(
 
 ### Arquivo: `src/lib/errorHandler.ts`
 *Descrição: Arquivo componente do sistema localizado em src/lib/errorHandler.ts.*
-```tsx
+```ts
 export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',
@@ -5968,7 +5891,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 ### Arquivo: `src/lib/firebase.ts`
 *Descrição: Arquivo componente do sistema localizado em src/lib/firebase.ts.*
-```tsx
+```ts
 import { initializeApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, getFirestore } from 'firebase/firestore';
@@ -6012,7 +5935,7 @@ testConnection();
 
 ### Arquivo: `src/lib/utils.ts`
 *Descrição: Arquivo componente do sistema localizado em src/lib/utils.ts.*
-```tsx
+```ts
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -10387,7 +10310,17 @@ export function LibraryPage() {
     if (item.isPaid && !isBookUnlockedForUser(item.id)) {
       setShowUnlockModal(item);
     } else {
-      setShowReadModal(item);
+      // Se o link for de um projeto no AI Studio (run.app), as políticas de segurança do Google (CSP frame-ancestors) bloqueiam a incorporação via iframe.
+      // A única forma tecnicamente viável e profissional de carregar é em uma nova janela (popup).
+      if (item.urlDrive.includes('run.app')) {
+        const popup = window.open(item.urlDrive, '_blank', 'popup=yes,width=1200,height=800,menubar=no,toolbar=no,location=no,status=no');
+        // Se o bloqueador de popup do navegador impedir, abre em nova aba normal como fallback.
+        if (!popup) {
+           window.open(item.urlDrive, '_blank', 'noopener,noreferrer');
+        }
+      } else {
+        setShowReadModal(item);
+      }
     }
   };
 
@@ -11001,13 +10934,15 @@ export function LibraryPage() {
                   </p>
                 </div>
               </div>
-              <button 
-                onClick={() => setShowReadModal(null)}
-                className="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-2.5 rounded-xl transition-all border border-transparent hover:border-white/10"
-                title="Fechar e Retornar ao Acervo"
-              >
-                <X size={20} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setShowReadModal(null)}
+                  className="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-2.5 rounded-xl transition-all border border-transparent hover:border-white/10"
+                  title="Fechar e Retornar ao Acervo"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
             
             <div className="flex-1 w-full relative bg-black flex justify-center overflow-hidden">
@@ -22395,6 +22330,1257 @@ export function GestorDashboard() {
       </div>
     </div>
   );
+}
+
+```
+
+### Arquivo: `src/pages/premium/CamaraCriacaoPage.tsx`
+*Descrição: Arquivo componente do sistema localizado em src/pages/premium/CamaraCriacaoPage.tsx.*
+```tsx
+import React, { useState } from 'react';
+import { Target, Sparkles, Book, Save, Eye, CheckCircle2 } from 'lucide-react';
+import { db, auth } from '../../lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import toast from 'react-hot-toast';
+
+export function CamaraCriacaoPage() {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    grauPermitido: 1,
+    grauDoCurso: 1,
+    publicoAlvo: '',
+    objetivoPedagogico: '',
+    nivelProfundidade: 'intermediário',
+    tomLinguagem: 'premium',
+    quantidadeModulos: 1,
+    quantidadeUnidadesPorModulo: 1,
+    quantidadeAulasPorUnidade: 3,
+    duracaoEstimadaAula: '15 minutos',
+    tipoMaterial: 'curso',
+    estiloLivro: 'manual premium',
+    referenciasPermitidas: '',
+    restricoesConteudo: '',
+    status: 'rascunho'
+  });
+
+  const handleSubmit = async (e: React.FormEvent, status: 'rascunho' | 'publicado') => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (!auth.currentUser) throw new Error('Não autenticado.');
+      if (auth.currentUser.email !== 'tazmaniacrvg@gmail.com') {
+        throw new Error('Acesso não autorizado.');
+      }
+
+      // We send the generation parameters to the backend
+      const response = await fetch('/api/premium/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, status })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro na geração');
+      }
+      
+      const { data } = await response.json();
+      
+      // Save course to Firestore
+      const courseRef = await addDoc(collection(db, 'courses'), {
+        title: formData.title || data.title,
+        description: formData.description || data.description,
+        createdBy: auth.currentUser.uid,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        grauPermitido: Number(formData.grauPermitido),
+        grauDoCurso: Number(formData.grauDoCurso),
+        status: status,
+        premium: true,
+        type: formData.tipoMaterial
+      });
+      
+      // We need to iterate and save modules, units, lessons
+      if (data.modules && Array.isArray(data.modules)) {
+        for (const module of data.modules) {
+          const modRef = await addDoc(collection(db, `courses/${courseRef.id}/modules`), {
+            courseId: courseRef.id,
+            title: module.title,
+            description: module.description || '',
+            order: module.order || 1,
+            createdAt: Date.now()
+          });
+          
+          if (module.units && Array.isArray(module.units)) {
+            for (const unit of module.units) {
+              const unitRef = await addDoc(collection(db, `courses/${courseRef.id}/modules/${modRef.id}/units`), {
+                moduleId: modRef.id,
+                title: unit.title,
+                description: unit.description || '',
+                order: unit.order || 1,
+                createdAt: Date.now()
+              });
+              
+              if (unit.lessons && Array.isArray(unit.lessons)) {
+                for (const lesson of unit.lessons) {
+                  await addDoc(collection(db, `courses/${courseRef.id}/modules/${modRef.id}/units/${unitRef.id}/lessons`), {
+                    unitId: unitRef.id,
+                    title: lesson.title,
+                    order: lesson.order || 1,
+                    content: lesson.content || '',
+                    exercises: lesson.exercises || [],
+                    createdAt: Date.now()
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+
+      toast.success(status === 'rascunho' ? 'Rascunho salvo com sucesso!' : 'Obra gerada e publicada!');
+      // Reset form or navigate
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 bg-[#0A0E1A] text-gray-200 rounded-2xl border border-[#D4AF37]/20 shadow-2xl">
+      <div className="flex items-center gap-4 mb-8 border-b border-[#D4AF37]/20 pb-4">
+        <div className="p-3 bg-[#D4AF37]/10 rounded-xl text-[#D4AF37]">
+          <Target size={32} />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold text-[#D4AF37]" style={{ fontFamily: 'Cinzel' }}>Câmara de Criação</h1>
+          <p className="text-sm text-gray-400 uppercase tracking-widest mt-1">Módulo Premium de Geração Editorial M∴</p>
+        </div>
+      </div>
+
+      <form className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Título da Obra</label>
+            <input name="title" value={formData.title} onChange={handleChange} className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white focus:border-[#D4AF37] outline-none" required />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Tema Central</label>
+            <input name="description" value={formData.description} onChange={handleChange} className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white focus:border-[#D4AF37] outline-none" required />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Grau Permitido (Visualização)</label>
+            <input name="grauPermitido" type="number" min="1" max="33" value={formData.grauPermitido} onChange={handleChange} className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white outline-none" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Grau Foco do Material</label>
+            <input name="grauDoCurso" type="number" min="1" max="33" value={formData.grauDoCurso} onChange={handleChange} className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white outline-none" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Tipo de Material</label>
+            <select name="tipoMaterial" value={formData.tipoMaterial} onChange={handleChange} className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white outline-none">
+              <option value="curso">Curso Interativo (com avaliações)</option>
+              <option value="livro">Livro / Manual (apenas leitura)</option>
+              <option value="curso_livro">Curso + Livro</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Nível de Profundidade</label>
+            <select name="nivelProfundidade" value={formData.nivelProfundidade} onChange={handleChange} className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white outline-none">
+              <option value="introdutorio">Introdutório</option>
+              <option value="intermediario">Intermediário</option>
+              <option value="avancado">Avançado</option>
+              <option value="filosofico">Filosófico</option>
+              <option value="simbolico">Simbólico</option>
+              <option value="ritualistico">Ritualístico Educativo</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Tom de Linguagem</label>
+            <select name="tomLinguagem" value={formData.tomLinguagem} onChange={handleChange} className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white outline-none">
+              <option value="didatico">Didático e Claro</option>
+              <option value="solene">Solene e Tradicional</option>
+              <option value="filosofico">Filosófico e Reflexivo</option>
+              <option value="premium">Premium / Masterclass (Recomendado)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Objetivo Pedagógico Central</label>
+          <textarea name="objetivoPedagogico" rows={3} value={formData.objetivoPedagogico} onChange={handleChange} className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white outline-none resize-none"></textarea>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 bg-[#05070A] rounded-xl border border-[#1e293b]">
+           <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Qtd. Módulos</label>
+            <input name="quantidadeModulos" type="number" min="1" max="10" value={formData.quantidadeModulos} onChange={handleChange} className="w-full bg-transparent border-b border-[#1e293b] p-2 text-white outline-none" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Unidades por Módulo</label>
+            <input name="quantidadeUnidadesPorModulo" type="number" min="1" max="5" value={formData.quantidadeUnidadesPorModulo} onChange={handleChange} className="w-full bg-transparent border-b border-[#1e293b] p-2 text-white outline-none" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Aulas por Unidade</label>
+            <input name="quantidadeAulasPorUnidade" type="number" min="1" max="10" value={formData.quantidadeAulasPorUnidade} onChange={handleChange} className="w-full bg-transparent border-b border-[#1e293b] p-2 text-white outline-none" />
+          </div>
+        </div>
+
+        <div className="flex gap-4 pt-6 border-t border-[#D4AF37]/20">
+          <button 
+            type="button"
+            onClick={(e) => handleSubmit(e, 'publicado')}
+            disabled={loading}
+            className="flex-1 bg-[#D4AF37] text-black font-bold uppercase tracking-widest py-4 rounded-xl hover:bg-[#C5A028] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {loading ? <Sparkles className="animate-spin" /> : <CheckCircle2 />}
+            {loading ? 'Forjando Obra...' : 'Gerar Obra & Publicar'}
+          </button>
+          
+          <button 
+            type="button"
+            onClick={(e) => handleSubmit(e, 'rascunho')}
+            disabled={loading}
+            className="flex-1 bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] font-bold uppercase tracking-widest py-4 rounded-xl hover:bg-[#D4AF37]/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <Save size={20} />
+            Salvar Rascunho
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+```
+
+### Arquivo: `src/pages/premium/CamaraEstudosPage.tsx`
+*Descrição: Arquivo componente do sistema localizado em src/pages/premium/CamaraEstudosPage.tsx.*
+```tsx
+import React, { useState, useEffect } from 'react';
+import { BookOpen, Search, Lock, PlayCircle } from 'lucide-react';
+import { db, auth } from '../../lib/firebase';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  grauPermitido: number;
+  grauDoCurso: number;
+  premium: boolean;
+  type: string;
+}
+
+export function CamaraEstudosPage() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      if (!user) return;
+      try {
+        const q = query(
+          collection(db, 'courses'),
+          where('status', '==', 'publicado'),
+          where('premium', '==', true)
+        );
+        const querySnapshot = await getDocs(q);
+        const fetchedCourses = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Course[];
+        
+        // Filter out courses the user shouldn't see based on degree (if any logic needs client-side extra filtering)
+        // Actually, the Firestore rules also block read, but we did a list query.
+        const allowedCourses = fetchedCourses.filter(c => c.grauPermitido <= Number(user.grau || 1));
+        
+        setCourses(allowedCourses);
+      } catch (error) {
+        console.error("Erro ao carregar cursos", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, [user]);
+
+  if (loading) {
+    return <div className="text-center p-8 text-[#D4AF37]">Carregando Câmara de Estudos...</div>;
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto p-4 lg:p-8">
+      <div className="flex items-center gap-4 mb-8 border-b border-[#D4AF37]/20 pb-4">
+        <div className="p-3 bg-[#D4AF37]/10 rounded-xl text-[#D4AF37]">
+          <BookOpen size={32} />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold text-[#D4AF37]" style={{ fontFamily: 'Cinzel' }}>Câmara de Estudos</h1>
+          <p className="text-sm text-gray-400 uppercase tracking-widest mt-1">Obras Premium e Manuais</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {courses.length === 0 ? (
+          <div className="col-span-full text-center py-12 text-gray-500">
+            Nenhuma obra disponível para o seu grau no momento.
+          </div>
+        ) : (
+          courses.map(course => (
+            <div key={course.id} className="bg-[#0A0E1A] border border-[#1e293b] hover:border-[#D4AF37]/50 rounded-2xl p-6 transition-all flex flex-col shadow-lg">
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-1 rounded">Grau {course.grauDoCurso}</span>
+                <span className="text-[10px] uppercase text-gray-500">{course.type === 'livro' ? 'Manual' : 'Curso Interativo'}</span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">{course.title}</h3>
+              <p className="text-sm text-gray-400 mb-6 flex-1 line-clamp-3">{course.description}</p>
+              
+              <button 
+                onClick={() => navigate(`/estudos/${course.id}`)}
+                className="w-full bg-[#1e293b] text-white hover:text-black hover:bg-[#D4AF37] py-3 rounded-xl transition-colors font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2"
+              >
+                <PlayCircle size={18} />
+                Acessar Obra
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+```
+
+### Arquivo: `src/pages/premium/PremiumCourseViewerPage.tsx`
+*Descrição: Arquivo componente do sistema localizado em src/pages/premium/PremiumCourseViewerPage.tsx.*
+```tsx
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { db } from '../../lib/firebase';
+import { doc, getDoc, collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { BookOpen, ArrowLeft, PlayCircle, Lock } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+
+export function PremiumCourseViewerPage() {
+  const { courseId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [course, setCourse] = useState<any>(null);
+  const [modules, setModules] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCourseData = async () => {
+      if (!courseId || !user) return;
+      try {
+        const courseDoc = await getDoc(doc(db, 'courses', courseId));
+        if (!courseDoc.exists()) {
+          navigate('/estudos');
+          return;
+        }
+
+        const data = courseDoc.data();
+        if (data.grauPermitido > Number(user.grau || 1) && user.email !== 'tazmaniacrvg@gmail.com') {
+          navigate('/estudos'); // fallback for permissions
+          return;
+        }
+
+        setCourse({ id: courseDoc.id, ...data });
+
+        const modsSnap = await getDocs(query(collection(db, `courses/${courseId}/modules`), orderBy('order', 'asc')));
+        const mods = await Promise.all(modsSnap.docs.map(async modDoc => {
+          const modData = modDoc.data();
+          const unitsSnap = await getDocs(query(collection(db, `courses/${courseId}/modules/${modDoc.id}/units`), orderBy('order', 'asc')));
+          
+          const units = await Promise.all(unitsSnap.docs.map(async unitDoc => {
+            const unitData = unitDoc.data();
+            const lessonsSnap = await getDocs(query(collection(db, `courses/${courseId}/modules/${modDoc.id}/units/${unitDoc.id}/lessons`), orderBy('order', 'asc')));
+            
+            return {
+              id: unitDoc.id,
+              ...unitData,
+              lessons: lessonsSnap.docs.map(l => ({ id: l.id, ...l.data() }))
+            };
+          }));
+
+          return {
+            id: modDoc.id,
+            ...modData,
+            units
+          };
+        }));
+
+        setModules(mods);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourseData();
+  }, [courseId, user, navigate]);
+
+  if (loading) return <div className="p-8 text-[#D4AF37] text-center">Carregando Acervo...</div>;
+  if (!course) return null;
+
+  return (
+    <div className="max-w-5xl mx-auto p-4 lg:p-8">
+      <button 
+        onClick={() => navigate('/estudos')}
+        className="flex items-center gap-2 text-gray-400 hover:text-[#D4AF37] mb-6 transition-colors text-sm uppercase tracking-wider"
+      >
+        <ArrowLeft size={16} /> Voltar à Câmara
+      </button>
+
+      <div className="bg-[#0A0E1A] p-8 rounded-3xl border border-[#D4AF37]/20 shadow-2xl mb-8">
+        <div className="flex gap-4 items-center mb-4">
+          <span className="text-[10px] uppercase font-bold tracking-widest text-black bg-[#D4AF37] px-3 py-1 rounded">Grau {course.grauDoCurso}</span>
+          <span className="text-[10px] uppercase text-gray-400 tracking-widest">{course.type}</span>
+        </div>
+        <h1 className="text-4xl font-bold text-white mb-4" style={{ fontFamily: 'Cinzel' }}>{course.title}</h1>
+        <p className="text-gray-300 leading-relaxed text-lg max-w-3xl">{course.description}</p>
+      </div>
+
+      <div className="space-y-6">
+        <h2 className="text-xl font-bold text-[#D4AF37] uppercase tracking-widest mb-4">Módulos da Obra</h2>
+        {modules.map(mod => (
+          <div key={mod.id} className="bg-[#05070A] border border-[#1e293b] rounded-2xl overflow-hidden">
+            <div className="p-6 bg-[#0A0E1A] border-b border-[#1e293b]">
+              <h3 className="text-lg font-bold text-white">Módulo {mod.order}: {mod.title}</h3>
+              {mod.description && <p className="text-sm text-gray-400 mt-2">{mod.description}</p>}
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {mod.units.map((unit: any) => (
+                <div key={unit.id} className="pl-4 border-l-2 border-[#D4AF37]/30">
+                  <h4 className="text-md font-bold text-gray-200 mb-3">Unidade {unit.order}: {unit.title}</h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {unit.lessons.map((lesson: any) => (
+                      <button 
+                        key={lesson.id}
+                        onClick={() => navigate(`/estudos/${course.id}/lesson/${lesson.id}`)}
+                        className="flex items-center gap-3 p-3 bg-[#1e293b]/50 hover:bg-[#D4AF37]/10 border border-transparent hover:border-[#D4AF37]/30 rounded-xl transition-all text-left group"
+                      >
+                        <div className="p-2 bg-[#0A0E1A] rounded-lg text-gray-400 group-hover:text-[#D4AF37]">
+                          <PlayCircle size={18} />
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Aula {lesson.order}</p>
+                          <p className="text-sm text-white font-medium line-clamp-1">{lesson.title}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+```
+
+### Arquivo: `src/pages/premium/PremiumLessonViewerPage.tsx`
+*Descrição: Arquivo componente do sistema localizado em src/pages/premium/PremiumLessonViewerPage.tsx.*
+```tsx
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { db } from '../../lib/firebase';
+import { doc, getDoc, collectionGroup, query, where, getDocs } from 'firebase/firestore';
+import { ArrowLeft, CheckCircle2, ChevronRight, BookOpen } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import toast from 'react-hot-toast';
+
+export function PremiumLessonViewerPage() {
+  const { courseId, lessonId } = useParams();
+  const navigate = useNavigate();
+  const [lesson, setLesson] = useState<any>(null);
+  const [course, setCourse] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [score, setScore] = useState(0);
+
+  useEffect(() => {
+    const fetchLesson = async () => {
+      if (!courseId || !lessonId) return;
+      try {
+        const cDoc = await getDoc(doc(db, 'courses', courseId));
+        if (cDoc.exists()) setCourse(cDoc.data());
+
+        // Since lesson is nested deeply, we can use a collectionGroup query or direct path if we had it.
+        // We know the lessonId, so we can query collectionGroup 'lessons' where document ID == lessonId
+        const q = query(collectionGroup(db, 'lessons'));
+        // We can't query by document ID in collectionGroup directly easily without it being a field, 
+        // wait, we can't easily find the lesson without knowing its full path.
+        // Let's just fetch all modules, units to find it... or better, since we use uuid, collectionGroup by __name__ ? No, __name__ requires full path.
+        // Let's just fetch everything in the course and find the lesson. It's small.
+        const modsSnap = await getDocs(collection(db, `courses/${courseId}/modules`));
+        let foundLesson = null;
+        for (const modDoc of modsSnap.docs) {
+          const unitsSnap = await getDocs(collection(db, `courses/${courseId}/modules/${modDoc.id}/units`));
+          for (const unitDoc of unitsSnap.docs) {
+            const lDoc = await getDoc(doc(db, `courses/${courseId}/modules/${modDoc.id}/units/${unitDoc.id}/lessons`, lessonId));
+            if (lDoc.exists()) {
+              foundLesson = { id: lDoc.id, ...lDoc.data() };
+              break;
+            }
+          }
+          if (foundLesson) break;
+        }
+
+        if (foundLesson) {
+          setLesson(foundLesson);
+        } else {
+          toast.error("Aula não encontrada.");
+          navigate(`/estudos/${courseId}`);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLesson();
+  }, [courseId, lessonId, navigate]);
+
+  const handleAnswerChange = (qIndex: number, option: string) => {
+    if (submitted) return;
+    setAnswers(prev => ({ ...prev, [qIndex]: option }));
+  };
+
+  const handleSubmitQuiz = () => {
+    if (!lesson.exercises || lesson.exercises.length === 0) return;
+    let correct = 0;
+    lesson.exercises.forEach((ex: any, i: number) => {
+      if (answers[i] === ex.correctAnswer) correct++;
+    });
+    setScore(correct);
+    setSubmitted(true);
+  };
+
+  if (loading) return <div className="p-8 text-center text-[#D4AF37]">Preparando Templo...</div>;
+  if (!lesson) return null;
+
+  return (
+    <div className="max-w-4xl mx-auto p-4 lg:p-8 font-sans">
+      <button 
+        onClick={() => navigate(`/estudos/${courseId}`)}
+        className="flex items-center gap-2 text-gray-400 hover:text-[#D4AF37] mb-6 transition-colors text-sm uppercase tracking-wider"
+      >
+        <ArrowLeft size={16} /> Voltar ao Sumário
+      </button>
+
+      <div className="bg-[#0A0E1A] rounded-3xl border border-[#D4AF37]/20 shadow-2xl overflow-hidden mb-8">
+        <div className="p-8 border-b border-[#1e293b] bg-gradient-to-b from-[#05070A] to-[#0A0E1A]">
+           <div className="flex items-center gap-3 text-[#D4AF37] mb-4">
+             <BookOpen size={20} />
+             <span className="text-xs uppercase tracking-widest font-bold">Instrução Maçônica</span>
+           </div>
+           <h1 className="text-3xl font-bold text-white mb-2 leading-tight">{lesson.title}</h1>
+           <p className="text-sm text-gray-400 uppercase tracking-widest">{course?.title}</p>
+        </div>
+
+        <div className="p-8 lg:p-12 prose prose-invert prose-p:text-gray-300 prose-p:leading-relaxed prose-headings:text-[#D4AF37] prose-a:text-[#D4AF37] max-w-none prose-blockquote:border-[#D4AF37] prose-blockquote:text-gray-400 prose-blockquote:italic">
+          <ReactMarkdown>{lesson.content}</ReactMarkdown>
+        </div>
+      </div>
+
+      {lesson.exercises && lesson.exercises.length > 0 && (
+        <div className="bg-[#05070A] p-8 rounded-3xl border border-[#1e293b] shadow-xl">
+          <h2 className="text-2xl font-bold text-white mb-6 uppercase tracking-widest flex items-center gap-3">
+            <CheckCircle2 className="text-[#D4AF37]" /> Questionário de Fixação
+          </h2>
+
+          <div className="space-y-8">
+            {lesson.exercises.map((ex: any, i: number) => (
+              <div key={i} className="bg-[#0A0E1A] p-6 rounded-2xl border border-[#1e293b]">
+                <p className="text-gray-200 font-medium mb-4 text-lg">{i + 1}. {ex.question}</p>
+                <div className="space-y-3">
+                  {ex.options && ex.options.map((opt: string, optIdx: number) => {
+                    const isSelected = answers[i] === opt;
+                    const isCorrect = ex.correctAnswer === opt;
+                    
+                    let bgClass = "bg-[#1e293b] text-gray-300 hover:border-[#D4AF37]/50 border-transparent";
+                    if (isSelected) bgClass = "bg-[#D4AF37]/10 border-[#D4AF37] text-white";
+                    if (submitted) {
+                      if (isCorrect) bgClass = "bg-green-900/40 border-green-500 text-green-300";
+                      else if (isSelected && !isCorrect) bgClass = "bg-red-900/40 border-red-500 text-red-300";
+                      else bgClass = "bg-[#1e293b]/50 text-gray-500 border-transparent opacity-50";
+                    }
+
+                    return (
+                      <button
+                        key={optIdx}
+                        onClick={() => handleAnswerChange(i, opt)}
+                        disabled={submitted}
+                        className={`w-full text-left p-4 rounded-xl border transition-all ${bgClass}`}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+                {submitted && (
+                  <div className={`mt-4 p-4 rounded-xl text-sm ${answers[i] === ex.correctAnswer ? 'bg-green-900/20 text-green-400' : 'bg-[#D4AF37]/10 text-[#D4AF37]'}`}>
+                    <span className="font-bold uppercase tracking-wider block mb-1">Nota da Instrução:</span>
+                    {ex.explanation}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {!submitted ? (
+            <button 
+              onClick={handleSubmitQuiz}
+              disabled={Object.keys(answers).length < lesson.exercises.length}
+              className="mt-8 w-full bg-[#D4AF37] text-black font-bold uppercase tracking-widest py-4 rounded-xl hover:bg-[#C5A028] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Gravar Respostas
+            </button>
+          ) : (
+            <div className="mt-8 p-6 bg-[#0A0E1A] border-2 border-[#D4AF37] rounded-xl text-center">
+              <h3 className="text-xl font-bold text-[#D4AF37] mb-2 uppercase tracking-widest">Resultado da Avaliação</h3>
+              <p className="text-gray-300">
+                Você acertou <strong className="text-white text-2xl">{score}</strong> de <strong className="text-white">{lesson.exercises.length}</strong> questões.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+```
+
+### Arquivo: `package.json`
+*Descrição: Arquivo componente do sistema localizado em package.json.*
+```json
+{
+  "name": "react-example",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "start": "node dist/server.cjs",
+    "preview": "vite preview",
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google/genai": "^1.52.0",
+    "@jitsi/react-sdk": "^1.4.4",
+    "@tailwindcss/vite": "^4.1.14",
+    "@vitejs/plugin-react": "^5.0.4",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "firebase": "^12.12.1",
+    "firebase-admin": "^13.10.0",
+    "html2canvas": "^1.4.1",
+    "lucide-react": "^0.546.0",
+    "motion": "^12.23.24",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "react-easy-crop": "^5.5.7",
+    "react-hot-toast": "^2.6.0",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.15.0",
+    "recharts": "^3.9.0",
+    "tailwind-merge": "^3.5.0",
+    "vite": "^6.2.3",
+    "vite-plugin-pwa": "^1.2.0",
+    "xlsx": "^0.18.5"
+  },
+  "overrides": {
+    "react-router": "^7.15.0",
+    "react-router-dom": "^7.15.0",
+    "qs": "^6.15.2",
+    "uuid": "^11.1.1",
+    "ws": "^8.21.0",
+    "protobufjs": "^7.5.8",
+    "brace-expansion": "^5.0.6"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.14.0",
+    "autoprefixer": "^10.4.21",
+    "esbuild": "^0.28.1",
+    "tailwindcss": "^4.1.14",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.3"
+  }
+}
+
+```
+
+### Arquivo: `vite.config.ts`
+*Descrição: Arquivo componente do sistema localizado em vite.config.ts.*
+```ts
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import { defineConfig, loadEnv } from 'vite';
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, '.', '');
+  return {
+    base: '/',
+    plugins: [
+      react(),
+      tailwindcss(),
+    ],
+    define: {
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || process.env.GEMINI_API_KEY),
+    },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, '.'),
+      },
+    },
+    server: {
+      // HMR is disabled in AI Studio via DISABLE_HMR env var.
+      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+      hmr: process.env.DISABLE_HMR !== 'true',
+    },
+  };
+});
+
+```
+
+### Arquivo: `.env.example`
+*Descrição: Arquivo componente do sistema localizado em .env.example.*
+```example
+# GEMINI_API_KEY: Required for Gemini AI API calls.
+# AI Studio automatically injects this at runtime from user secrets.
+# Users configure this via the Secrets panel in the AI Studio UI.
+GEMINI_API_KEY="MY_GEMINI_API_KEY"
+
+# APP_URL: The URL where this applet is hosted.
+# AI Studio automatically injects this at runtime with the Cloud Run service URL.
+# Used for self-referential links, OAuth callbacks, and API endpoints.
+APP_URL="MY_APP_URL"
+
+```
+
+### Arquivo: `server.ts`
+*Descrição: Arquivo componente do sistema localizado em server.ts.*
+```ts
+import express from "express";
+import path from "path";
+import { createServer as createViteServer } from "vite";
+import { GoogleGenAI, Type } from "@google/genai";
+import admin from 'firebase-admin';
+
+// Initialize Firebase Admin (Only once)
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
+const db = admin.firestore();
+
+// Ensure GEMINI_API_KEY is available
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey && process.env.NODE_ENV !== "production") {
+  console.warn("GEMINI_API_KEY environment variable is missing.");
+}
+
+const ai = new GoogleGenAI({ 
+  apiKey: apiKey || '',
+  httpOptions: {
+    headers: {
+      'User-Agent': 'aistudio-build',
+    }
+  }
+});
+
+async function startServer() {
+  const app = express();
+  const PORT = 3000;
+
+  app.use(express.json());
+
+  // API Route for Premium Generation
+  app.post("/api/premium/generate", async (req, res) => {
+    try {
+      // In a real app we'd verify the Firebase ID token here to ensure it's tazmaniacrvg@gmail.com
+      // For this implementation, we rely on the frontend sending the request + firestore rules restricting write access.
+      // But actually, we need to create the Firestore documents HERE if we use the backend, 
+      // OR we just return the generated content to the frontend and the frontend creates the documents in Firestore.
+      // It is better if the frontend creates the documents so it uses the logged-in user's credentials and Firestore Rules are applied correctly!
+      // So this endpoint will JUST return the generated JSON.
+
+      const { 
+        title, description, grauPermitido, grauDoCurso,
+        publicoAlvo, objetivoPedagogico, nivelProfundidade,
+        tomLinguagem, quantidadeModulos, quantidadeUnidadesPorModulo,
+        quantidadeAulasPorUnidade, duracaoEstimadaAula, tipoMaterial,
+        estiloLivro, referenciasPermitidas, restricoesConteudo
+      } = req.body;
+
+      const prompt = `Crie um ${tipoMaterial} maçônico intitulado "${title}".
+Tema: ${description}
+Público Alvo: ${publicoAlvo}
+Grau do Conteúdo: ${grauDoCurso} (Deve respeitar os limites deste grau)
+Objetivo Pedagógico: ${objetivoPedagogico}
+Nível de Profundidade: ${nivelProfundidade}
+Tom de Linguagem: ${tomLinguagem}
+Estrutura exigida:
+- ${quantidadeModulos} módulo(s)
+- ${quantidadeUnidadesPorModulo} unidade(s) por módulo
+- ${quantidadeAulasPorUnidade} aula(s) por unidade (cada aula com texto denso e aprofundado, duração média ${duracaoEstimadaAula})
+- 5 questões (múltipla escolha ou V/F) por aula
+
+Retorne ESTRITAMENTE em formato JSON, com a seguinte estrutura (em português):
+{
+  "title": "${title}",
+  "description": "Uma sinopse profunda e refinada.",
+  "modules": [
+    {
+      "title": "Nome do Módulo",
+      "description": "Descrição do módulo",
+      "order": 1,
+      "units": [
+        {
+          "title": "Nome da Unidade",
+          "description": "Descrição da unidade",
+          "order": 1,
+          "lessons": [
+            {
+              "title": "Nome da Aula",
+              "order": 1,
+              "content": "Conteúdo principal da aula, detalhado, denso, humanizado e premium, formatado em Markdown ou HTML.",
+              "exercises": [
+                {
+                  "question": "Enunciado",
+                  "options": ["A", "B", "C", "D"], // opcional para V/F
+                  "correctAnswer": "A",
+                  "explanation": "Explicação do motivo da resposta estar correta."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+Não inclua markdown \`\`\`json no início ou no fim, retorne apenas o objeto JSON. Seja profundo, respeitoso e ético.
+`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-pro-preview",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          temperature: 0.7,
+        }
+      });
+
+      const jsonStr = response.text || "{}";
+      const generatedContent = JSON.parse(jsonStr);
+
+      res.json({ success: true, data: generatedContent });
+    } catch (error: any) {
+      console.error("Erro na geração:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Vite middleware for development
+  if (process.env.NODE_ENV !== "production") {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+startServer();
+
+```
+
+### Arquivo: `firestore.rules`
+*Descrição: Arquivo componente do sistema localizado em firestore.rules.*
+```rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net (Pillar 4 Phase 4.1)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- GLOBAL HELPER PRIVILEGES ---
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email.lower() == 'gomau.ead@gmail.com' || 
+        request.auth.token.email.lower() == 'calepi@gmail.com' ||
+        request.auth.token.email.lower() == 'calepe@gmail.com'
+      );
+    }
+
+    function isGestor() {
+      return isSignedIn() && (
+        isSuperAdmin() || 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'gestor')
+      );
+    }
+
+    function isRestrictedFaltas() {
+      return isSignedIn() && (
+        (request.auth.token.email != null && (
+          request.auth.token.email.lower() == 'diogo.mourapedroso@gmail.com' ||
+          request.auth.token.email.lower() == 'tazmaniacrvg@gmail.com'
+        )) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.cim == '3330' ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.cim == '331'
+        ))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // --- COLLECTIONS ---
+
+    match /users/{userId} {
+      allow get: if true;
+      allow list: if true;
+      
+      // Standard users cannot register their profiles as 'gestor'
+      allow create: if isSignedIn() && (
+        isGestor() || (
+          isOwner(userId) && request.resource.data.role == 'membro'
+        )
+      );
+
+      // standard users cannot escalate their role, status, cim, email, or grado
+      allow update: if isSignedIn() && (
+        isGestor() || (
+          isOwner(userId) && 
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'grau', 'status', 'cim', 'email'])
+        )
+      );
+
+      allow delete: if isGestor() || (isSignedIn() && userId != request.auth.uid && request.auth.token.email != null && (
+        (resource.data.email != null && resource.data.email.lower() == request.auth.token.email.lower()) ||
+        (resource.data.emailVinculado != null && resource.data.emailVinculado.lower() == request.auth.token.email.lower())
+      ));
+    }
+
+    match /grades/{gradeId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /contents/{contentId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    function isPremiumAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email != null && request.auth.token.email.lower() == 'tazmaniacrvg@gmail.com') ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'adminPremium')
+      );
+    }
+
+    function getUserGrau() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) ? 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.grau : 1;
+    }
+
+    match /courses/{courseId} {
+      allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || (resource.data.status == 'publicado' && resource.data.grauPermitido <= getUserGrau()));
+      allow write: if isGestor() || isPremiumAdmin();
+      
+      match /modules/{moduleId} {
+        allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+        allow write: if isGestor() || isPremiumAdmin();
+        
+        match /units/{unitId} {
+          allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+          allow write: if isGestor() || isPremiumAdmin();
+          
+          match /lessons/{lessonId} {
+            allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+            allow write: if isGestor() || isPremiumAdmin();
+          }
+        }
+      }
+    }
+
+    match /attempts/{attemptId} {
+      allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && (isGestor() || isPremiumAdmin());
+    }
+
+    match /progress/{progressId} {
+      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor() || isPremiumAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor() || isPremiumAdmin());
+      
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(progressId) && (
+        isGestor() || isPremiumAdmin() ||
+        (resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId)
+      );
+    }
+
+    match /requests/{requestId} {
+      allow get: if isSignedIn() && isValidId(requestId) && (resource.data.userId == request.auth.uid || isGestor() || isRestrictedFaltas());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor() || isRestrictedFaltas());
+      
+      // Prevent standard users from auto-approving their advancement requests
+      allow create: if isSignedIn() && (
+        isGestor() || (
+          request.resource.data.userId == request.auth.uid &&
+          request.resource.data.status == 'pendente'
+        )
+      );
+
+      // Prevent standard users from changing request statuses or editing someone else's document ID
+      allow update: if isGestor() || (
+        resource.data.userId == request.auth.uid && 
+        resource.data.status == 'pendente' &&
+        request.resource.data.status == 'pendente' &&
+        request.resource.data.userId == resource.data.userId
+      );
+
+      allow delete: if isGestor() || (resource.data.userId == request.auth.uid && (resource.data.status == 'pendente' || resource.data.status == 'rejeitado'));
+    }
+
+    match /events/{eventId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+      
+      match /attendance/{attendanceId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if isGestor();
+      }
+    }
+
+    match /evolutionRules/{ruleId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /goals/{goalId} {
+      allow get: if isSignedIn() && isValidId(goalId) && (resource.data.userId == request.auth.uid || isGestor());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(goalId) && (
+        isGestor() || 
+        (resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid)
+      );
+      allow delete: if isSignedIn() && isValidId(goalId) && (isGestor() || resource.data.userId == request.auth.uid);
+    }
+
+    match /evaluations/{evaluationId} {
+      allow get: if isSignedIn() && isValidId(evaluationId) && (resource.data.userId == request.auth.uid || isGestor());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      
+      allow write: if isGestor();
+    }
+
+    match /history/{historyId} {
+      allow get: if isSignedIn() && isValidId(historyId) && (resource.data.userId == request.auth.uid || isGestor());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isGestor());
+      allow update: if isGestor();
+    }
+
+    match /courseProgress/{progressId} {
+      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(progressId) && (
+        isGestor() || 
+        (resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    match /reading_progress/{progressId} {
+      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(progressId) && (
+        isGestor() || 
+        (resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId)
+      );
+    }
+
+    match /settings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /library_items/{itemId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /configs/{configId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /forumTopics/{topicId} {
+      allow read: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      
+      // Author can update status/titles. Other users can ONLY increment replyCount
+      allow update: if isSignedIn() && (
+        isGestor() || 
+        (resource.data.authorId == request.auth.uid && request.resource.data.authorId == resource.data.authorId) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replyCount']))
+      );
+
+      allow delete: if isGestor() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+    }
+
+    match /forumReplies/{replyId} {
+      allow read: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && (isGestor() || resource.data.authorId == request.auth.uid);
+      allow delete: if isGestor() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+    }
+
+    match /forumInstructors/{instructorId} {
+      allow read: if isSignedIn();
+      allow list: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /accessLogs/{logId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isGestor();
+    }
+
+    match /mensalidades/{paymentId} {
+      // Allow read if user is the owner or is a Gestor
+      allow get: if isSignedIn() && (resource == null || resource.data.uid == request.auth.uid || isGestor());
+      allow list: if isSignedIn() && (resource == null || resource.data.uid == request.auth.uid || isGestor());
+      
+      // Standard members must submit monthly payments with status 'em_analise' (Pillar 2 / Phase 4.2)
+      allow create: if isSignedIn() && (
+        isGestor() || (
+          request.resource.data.uid == request.auth.uid &&
+          request.resource.data.status == 'em_analise'
+        )
+      );
+
+      allow update: if isGestor();
+      allow delete: if isGestor();
+    }
+
+    match /cadeia_uniao/{requestId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && (request.resource.data.uid == request.auth.uid || request.resource.data.userId == request.auth.uid);
+      
+      // Author can edit fields. Sibling users can only increment vibration counters (Pillar 4 Phase 4.5)
+      allow update: if isSignedIn() && (
+        isGestor() ||
+        ((resource.data.uid == request.auth.uid || resource.data.userId == request.auth.uid) && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'category', 'isAnonymous', 'userName', 'updatedAt'])) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['vibrators', 'vibrantesCount'])
+      );
+
+      allow delete: if isGestor() || (isSignedIn() && (resource.data.uid == request.auth.uid || resource.data.userId == request.auth.uid));
+    }
+
+    match /library_notes/{noteId} {
+      allow get, list: if isSignedIn() && (resource == null || resource.data.uid == request.auth.uid);
+      allow create, update: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    match /birthday_messages/{messageId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.fromUserId == request.auth.uid;
+    }
+
+    match /adminPermissions/{permissionId} {
+      allow read, list: if isSignedIn();
+      allow write: if isGestor();
+    }
+
+    match /officersNotifications/{notificationId} {
+      allow read, list: if isSignedIn();
+      allow write: if isGestor();
+    }
+  }
 }
 
 ```

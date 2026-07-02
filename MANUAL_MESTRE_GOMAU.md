@@ -240,6 +240,12 @@ Ao fazer login com a conta Google, o sistema exige:
 
 ## 5. Changelog e Histórico de Evolução
 
+- **2026-07-01 (Módulo Premium "Câmara de Criação" Integrado):**
+  1. **Gerador de Conteúdos por IA**: Desenvolvido um portal premium (Câmara de Criação) exclusivo para o e-mail 'tazmaniacrvg@gmail.com'. Permite a geração estruturada, autônoma e editorial de Cursos Interativos e Livros (Manuais) com profundidade maçônica.
+  2. **Estrutura Hierárquica Aprofundada**: O motor de geração no backend utiliza o Gemini 3.1 Pro para criar e aninhar Módulos, Unidades, Aulas e Exercícios, formatados em JSON e persistidos nativamente no Firestore.
+  3. **Visualizador de "Câmara de Estudos"**: Criada a listagem restrita aos alunos de "Obras Premium e Manuais", respeitando a trava de Graus e permissões de visibilidade.
+  4. **Atualização Oficial do Valuation**: Incorporação orçamentária do motor avançado de IA (Gerador Premium), adicionando R$ 22.000,00 e elevando o **Valor Global Estimado (Valuation) da Plataforma para R$ 220.000,00**.
+
 - **2026-07-01 (Leitor Seguro em Modal na Biblioteca Virtual & Atualização no Valuation):**
   1. **Visualizador Seguro Restrito**: Substituído o redirecionamento externo para abertura de links por um Leitor Seguro (Pop-up/Modal) integrado na própria plataforma, isolando a leitura dos cursos/livros da Biblioteca Virtual em iframe.
   2. **Bloqueios Anti-Pirataria**: Implementados bloqueios robustos via React e Tailwind (CSS) para proibir a cópia, impressão e salvamento direto do acervo (restrições via `onContextMenu`, `select-none`, ocultação total da página na fila de impressão global e desativação dos atalhos de corte e cola).

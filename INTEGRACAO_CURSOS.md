@@ -41,4 +41,12 @@ A plataforma agora possui seu próprio LMS (Learning Management System) integrad
 - **Performance:** Os cursos são cacheados e carregados muito mais rapidamente do que via Iframes (onde perderíamos controle de navegação e UX mobile).
 - **Gamificação Segura:** Sem risco de APIs forjadas atualizando o progresso; as Security Rules do Firestore protegem o documento `courseProgress`.
 
-**Fim do arquivo original de Integração:** Este módulo superou a proposta anterior e hoje se configura como um dos pilares mais inovadores da EdTech maçônica global.
+## 4. Evolução (2026-07-01): Câmara de Criação Premium
+
+O sistema evoluiu para comportar obras ainda mais complexas (Livros, Cursos Interativos e Formatos Híbridos) operando com o `gemini-3.1-pro-preview` através de um Backend Full-Stack Server (Express). 
+
+O módulo "Câmara de Criação", exclusivo para acesso Premium/Administrativo, gera estruturas de dados ainda mais ricas:
+- **Hierarquia:** Curso -> Módulos -> Unidades -> Aulas -> Exercícios.
+- **Validação Server-Side:** A API Key do Gemini foi movida definitivamente para o `server.ts` (`/api/premium/generate`), garantindo proteção absoluta e processamento off-loaded do cliente.
+- **Visualizador Próprio:** Os cursos/manuais gerados são acessados via `PremiumCourseViewerPage`, que orquestra a visibilidade da nova arquitetura hierárquica baseada no Grau do aluno.
+

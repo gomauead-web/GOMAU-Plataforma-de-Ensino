@@ -24,7 +24,15 @@ import { Forum } from './pages/Forum';
 import { MASTER_ADMINS } from './constants';
 import { NotificationManager } from './components/NotificationManager';
 
+import { CamaraCriacaoPage } from './pages/premium/CamaraCriacaoPage';
+import { CamaraEstudosPage } from './pages/premium/CamaraEstudosPage';
+
+import { PremiumCourseViewerPage } from './pages/premium/PremiumCourseViewerPage';
+import { PremiumLessonViewerPage } from './pages/premium/PremiumLessonViewerPage';
+
 function ProtectedRoute({ children, requireGestor = false }: { children: React.ReactNode, requireGestor?: boolean }) {
+
+
   const { user, loading } = useAuth();
   
   if (loading) return <div className="h-screen w-screen flex items-center justify-center bg-[#0B0B0C] text-[#D4AF37]">Carregando...</div>;
@@ -97,6 +105,10 @@ export default function App() {
           <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />
           <Route path="/contents" element={<ProtectedRoute><Layout><ContentPage /></Layout></ProtectedRoute>} />
           <Route path="/cursos" element={<ProtectedRoute><Layout><CursosExternos /></Layout></ProtectedRoute>} />
+          <Route path="/criacao" element={<ProtectedRoute><Layout><CamaraCriacaoPage /></Layout></ProtectedRoute>} />
+          <Route path="/estudos" element={<ProtectedRoute><Layout><CamaraEstudosPage /></Layout></ProtectedRoute>} />
+          <Route path="/estudos/:courseId" element={<ProtectedRoute><Layout><PremiumCourseViewerPage /></Layout></ProtectedRoute>} />
+          <Route path="/estudos/:courseId/lesson/:lessonId" element={<ProtectedRoute><Layout><PremiumLessonViewerPage /></Layout></ProtectedRoute>} />
           <Route path="/cursos/:courseId" element={<ProtectedRoute><Layout><CursoDetail /></Layout></ProtectedRoute>} />
           <Route path="/forum" element={<ProtectedRoute><Layout><Forum /></Layout></ProtectedRoute>} />
           <Route path="/requests" element={<ProtectedRoute><Layout><RequestsPage /></Layout></ProtectedRoute>} />

@@ -86,18 +86,52 @@ service cloud.firestore {
       allow write: if isGestor();
     }
 
+    function isPremiumAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email != null && request.auth.token.email.lower() == 'tazmaniacrvg@gmail.com') ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'adminPremium')
+      );
+    }
+
+    function getUserGrau() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) ? 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.grau : 1;
+    }
+
     match /courses/{courseId} {
-      allow read: if isSignedIn();
-      allow write: if isGestor();
+      allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || (resource.data.status == 'publicado' && resource.data.grauPermitido <= getUserGrau()));
+      allow write: if isGestor() || isPremiumAdmin();
+      
+      match /modules/{moduleId} {
+        allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+        allow write: if isGestor() || isPremiumAdmin();
+        
+        match /units/{unitId} {
+          allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+          allow write: if isGestor() || isPremiumAdmin();
+          
+          match /lessons/{lessonId} {
+            allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+            allow write: if isGestor() || isPremiumAdmin();
+          }
+        }
+      }
+    }
+
+    match /attempts/{attemptId} {
+      allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && (isGestor() || isPremiumAdmin());
     }
 
     match /progress/{progressId} {
-      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor());
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor() || isPremiumAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor() || isPremiumAdmin());
       
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if isSignedIn() && isValidId(progressId) && (
-        isGestor() ||
+        isGestor() || isPremiumAdmin() ||
         (resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId)
       );
     }
