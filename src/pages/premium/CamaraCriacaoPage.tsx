@@ -15,6 +15,11 @@ export function CamaraCriacaoPage() {
     objetivoPedagogico: '',
     nivelProfundidade: 'intermediário',
     tomLinguagem: 'premium',
+    ritoFoco: 'universal',
+    abordagemFilosofica: 'tradicional',
+    estiloExercicios: 'misturado',
+    tamanhoLicoes: 'médio',
+    citacoesEReferencias: 'autores_classicos',
     quantidadeModulos: 1,
     quantidadeUnidadesPorModulo: 1,
     quantidadeAulasPorUnidade: 3,
@@ -179,6 +184,64 @@ export function CamaraCriacaoPage() {
               <option value="premium">Premium / Masterclass (Recomendado)</option>
             </select>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Rito Foco</label>
+            <select name="ritoFoco" value={formData.ritoFoco} onChange={handleChange} className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white outline-none">
+              <option value="universal">Multirito / Universal</option>
+              <option value="reaa">R.E.A.A.</option>
+              <option value="york">Rito de York</option>
+              <option value="schroeder">Rito Schröder</option>
+              <option value="brasileiro">Rito Brasileiro</option>
+              <option value="adonhiramita">Rito Adonhiramita</option>
+              <option value="moderno">Rito Moderno</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Abordagem Filosófica</label>
+            <select name="abordagemFilosofica" value={formData.abordagemFilosofica} onChange={handleChange} className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white outline-none">
+              <option value="tradicional">Tradicional / Ortodoxa</option>
+              <option value="esoterica">Hermética / Esotérica</option>
+              <option value="historica">Histórica / Científica</option>
+              <option value="psicologica">Psicológica / Analítica</option>
+              <option value="comportamental">Prática / Comportamental</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Citações & Referências</label>
+            <select name="citacoesEReferencias" value={formData.citacoesEReferencias} onChange={handleChange} className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white outline-none">
+              <option value="autores_classicos">Autores Clássicos (Boucher, Aslan, etc)</option>
+              <option value="rituais_oficiais">Foco em Rituais Oficiais</option>
+              <option value="textos_filosoficos">Textos Filosóficos Gerais</option>
+              <option value="sem_citacoes">Evitar Citações Diretas</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Estilo de Exercícios</label>
+            <select name="estiloExercicios" value={formData.estiloExercicios} onChange={handleChange} className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white outline-none">
+              <option value="misturado">Misturado (Exato e Reflexivo)</option>
+              <option value="reflexivo">Predominantemente Reflexivo / Interpretativo</option>
+              <option value="conhecimento">Conhecimento Exato / Ritualística</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Densidade / Tamanho da Aula</label>
+            <select name="tamanhoLicoes" value={formData.tamanhoLicoes} onChange={handleChange} className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white outline-none">
+              <option value="curto">Curto (Leitura de 5-10 min)</option>
+              <option value="medio">Médio (Leitura de 15-20 min)</option>
+              <option value="longo">Longo / Denso (Leitura de 30+ min)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Restrições e Cuidados Editoriais</label>
+          <textarea name="restricoesConteudo" rows={2} value={formData.restricoesConteudo} onChange={handleChange} placeholder="Ex: Não citar política contemporânea, não mencionar palavras de passe, manter foco apenas na instrução do grau..." className="w-full bg-[#05070A] border border-[#1e293b] rounded-lg p-3 text-white outline-none resize-none"></textarea>
         </div>
 
         <div className="space-y-2">

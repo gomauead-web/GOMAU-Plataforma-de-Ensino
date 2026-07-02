@@ -45,7 +45,9 @@ async function startServer() {
       const { 
         title, description, grauPermitido, grauDoCurso,
         publicoAlvo, objetivoPedagogico, nivelProfundidade,
-        tomLinguagem, quantidadeModulos, quantidadeUnidadesPorModulo,
+        tomLinguagem, ritoFoco, abordagemFilosofica,
+        estiloExercicios, tamanhoLicoes, citacoesEReferencias,
+        quantidadeModulos, quantidadeUnidadesPorModulo,
         quantidadeAulasPorUnidade, duracaoEstimadaAula, tipoMaterial,
         estiloLivro, referenciasPermitidas, restricoesConteudo
       } = req.body;
@@ -53,15 +55,22 @@ async function startServer() {
       const prompt = `Crie um ${tipoMaterial} maçônico intitulado "${title}".
 Tema: ${description}
 Público Alvo: ${publicoAlvo}
-Grau do Conteúdo: ${grauDoCurso} (Deve respeitar os limites deste grau)
+Grau do Conteúdo: ${grauDoCurso} (Deve respeitar os limites e os juramentos deste grau)
 Objetivo Pedagógico: ${objetivoPedagogico}
 Nível de Profundidade: ${nivelProfundidade}
 Tom de Linguagem: ${tomLinguagem}
+Rito Foco: ${ritoFoco}
+Abordagem Filosófica: ${abordagemFilosofica}
+Citações & Referências Recomendadas: ${citacoesEReferencias}
+Tamanho Médio das Lições: ${tamanhoLicoes}
+Estilo dos Exercícios: ${estiloExercicios}
+Restrições e Cuidados Editoriais Específicos: ${restricoesConteudo}
+
 Estrutura exigida:
 - ${quantidadeModulos} módulo(s)
 - ${quantidadeUnidadesPorModulo} unidade(s) por módulo
-- ${quantidadeAulasPorUnidade} aula(s) por unidade (cada aula com texto denso e aprofundado, duração média ${duracaoEstimadaAula})
-- 5 questões (múltipla escolha ou V/F) por aula
+- ${quantidadeAulasPorUnidade} aula(s) por unidade (cada aula com texto denso e aprofundado, formatado com excelente diagramação tipográfica em Markdown)
+- 5 questões por aula no estilo: ${estiloExercicios}
 
 Retorne ESTRITAMENTE em formato JSON, com a seguinte estrutura (em português):
 {
