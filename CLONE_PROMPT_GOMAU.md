@@ -2340,8 +2340,8 @@ export function DataManagement() {
 ```tsx
 import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
-import { Plus, Trash2, Edit2, Save, X, BookOpen, Link, Star, Lock, HelpCircle, Users, Unlock, CheckCircle2, Search, Coins, Sparkles, BookMarked } from 'lucide-react';
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc } from 'firebase/firestore';
+import { Plus, Trash2, Edit2, Save, X, BookOpen, Link, Star, Lock, HelpCircle, Users, Unlock, CheckCircle2, Search, Coins, Sparkles, BookMarked, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const GRAUS = ['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'];
@@ -2351,11 +2351,20 @@ export function GestorLibrary() {
   const [loading, setLoading] = useState(true);
   
   // Tab Management
-  const [activeTab, setActiveTab] = useState<'obras' | 'liberacoes'>('obras');
+  const [activeTab, setActiveTab] = useState<'obras' | 'liberacoes' | 'configuracoes'>('obras');
   const [users, setUsers] = useState<any[]>([]);
   const [userPayments, setUserPayments] = useState<{ [uid: string]: any[] }>({});
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [userSearch, setUserSearch] = useState('');
+
+  // Config State
+  const [loadingConfig, setLoadingConfig] = useState(false);
+  const [configSubmitting, setConfigSubmitting] = useState(false);
+  const [planoMensal, setPlanoMensal] = useState('');
+  const [planoSemestral, setPlanoSemestral] = useState('');
+  const [planoAnual, setPlanoAnual] = useState('');
+  const [descontoTexto, setDescontoTexto] = useState('');
+  const [whatsappCobranca, setWhatsappCobranca] = useState('');
 
   // Form State
   const [showAddForm, setShowAddForm] = useState(false);
@@ -2378,7 +2387,49 @@ export function GestorLibrary() {
   useEffect(() => {
     fetchItems();
     fetchUsersAndPayments();
+    fetchConfig();
   }, []);
+
+  const fetchConfig = async () => {
+    setLoadingConfig(true);
+    try {
+      const docRef = doc(db, 'library_settings', 'premium_plan');
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        setPlanoMensal(data.planoMensal || '');
+        setPlanoSemestral(data.planoSemestral || '');
+        setPlanoAnual(data.planoAnual || '');
+        setDescontoTexto(data.descontoTexto || '');
+        setWhatsappCobranca(data.whatsappCobranca || '');
+      }
+    } catch (err) {
+      console.error("Erro ao carregar configurações da biblioteca:", err);
+    } finally {
+      setLoadingConfig(false);
+    }
+  };
+
+  const handleSaveConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setConfigSubmitting(true);
+    try {
+      await setDoc(doc(db, 'library_settings', 'premium_plan'), {
+        planoMensal,
+        planoSemestral,
+        planoAnual,
+        descontoTexto,
+        whatsappCobranca,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      toast.success("Configurações financeiras atualizadas com sucesso!");
+    } catch (err) {
+      console.error("Erro ao salvar configurações:", err);
+      toast.error("Falha ao salvar configurações.");
+    } finally {
+      setConfigSubmitting(false);
+    }
+  };
 
   const fetchItems = async () => {
     setLoading(true);
@@ -2610,11 +2661,11 @@ export function GestorLibrary() {
           </h2>
           <p className="text-xs text-gray-400 mt-1">Gerencie tomos, rituais, de linhagem e envie chaves de liberação para os irmãos.</p>
         </div>
-        <div className="flex bg-black/40 border border-white/10 p-0.5 rounded-xl w-full sm:w-auto self-stretch sm:self-auto shrink-0">
+        <div className="flex bg-black/40 border border-white/10 p-0.5 rounded-xl w-full sm:w-auto self-stretch sm:self-auto shrink-0 overflow-x-auto hide-scrollbar">
           <button
             type="button"
             onClick={() => { setActiveTab('obras'); setShowAddForm(false); }}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'obras' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'obras' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
           >
             <BookMarked size={14} />
             Acervo de Obras
@@ -2622,15 +2673,23 @@ export function GestorLibrary() {
           <button
             type="button"
             onClick={() => { setActiveTab('liberacoes'); fetchUsersAndPayments(); }}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'liberacoes' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'liberacoes' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
           >
             <Users size={14} />
             Liberações ({users.length})
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('configuracoes')}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'configuracoes' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+          >
+            <Settings size={14} />
+            Planos & Cobrança
+          </button>
         </div>
       </div>
 
-      {activeTab === 'obras' ? (
+      {activeTab === 'obras' && (
         <>
           <div className="flex justify-between items-center bg-[#1e293b]/20 p-5 rounded-2xl border border-white/5">
             <div>
@@ -2916,8 +2975,8 @@ export function GestorLibrary() {
           </div>
         </div>
       )}
-        </>
-      ) : (
+
+      {activeTab === 'liberacoes' && (
         <>
           {/* SECURE PREMIUM UNLOCK & TREASURY ALIGNMENT BOARD */}
           <div className="bg-black/30 border border-white/5 rounded-2xl p-6 space-y-6">
@@ -3088,6 +3147,84 @@ export function GestorLibrary() {
             )}
           </div>
         </>
+      )}
+
+      {activeTab === 'configuracoes' && (
+        <form onSubmit={handleSaveConfig} className="bg-black/30 border border-white/5 rounded-2xl p-6 space-y-6">
+          <div className="flex flex-col gap-4 border-b border-white/5 pb-4">
+            <h3 className="font-semibold text-white tracking-wide text-sm uppercase flex items-center gap-1.5">
+              <Settings size={16} className="text-[#D4AF37]" /> Configurações de Planos & Cobrança
+            </h3>
+            <p className="text-xs text-gray-400">Configure os valores dos planos de assinatura (Plano Total) da Biblioteca Virtual e os textos de conversão/descontos.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Valor Mensal (Plano Total)</label>
+              <input 
+                type="text" 
+                value={planoMensal}
+                onChange={e => setPlanoMensal(e.target.value)}
+                placeholder="Ex: R$ 29,90"
+                className="bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Valor Semestral (Plano Total)</label>
+              <input 
+                type="text" 
+                value={planoSemestral}
+                onChange={e => setPlanoSemestral(e.target.value)}
+                placeholder="Ex: R$ 149,90 (15% de Desconto)"
+                className="bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Valor Anual (Plano Total)</label>
+              <input 
+                type="text" 
+                value={planoAnual}
+                onChange={e => setPlanoAnual(e.target.value)}
+                placeholder="Ex: R$ 249,90 (30% de Desconto)"
+                className="bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Link/Número de WhatsApp para Cobrança</label>
+              <input 
+                type="text" 
+                value={whatsappCobranca}
+                onChange={e => setWhatsappCobranca(e.target.value)}
+                placeholder="Ex: https://wa.me/5511999999999?text=Quero%20assinar%20o%20plano..."
+                className="bg-black/60 border border-[#D4AF37]/30 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1 md:col-span-3">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Texto de Oferta / Cupons de Desconto</label>
+              <textarea 
+                value={descontoTexto}
+                onChange={e => setDescontoTexto(e.target.value)}
+                rows={3}
+                placeholder="Insira promoções ativas, ex: Use o cupom HIRAM10 para 10% de desconto no plano anual."
+                className="bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none resize-none"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end pt-4 border-t border-white/5">
+            <button 
+              type="submit" 
+              disabled={configSubmitting || loadingConfig}
+              className="bg-[#D4AF37] hover:scale-[1.02] text-black px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1 shadow-lg shadow-[#D4AF37]/20"
+            >
+              <Save size={14} /> {configSubmitting ? 'Salvando...' : 'Salvar Configurações'}
+            </button>
+          </div>
+        </form>
       )}
     </div>
   );
@@ -3757,11 +3894,11 @@ export function GestorValuation() {
              <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm">Biblioteca Virtual & Tomos Premium</h3>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-             Módulo de Atheneum standalone com acervo digitalizado, triagem automática por grau iniciático, controle de progresso ("Guardados") e link de ativação via Tesouraria.
+             Módulo de Atheneum standalone com acervo digitalizado, triagem automática por grau iniciático, configuração dinâmica de planos de assinatura, cupons de desconto e controle de acessos (Premium/Avulso).
           </p>
           <div className="mt-auto">
-             <div className="text-[#D4AF37] font-bold text-lg">R$ 9.500,00</div>
-             <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Estimativa Base</div>
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 13.000,00</div>
+             <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Adicional Ativado</div>
           </div>
         </div>
 
@@ -3983,7 +4120,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 194.500,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 198.000,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>
@@ -10057,7 +10194,7 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../lib/firebase';
 import { collection, query, getDocs, orderBy, doc, getDoc, addDoc, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { BookOpen, Search, Lock, Unlock, ExternalLink, Sparkles, Filter, CheckCircle, DollarSign, Bookmark, ArrowLeft, Shield, Award, Landmark, HelpCircle, Copy, Check, ChevronDown } from 'lucide-react';
+import { BookOpen, Search, Lock, Unlock, ExternalLink, Sparkles, Filter, CheckCircle, DollarSign, Bookmark, ArrowLeft, Shield, Award, Landmark, HelpCircle, Copy, Check, ChevronDown, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const GRAUS = ['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'];
@@ -10087,6 +10224,7 @@ export function LibraryPage() {
   const [selectedCost, setSelectedCost] = useState<string>('Público'); // 'Público', 'Premium'
   const [selectedCategoria, setSelectedCategoria] = useState<string>('Todos');
   const [showUnlockModal, setShowUnlockModal] = useState<LibraryItem | null>(null);
+  const [showReadModal, setShowReadModal] = useState<LibraryItem | null>(null);
   const [remetentePix, setRemetentePix] = useState('');
   const [copied, setCopied] = useState(false);
   const [treasuryConfig, setTreasuryConfig] = useState({ pixKey: '', pixName: '' });
@@ -10249,7 +10387,7 @@ export function LibraryPage() {
     if (item.isPaid && !isBookUnlockedForUser(item.id)) {
       setShowUnlockModal(item);
     } else {
-      window.open(item.urlDrive, '_blank', 'noopener,noreferrer');
+      setShowReadModal(item);
     }
   };
 
@@ -10832,6 +10970,56 @@ export function LibraryPage() {
                 </button>
               </div>
             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Reader Modal (Secure Pop-up) */}
+      <AnimatePresence>
+        {showReadModal && (
+          <div 
+            className="fixed inset-0 bg-[#070A13]/95 backdrop-blur-xl z-[200] flex flex-col print:hidden select-none"
+            onContextMenu={(e) => e.preventDefault()}
+            onCopy={(e) => e.preventDefault()}
+            onCut={(e) => e.preventDefault()}
+            onPaste={(e) => e.preventDefault()}
+          >
+            {/* Global style to prevent printing */}
+            <style>{`@media print { body { display: none !important; } }`}</style>
+
+            <div className="flex justify-between items-center px-6 py-4 border-b border-[#D4AF37]/30 bg-[#0A0E1A] shadow-md z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full border border-[#D4AF37]/40 bg-black flex items-center justify-center text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                  <BookOpen size={18} />
+                </div>
+                <div>
+                  <h3 className="text-[#D4AF37] font-serif font-bold uppercase tracking-widest text-sm md:text-base leading-tight">
+                    {showReadModal.titulo}
+                  </h3>
+                  <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">
+                    Modo Leitura Segura — Cópia Restrita
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowReadModal(null)}
+                className="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-2.5 rounded-xl transition-all border border-transparent hover:border-white/10"
+                title="Fechar e Retornar ao Acervo"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="flex-1 w-full relative bg-black flex justify-center overflow-hidden">
+              {/* If it's a google drive link, it typically can be embedded with /preview, but we use what we have */}
+              <iframe 
+                src={showReadModal.urlDrive.includes('view') ? showReadModal.urlDrive.replace('/view', '/preview') : showReadModal.urlDrive} 
+                className="w-full h-full border-none max-w-5xl bg-white"
+                title={showReadModal.titulo}
+              />
+              {/* Invisible overlay around iframe edges to prevent easy right clicks outside iframe if any, though iframe content itself controls its own context menu. */}
+              <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_30px_rgba(0,0,0,0.8)]"></div>
+            </div>
           </div>
         )}
       </AnimatePresence>

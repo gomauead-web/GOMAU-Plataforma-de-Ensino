@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../lib/firebase';
 import { collection, query, getDocs, orderBy, doc, getDoc, addDoc, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { BookOpen, Search, Lock, Unlock, ExternalLink, Sparkles, Filter, CheckCircle, DollarSign, Bookmark, ArrowLeft, Shield, Award, Landmark, HelpCircle, Copy, Check, ChevronDown } from 'lucide-react';
+import { BookOpen, Search, Lock, Unlock, ExternalLink, Sparkles, Filter, CheckCircle, DollarSign, Bookmark, ArrowLeft, Shield, Award, Landmark, HelpCircle, Copy, Check, ChevronDown, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const GRAUS = ['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'];
@@ -33,6 +33,7 @@ export function LibraryPage() {
   const [selectedCost, setSelectedCost] = useState<string>('Público'); // 'Público', 'Premium'
   const [selectedCategoria, setSelectedCategoria] = useState<string>('Todos');
   const [showUnlockModal, setShowUnlockModal] = useState<LibraryItem | null>(null);
+  const [showReadModal, setShowReadModal] = useState<LibraryItem | null>(null);
   const [remetentePix, setRemetentePix] = useState('');
   const [copied, setCopied] = useState(false);
   const [treasuryConfig, setTreasuryConfig] = useState({ pixKey: '', pixName: '' });
@@ -195,7 +196,17 @@ export function LibraryPage() {
     if (item.isPaid && !isBookUnlockedForUser(item.id)) {
       setShowUnlockModal(item);
     } else {
-      window.open(item.urlDrive, '_blank', 'noopener,noreferrer');
+      // Se o link for de um projeto no AI Studio (run.app), as políticas de segurança do Google (CSP frame-ancestors) bloqueiam a incorporação via iframe.
+      // A única forma tecnicamente viável e profissional de carregar é em uma nova janela (popup).
+      if (item.urlDrive.includes('run.app')) {
+        const popup = window.open(item.urlDrive, '_blank', 'popup=yes,width=1200,height=800,menubar=no,toolbar=no,location=no,status=no');
+        // Se o bloqueador de popup do navegador impedir, abre em nova aba normal como fallback.
+        if (!popup) {
+           window.open(item.urlDrive, '_blank', 'noopener,noreferrer');
+        }
+      } else {
+        setShowReadModal(item);
+      }
     }
   };
 
@@ -778,6 +789,58 @@ export function LibraryPage() {
                 </button>
               </div>
             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Reader Modal (Secure Pop-up) */}
+      <AnimatePresence>
+        {showReadModal && (
+          <div 
+            className="fixed inset-0 bg-[#070A13]/95 backdrop-blur-xl z-[200] flex flex-col print:hidden select-none"
+            onContextMenu={(e) => e.preventDefault()}
+            onCopy={(e) => e.preventDefault()}
+            onCut={(e) => e.preventDefault()}
+            onPaste={(e) => e.preventDefault()}
+          >
+            {/* Global style to prevent printing */}
+            <style>{`@media print { body { display: none !important; } }`}</style>
+
+            <div className="flex justify-between items-center px-6 py-4 border-b border-[#D4AF37]/30 bg-[#0A0E1A] shadow-md z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full border border-[#D4AF37]/40 bg-black flex items-center justify-center text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                  <BookOpen size={18} />
+                </div>
+                <div>
+                  <h3 className="text-[#D4AF37] font-serif font-bold uppercase tracking-widest text-sm md:text-base leading-tight">
+                    {showReadModal.titulo}
+                  </h3>
+                  <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">
+                    Modo Leitura Segura — Cópia Restrita
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setShowReadModal(null)}
+                  className="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-2.5 rounded-xl transition-all border border-transparent hover:border-white/10"
+                  title="Fechar e Retornar ao Acervo"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 w-full relative bg-black flex justify-center overflow-hidden">
+              {/* If it's a google drive link, it typically can be embedded with /preview, but we use what we have */}
+              <iframe 
+                src={showReadModal.urlDrive.includes('view') ? showReadModal.urlDrive.replace('/view', '/preview') : showReadModal.urlDrive} 
+                className="w-full h-full border-none max-w-5xl bg-white"
+                title={showReadModal.titulo}
+              />
+              {/* Invisible overlay around iframe edges to prevent easy right clicks outside iframe if any, though iframe content itself controls its own context menu. */}
+              <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_30px_rgba(0,0,0,0.8)]"></div>
+            </div>
           </div>
         )}
       </AnimatePresence>

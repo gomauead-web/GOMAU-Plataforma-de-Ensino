@@ -130,11 +130,11 @@ export function GestorValuation() {
              <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm">Biblioteca Virtual & Tomos Premium</h3>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-             Módulo de Atheneum standalone com acervo digitalizado, triagem automática por grau iniciático, controle de progresso ("Guardados") e link de ativação via Tesouraria.
+             Módulo de Atheneum standalone com acervo digitalizado, triagem automática por grau iniciático, configuração dinâmica de planos de assinatura, cupons de desconto e controle de acessos (Premium/Avulso).
           </p>
           <div className="mt-auto">
-             <div className="text-[#D4AF37] font-bold text-lg">R$ 9.500,00</div>
-             <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Estimativa Base</div>
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 13.000,00</div>
+             <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Adicional Ativado</div>
           </div>
         </div>
 
@@ -356,7 +356,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 194.500,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 198.000,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>

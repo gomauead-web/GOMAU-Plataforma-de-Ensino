@@ -240,6 +240,16 @@ Ao fazer login com a conta Google, o sistema exige:
 
 ## 5. Changelog e Histórico de Evolução
 
+- **2026-07-01 (Leitor Seguro em Modal na Biblioteca Virtual & Atualização no Valuation):**
+  1. **Visualizador Seguro Restrito**: Substituído o redirecionamento externo para abertura de links por um Leitor Seguro (Pop-up/Modal) integrado na própria plataforma, isolando a leitura dos cursos/livros da Biblioteca Virtual em iframe.
+  2. **Bloqueios Anti-Pirataria**: Implementados bloqueios robustos via React e Tailwind (CSS) para proibir a cópia, impressão e salvamento direto do acervo (restrições via `onContextMenu`, `select-none`, ocultação total da página na fila de impressão global e desativação dos atalhos de corte e cola).
+  3. **Atualização Oficial do Valuation**: Incorporação tecnológica do Leitor Restrito, adicionando R$ 1.500,00 de valor ao módulo "Biblioteca Virtual & Tomos Premium" (passando de R$ 11.500,00 para R$ 13.000,00), o que eleva o **Valor Global Estimado (Valuation) da Plataforma para R$ 198.000,00**.
+
+- **2026-07-01 (Configurações de Planos na Biblioteca Virtual & Valuation):**
+  1. **Aba de Configurações de Planos & Cobrança**: Adicionada uma nova aba "Configurações" na área da Biblioteca Virtual (Gestor) para possibilitar a precificação dinâmica do Plano Total (Premium).
+  2. **Configuração de Preços e Periodicidade**: O gestor agora pode configurar livremente os valores de "Valor Mensal", "Valor Semestral" e "Valor Anual" do plano, bem como registrar um texto promocional (cupons) e o link de WhatsApp para efetivação da cobrança.
+  3. **Atualização Oficial do Valuation**: Atribuição orçamentária para a nova feature, incrementando o card "Biblioteca Virtual & Tomos Premium" em R$ 2.000,00 (passando de R$ 9.500,00 para R$ 11.500,00), o que eleva o **Valor Global Estimado (Valuation) da Plataforma para R$ 196.500,00**.
+
 - **2026-06-29 (Adição de Cargo ao Painel do 2º Vigilante & Atualização no Valuation):**
   1. **Novo Cargo Configurável (Secr∴)**: Adicionada a posição de Secretário (Secr∴) ao painel unificado dos Oficiais da Loja no menu do 2º Vigilante. O novo cargo conta com as mesmas funcionalidades avançadas de lookup automático de membros por CIM, ativação de suplentes em standby, convocações direcionadas via WhatsApp e monitoramento real-time de recebimento da pauta (ciência/read receipts).
   2. **Refatoração do State e Seletores de Transmissão**: Integrado o novo papel no estado inicial de gerenciamento do painel (`INITIAL_ROLES_STATE`), nas chaves oficiais de listagem (`ROLES_KEYS`) e no mapa de disparos de notificações em lote no frontend.

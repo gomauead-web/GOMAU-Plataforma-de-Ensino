@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
-import { Plus, Trash2, Edit2, Save, X, BookOpen, Link, Star, Lock, HelpCircle, Users, Unlock, CheckCircle2, Search, Coins, Sparkles, BookMarked } from 'lucide-react';
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc } from 'firebase/firestore';
+import { Plus, Trash2, Edit2, Save, X, BookOpen, Link, Star, Lock, HelpCircle, Users, Unlock, CheckCircle2, Search, Coins, Sparkles, BookMarked, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const GRAUS = ['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'];
@@ -11,11 +11,20 @@ export function GestorLibrary() {
   const [loading, setLoading] = useState(true);
   
   // Tab Management
-  const [activeTab, setActiveTab] = useState<'obras' | 'liberacoes'>('obras');
+  const [activeTab, setActiveTab] = useState<'obras' | 'liberacoes' | 'configuracoes'>('obras');
   const [users, setUsers] = useState<any[]>([]);
   const [userPayments, setUserPayments] = useState<{ [uid: string]: any[] }>({});
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [userSearch, setUserSearch] = useState('');
+
+  // Config State
+  const [loadingConfig, setLoadingConfig] = useState(false);
+  const [configSubmitting, setConfigSubmitting] = useState(false);
+  const [planoMensal, setPlanoMensal] = useState('');
+  const [planoSemestral, setPlanoSemestral] = useState('');
+  const [planoAnual, setPlanoAnual] = useState('');
+  const [descontoTexto, setDescontoTexto] = useState('');
+  const [whatsappCobranca, setWhatsappCobranca] = useState('');
 
   // Form State
   const [showAddForm, setShowAddForm] = useState(false);
@@ -38,7 +47,49 @@ export function GestorLibrary() {
   useEffect(() => {
     fetchItems();
     fetchUsersAndPayments();
+    fetchConfig();
   }, []);
+
+  const fetchConfig = async () => {
+    setLoadingConfig(true);
+    try {
+      const docRef = doc(db, 'library_settings', 'premium_plan');
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        setPlanoMensal(data.planoMensal || '');
+        setPlanoSemestral(data.planoSemestral || '');
+        setPlanoAnual(data.planoAnual || '');
+        setDescontoTexto(data.descontoTexto || '');
+        setWhatsappCobranca(data.whatsappCobranca || '');
+      }
+    } catch (err) {
+      console.error("Erro ao carregar configurações da biblioteca:", err);
+    } finally {
+      setLoadingConfig(false);
+    }
+  };
+
+  const handleSaveConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setConfigSubmitting(true);
+    try {
+      await setDoc(doc(db, 'library_settings', 'premium_plan'), {
+        planoMensal,
+        planoSemestral,
+        planoAnual,
+        descontoTexto,
+        whatsappCobranca,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      toast.success("Configurações financeiras atualizadas com sucesso!");
+    } catch (err) {
+      console.error("Erro ao salvar configurações:", err);
+      toast.error("Falha ao salvar configurações.");
+    } finally {
+      setConfigSubmitting(false);
+    }
+  };
 
   const fetchItems = async () => {
     setLoading(true);
@@ -270,11 +321,11 @@ export function GestorLibrary() {
           </h2>
           <p className="text-xs text-gray-400 mt-1">Gerencie tomos, rituais, de linhagem e envie chaves de liberação para os irmãos.</p>
         </div>
-        <div className="flex bg-black/40 border border-white/10 p-0.5 rounded-xl w-full sm:w-auto self-stretch sm:self-auto shrink-0">
+        <div className="flex bg-black/40 border border-white/10 p-0.5 rounded-xl w-full sm:w-auto self-stretch sm:self-auto shrink-0 overflow-x-auto hide-scrollbar">
           <button
             type="button"
             onClick={() => { setActiveTab('obras'); setShowAddForm(false); }}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'obras' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'obras' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
           >
             <BookMarked size={14} />
             Acervo de Obras
@@ -282,15 +333,23 @@ export function GestorLibrary() {
           <button
             type="button"
             onClick={() => { setActiveTab('liberacoes'); fetchUsersAndPayments(); }}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'liberacoes' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'liberacoes' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
           >
             <Users size={14} />
             Liberações ({users.length})
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('configuracoes')}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'configuracoes' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+          >
+            <Settings size={14} />
+            Planos & Cobrança
+          </button>
         </div>
       </div>
 
-      {activeTab === 'obras' ? (
+      {activeTab === 'obras' && (
         <>
           <div className="flex justify-between items-center bg-[#1e293b]/20 p-5 rounded-2xl border border-white/5">
             <div>
@@ -577,7 +636,9 @@ export function GestorLibrary() {
         </div>
       )}
         </>
-      ) : (
+      )}
+
+      {activeTab === 'liberacoes' && (
         <>
           {/* SECURE PREMIUM UNLOCK & TREASURY ALIGNMENT BOARD */}
           <div className="bg-black/30 border border-white/5 rounded-2xl p-6 space-y-6">
@@ -748,6 +809,84 @@ export function GestorLibrary() {
             )}
           </div>
         </>
+      )}
+
+      {activeTab === 'configuracoes' && (
+        <form onSubmit={handleSaveConfig} className="bg-black/30 border border-white/5 rounded-2xl p-6 space-y-6">
+          <div className="flex flex-col gap-4 border-b border-white/5 pb-4">
+            <h3 className="font-semibold text-white tracking-wide text-sm uppercase flex items-center gap-1.5">
+              <Settings size={16} className="text-[#D4AF37]" /> Configurações de Planos & Cobrança
+            </h3>
+            <p className="text-xs text-gray-400">Configure os valores dos planos de assinatura (Plano Total) da Biblioteca Virtual e os textos de conversão/descontos.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Valor Mensal (Plano Total)</label>
+              <input 
+                type="text" 
+                value={planoMensal}
+                onChange={e => setPlanoMensal(e.target.value)}
+                placeholder="Ex: R$ 29,90"
+                className="bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Valor Semestral (Plano Total)</label>
+              <input 
+                type="text" 
+                value={planoSemestral}
+                onChange={e => setPlanoSemestral(e.target.value)}
+                placeholder="Ex: R$ 149,90 (15% de Desconto)"
+                className="bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Valor Anual (Plano Total)</label>
+              <input 
+                type="text" 
+                value={planoAnual}
+                onChange={e => setPlanoAnual(e.target.value)}
+                placeholder="Ex: R$ 249,90 (30% de Desconto)"
+                className="bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Link/Número de WhatsApp para Cobrança</label>
+              <input 
+                type="text" 
+                value={whatsappCobranca}
+                onChange={e => setWhatsappCobranca(e.target.value)}
+                placeholder="Ex: https://wa.me/5511999999999?text=Quero%20assinar%20o%20plano..."
+                className="bg-black/60 border border-[#D4AF37]/30 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1 md:col-span-3">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Texto de Oferta / Cupons de Desconto</label>
+              <textarea 
+                value={descontoTexto}
+                onChange={e => setDescontoTexto(e.target.value)}
+                rows={3}
+                placeholder="Insira promoções ativas, ex: Use o cupom HIRAM10 para 10% de desconto no plano anual."
+                className="bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none resize-none"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end pt-4 border-t border-white/5">
+            <button 
+              type="submit" 
+              disabled={configSubmitting || loadingConfig}
+              className="bg-[#D4AF37] hover:scale-[1.02] text-black px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1 shadow-lg shadow-[#D4AF37]/20"
+            >
+              <Save size={14} /> {configSubmitting ? 'Salvando...' : 'Salvar Configurações'}
+            </button>
+          </div>
+        </form>
       )}
     </div>
   );

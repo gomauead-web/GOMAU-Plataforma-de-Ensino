@@ -1,4 +1,18 @@
-# 🚀 SUPER PROMPT DE RECONSTRUÇÃO COMPLETA - PLATAFORMA G∴O∴M∴A∴U∴\n\nEste é um arquivo mestre contendo TODA a documentação pedagógica, técnica, mapeamento de bastidores, regras de segurança, manuais de engenharia de construção e 100% dos códigos-fonte de todos os arquivos da plataforma G∴O∴M∴A∴U∴.\n\nAlimente este prompt em uma Inteligência Artificial para recriar a plataforma de ponta a ponta com fidelidade de 100% de design, lógica, segurança e regras maçônicas.\n\n---\n\n\n\n================================================================================\n📖 CONTEÚDO DO ARQUIVO COMPONENTE: MANUAL_MESTRE_GOMAU.md\n================================================================================\n\n# Manual Mestre: G∴O∴M∴A∴U∴ (Grande Oriente Maçônico Universal)
+# 🚀 SUPER PROMPT DE RECONSTRUÇÃO COMPLETA - PLATAFORMA G∴O∴M∴A∴U∴
+
+Este é um arquivo mestre contendo TODA a documentação pedagógica, técnica, mapeamento de bastidores, regras de segurança, manuais de engenharia de construção e 100% dos códigos-fonte de todos os arquivos da plataforma G∴O∴M∴A∴U∴.
+
+Alimente este prompt em uma Inteligência Artificial para recriar a plataforma de ponta a ponta com fidelidade de 100% de design, lógica, segurança e regras maçônicas.
+
+---
+
+
+
+================================================================================
+📖 CONTEÚDO DO ARQUIVO COMPONENTE: MANUAL_MESTRE_GOMAU.md
+================================================================================
+
+# Manual Mestre: G∴O∴M∴A∴U∴ (Grande Oriente Maçônico Universal)
 
 Este é o documento definitivo e "Caixa Preta" da plataforma. Ele contém instruções técnicas para reprodução, guias de uso passo a passo para membros e gestores, e a inteligência de negócios do sistema.
 
@@ -239,6 +253,16 @@ Ao fazer login com a conta Google, o sistema exige:
 - **DOCUMENTACAO_DETALHADA_SISTEMA.md**: Para um raio-X completo, contendo o mapeamento exaustivo tela a tela, regras de negócio minuciosas (Bastidores, Regras Ocultas, Precedências), consulte este arquivo recém-gerado.
 
 ## 5. Changelog e Histórico de Evolução
+
+- **2026-07-01 (Leitor Seguro em Modal na Biblioteca Virtual & Atualização no Valuation):**
+  1. **Visualizador Seguro Restrito**: Substituído o redirecionamento externo para abertura de links por um Leitor Seguro (Pop-up/Modal) integrado na própria plataforma, isolando a leitura dos cursos/livros da Biblioteca Virtual em iframe.
+  2. **Bloqueios Anti-Pirataria**: Implementados bloqueios robustos via React e Tailwind (CSS) para proibir a cópia, impressão e salvamento direto do acervo (restrições via `onContextMenu`, `select-none`, ocultação total da página na fila de impressão global e desativação dos atalhos de corte e cola).
+  3. **Atualização Oficial do Valuation**: Incorporação tecnológica do Leitor Restrito, adicionando R$ 1.500,00 de valor ao módulo "Biblioteca Virtual & Tomos Premium" (passando de R$ 11.500,00 para R$ 13.000,00), o que eleva o **Valor Global Estimado (Valuation) da Plataforma para R$ 198.000,00**.
+
+- **2026-07-01 (Configurações de Planos na Biblioteca Virtual & Valuation):**
+  1. **Aba de Configurações de Planos & Cobrança**: Adicionada uma nova aba "Configurações" na área da Biblioteca Virtual (Gestor) para possibilitar a precificação dinâmica do Plano Total (Premium).
+  2. **Configuração de Preços e Periodicidade**: O gestor agora pode configurar livremente os valores de "Valor Mensal", "Valor Semestral" e "Valor Anual" do plano, bem como registrar um texto promocional (cupons) e o link de WhatsApp para efetivação da cobrança.
+  3. **Atualização Oficial do Valuation**: Atribuição orçamentária para a nova feature, incrementando o card "Biblioteca Virtual & Tomos Premium" em R$ 2.000,00 (passando de R$ 9.500,00 para R$ 11.500,00), o que eleva o **Valor Global Estimado (Valuation) da Plataforma para R$ 196.500,00**.
 
 - **2026-06-29 (Adição de Cargo ao Painel do 2º Vigilante & Atualização no Valuation):**
   1. **Novo Cargo Configurável (Secr∴)**: Adicionada a posição de Secretário (Secr∴) ao painel unificado dos Oficiais da Loja no menu do 2º Vigilante. O novo cargo conta com as mesmas funcionalidades avançadas de lookup automático de membros por CIM, ativação de suplentes em standby, convocações direcionadas via WhatsApp e monitoramento real-time de recebimento da pauta (ciência/read receipts).
@@ -575,7 +599,15 @@ Ao fazer login com a conta Google, o sistema exige:
 - **2026-05-10:** Implementação de campos detalhados em Pranchas e rastreabilidade total de data/hora (Pedidos e Respostas).
 - **2026-05-09:** Sistema de Cropper de Imagem para Avatares e CIM.
 - **2026-05-07:** Lançamento da Carteira de Identidade Maçônica (CIM) Digital.
-\n\n\n\n================================================================================\n📖 CONTEÚDO DO ARQUIVO COMPONENTE: DOCUMENTACAO_DETALHADA_SISTEMA.md\n================================================================================\n\n# 🏛️ Plataforma G∴O∴M∴A∴U∴ - Mapeamento Detalhado e Arquitetura Global
+
+
+
+
+================================================================================
+📖 CONTEÚDO DO ARQUIVO COMPONENTE: DOCUMENTACAO_DETALHADA_SISTEMA.md
+================================================================================
+
+# 🏛️ Plataforma G∴O∴M∴A∴U∴ - Mapeamento Detalhado e Arquitetura Global
 
 Este documento é a **Bíblia Arquitetural e Funcional** do sistema G∴O∴M∴A∴U∴. Ele detalha CADA TELA, OPÇÃO, CAMPO, REGRA DE NEGÓCIO E MECANISMO DE BASTIDORES presente na plataforma. Elaborado após profunda auditoria de sistema.
 
@@ -721,7 +753,15 @@ A aplicação utiliza a técnica de **"Global Safety Net" fechada**.
 ---
 
 > **Resumo Geral:** A plataforma G∴O∴M∴A∴U∴ não é apenas um portal visual; é um **ERP maçônico de alta complexidade**, mesclando gamificação educacional, telemetria analítica severa, blindagem hierárquica por graus e um backend de self-healing (autolimpeza). Cada tela foi projetada com precedências restritas ditadas tanto pela liturgia maçônica quanto pelas melhores práticas de segurança de software corporativo (DevSecOps e OWASP).
-\n\n\n\n================================================================================\n📖 CONTEÚDO DO ARQUIVO COMPONENTE: MANUAL_CONSTRUCAO_SISTEMA.md\n================================================================================\n\n# 🏗️ Manual de Construção e Engenharia - Plataforma G∴O∴M∴A∴U∴
+
+
+
+
+================================================================================
+📖 CONTEÚDO DO ARQUIVO COMPONENTE: MANUAL_CONSTRUCAO_SISTEMA.md
+================================================================================
+
+# 🏗️ Manual de Construção e Engenharia - Plataforma G∴O∴M∴A∴U∴
 
 Este manual é um guia técnico de engenharia de software para reconstruir, manter e escalar a **Plataforma Maçônica G∴O∴M∴A∴U∴** do absoluto zero. Ele documenta todas as decisões de arquitetura, configurações de ambiente, modelagem de dados no Firestore, lógica de algoritmos complexos, diretrizes de segurança (OWASP) e otimização de performance empregadas no projeto.
 
@@ -1172,7 +1212,15 @@ Para compilar e colocar o sistema em ambiente de produção (Cloud Run ou static
 3.  **Deploy das regras do Firestore:** Toda vez que houver alteração de escopo, atualize as regras usando a ferramenta do painel administrativo ou CLI: `firebase deploy --only firestore:rules`.
 
 Este manual estabelece o **State-of-the-Art** de engenharia de software empregado na Plataforma G∴O∴M∴A∴U∴, garantindo que qualquer arquiteto ou desenvolvedor possa replicá-la com total maestria e sem pontos cegos técnicos.
-\n\n\n\n================================================================================\n📖 CONTEÚDO DO ARQUIVO COMPONENTE: INTEGRACAO_CURSOS.md\n================================================================================\n\n# Evolução do EAD: Arquitetura Nativa (Mestre-IA) G∴O∴M∴A∴U∴
+
+
+
+
+================================================================================
+📖 CONTEÚDO DO ARQUIVO COMPONENTE: INTEGRACAO_CURSOS.md
+================================================================================
+
+# Evolução do EAD: Arquitetura Nativa (Mestre-IA) G∴O∴M∴A∴U∴
 
 **Data de Atualização:** 2026-06-26
 **Status:** Módulo de IA Nativo Implementado. Integração Externa (Iframe) Cancelada.
@@ -1216,7 +1264,15 @@ A plataforma agora possui seu próprio LMS (Learning Management System) integrad
 - **Gamificação Segura:** Sem risco de APIs forjadas atualizando o progresso; as Security Rules do Firestore protegem o documento `courseProgress`.
 
 **Fim do arquivo original de Integração:** Este módulo superou a proposta anterior e hoje se configura como um dos pilares mais inovadores da EdTech maçônica global.
-\n\n\n\n================================================================================\n📖 CONTEÚDO DO ARQUIVO COMPONENTE: CODIGOS_MIGRACAO_GOMAU.md\n================================================================================\n\n# 📜 CÓDIGOS COMPLETOS DE MIGRAÇÃO - G∴O∴M∴A∴U∴
+
+
+
+
+================================================================================
+📖 CONTEÚDO DO ARQUIVO COMPONENTE: CODIGOS_MIGRACAO_GOMAU.md
+================================================================================
+
+# 📜 CÓDIGOS COMPLETOS DE MIGRAÇÃO - G∴O∴M∴A∴U∴
 
 Este documento contém o código-fonte integral, exato e sem resumos dos arquivos solicitados para migração e controle da plataforma.
 
@@ -16809,7 +16865,15 @@ export default async function getCroppedImg(
 
 ---
 
-\n\n\n\n================================================================================\n📖 CONTEÚDO DO ARQUIVO COMPONENTE: CLONE_PROMPT_GOMAU.md\n================================================================================\n\n# Prompt Mestre de Clonagem e Especificação Técnica: G∴O∴M∴A∴U∴
+
+
+
+
+================================================================================
+📖 CONTEÚDO DO ARQUIVO COMPONENTE: CLONE_PROMPT_GOMAU.md
+================================================================================
+
+# Prompt Mestre de Clonagem e Especificação Técnica: G∴O∴M∴A∴U∴
 
 Este documento é a especificação técnica absoluta, completa e exaustiva para clonar a **Plataforma Maçônica G∴O∴M∴A∴U∴**.
 O objetivo deste arquivo é alimentar uma Inteligência Artificial Sênior de Engenharia (como Gemini, Claude, ChatGPT, etc.) para recriar **100% da plataforma, linha por linha, com toda a sua arquitetura, frontend, backend no Firebase, regras de negócio, gamificação, motores de inteligência artificial e interfaces dinâmicas**, sem perder nenhuma regra de negócio oculta.
@@ -19151,8 +19215,8 @@ export function DataManagement() {
 ```tsx
 import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
-import { Plus, Trash2, Edit2, Save, X, BookOpen, Link, Star, Lock, HelpCircle, Users, Unlock, CheckCircle2, Search, Coins, Sparkles, BookMarked } from 'lucide-react';
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc } from 'firebase/firestore';
+import { Plus, Trash2, Edit2, Save, X, BookOpen, Link, Star, Lock, HelpCircle, Users, Unlock, CheckCircle2, Search, Coins, Sparkles, BookMarked, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const GRAUS = ['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'];
@@ -19162,11 +19226,20 @@ export function GestorLibrary() {
   const [loading, setLoading] = useState(true);
   
   // Tab Management
-  const [activeTab, setActiveTab] = useState<'obras' | 'liberacoes'>('obras');
+  const [activeTab, setActiveTab] = useState<'obras' | 'liberacoes' | 'configuracoes'>('obras');
   const [users, setUsers] = useState<any[]>([]);
   const [userPayments, setUserPayments] = useState<{ [uid: string]: any[] }>({});
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [userSearch, setUserSearch] = useState('');
+
+  // Config State
+  const [loadingConfig, setLoadingConfig] = useState(false);
+  const [configSubmitting, setConfigSubmitting] = useState(false);
+  const [planoMensal, setPlanoMensal] = useState('');
+  const [planoSemestral, setPlanoSemestral] = useState('');
+  const [planoAnual, setPlanoAnual] = useState('');
+  const [descontoTexto, setDescontoTexto] = useState('');
+  const [whatsappCobranca, setWhatsappCobranca] = useState('');
 
   // Form State
   const [showAddForm, setShowAddForm] = useState(false);
@@ -19189,7 +19262,49 @@ export function GestorLibrary() {
   useEffect(() => {
     fetchItems();
     fetchUsersAndPayments();
+    fetchConfig();
   }, []);
+
+  const fetchConfig = async () => {
+    setLoadingConfig(true);
+    try {
+      const docRef = doc(db, 'library_settings', 'premium_plan');
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        setPlanoMensal(data.planoMensal || '');
+        setPlanoSemestral(data.planoSemestral || '');
+        setPlanoAnual(data.planoAnual || '');
+        setDescontoTexto(data.descontoTexto || '');
+        setWhatsappCobranca(data.whatsappCobranca || '');
+      }
+    } catch (err) {
+      console.error("Erro ao carregar configurações da biblioteca:", err);
+    } finally {
+      setLoadingConfig(false);
+    }
+  };
+
+  const handleSaveConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setConfigSubmitting(true);
+    try {
+      await setDoc(doc(db, 'library_settings', 'premium_plan'), {
+        planoMensal,
+        planoSemestral,
+        planoAnual,
+        descontoTexto,
+        whatsappCobranca,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      toast.success("Configurações financeiras atualizadas com sucesso!");
+    } catch (err) {
+      console.error("Erro ao salvar configurações:", err);
+      toast.error("Falha ao salvar configurações.");
+    } finally {
+      setConfigSubmitting(false);
+    }
+  };
 
   const fetchItems = async () => {
     setLoading(true);
@@ -19421,11 +19536,11 @@ export function GestorLibrary() {
           </h2>
           <p className="text-xs text-gray-400 mt-1">Gerencie tomos, rituais, de linhagem e envie chaves de liberação para os irmãos.</p>
         </div>
-        <div className="flex bg-black/40 border border-white/10 p-0.5 rounded-xl w-full sm:w-auto self-stretch sm:self-auto shrink-0">
+        <div className="flex bg-black/40 border border-white/10 p-0.5 rounded-xl w-full sm:w-auto self-stretch sm:self-auto shrink-0 overflow-x-auto hide-scrollbar">
           <button
             type="button"
             onClick={() => { setActiveTab('obras'); setShowAddForm(false); }}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'obras' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'obras' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
           >
             <BookMarked size={14} />
             Acervo de Obras
@@ -19433,15 +19548,23 @@ export function GestorLibrary() {
           <button
             type="button"
             onClick={() => { setActiveTab('liberacoes'); fetchUsersAndPayments(); }}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'liberacoes' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'liberacoes' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
           >
             <Users size={14} />
             Liberações ({users.length})
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('configuracoes')}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'configuracoes' ? 'bg-[#D4AF37] text-black font-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+          >
+            <Settings size={14} />
+            Planos & Cobrança
+          </button>
         </div>
       </div>
 
-      {activeTab === 'obras' ? (
+      {activeTab === 'obras' && (
         <>
           <div className="flex justify-between items-center bg-[#1e293b]/20 p-5 rounded-2xl border border-white/5">
             <div>
@@ -19727,8 +19850,8 @@ export function GestorLibrary() {
           </div>
         </div>
       )}
-        </>
-      ) : (
+
+      {activeTab === 'liberacoes' && (
         <>
           {/* SECURE PREMIUM UNLOCK & TREASURY ALIGNMENT BOARD */}
           <div className="bg-black/30 border border-white/5 rounded-2xl p-6 space-y-6">
@@ -19899,6 +20022,84 @@ export function GestorLibrary() {
             )}
           </div>
         </>
+      )}
+
+      {activeTab === 'configuracoes' && (
+        <form onSubmit={handleSaveConfig} className="bg-black/30 border border-white/5 rounded-2xl p-6 space-y-6">
+          <div className="flex flex-col gap-4 border-b border-white/5 pb-4">
+            <h3 className="font-semibold text-white tracking-wide text-sm uppercase flex items-center gap-1.5">
+              <Settings size={16} className="text-[#D4AF37]" /> Configurações de Planos & Cobrança
+            </h3>
+            <p className="text-xs text-gray-400">Configure os valores dos planos de assinatura (Plano Total) da Biblioteca Virtual e os textos de conversão/descontos.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Valor Mensal (Plano Total)</label>
+              <input 
+                type="text" 
+                value={planoMensal}
+                onChange={e => setPlanoMensal(e.target.value)}
+                placeholder="Ex: R$ 29,90"
+                className="bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Valor Semestral (Plano Total)</label>
+              <input 
+                type="text" 
+                value={planoSemestral}
+                onChange={e => setPlanoSemestral(e.target.value)}
+                placeholder="Ex: R$ 149,90 (15% de Desconto)"
+                className="bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Valor Anual (Plano Total)</label>
+              <input 
+                type="text" 
+                value={planoAnual}
+                onChange={e => setPlanoAnual(e.target.value)}
+                placeholder="Ex: R$ 249,90 (30% de Desconto)"
+                className="bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider">Link/Número de WhatsApp para Cobrança</label>
+              <input 
+                type="text" 
+                value={whatsappCobranca}
+                onChange={e => setWhatsappCobranca(e.target.value)}
+                placeholder="Ex: https://wa.me/5511999999999?text=Quero%20assinar%20o%20plano..."
+                className="bg-black/60 border border-[#D4AF37]/30 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1 md:col-span-3">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Texto de Oferta / Cupons de Desconto</label>
+              <textarea 
+                value={descontoTexto}
+                onChange={e => setDescontoTexto(e.target.value)}
+                rows={3}
+                placeholder="Insira promoções ativas, ex: Use o cupom HIRAM10 para 10% de desconto no plano anual."
+                className="bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none resize-none"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end pt-4 border-t border-white/5">
+            <button 
+              type="submit" 
+              disabled={configSubmitting || loadingConfig}
+              className="bg-[#D4AF37] hover:scale-[1.02] text-black px-6 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1 shadow-lg shadow-[#D4AF37]/20"
+            >
+              <Save size={14} /> {configSubmitting ? 'Salvando...' : 'Salvar Configurações'}
+            </button>
+          </div>
+        </form>
       )}
     </div>
   );
@@ -20568,11 +20769,11 @@ export function GestorValuation() {
              <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm">Biblioteca Virtual & Tomos Premium</h3>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-             Módulo de Atheneum standalone com acervo digitalizado, triagem automática por grau iniciático, controle de progresso ("Guardados") e link de ativação via Tesouraria.
+             Módulo de Atheneum standalone com acervo digitalizado, triagem automática por grau iniciático, configuração dinâmica de planos de assinatura, cupons de desconto e controle de acessos (Premium/Avulso).
           </p>
           <div className="mt-auto">
-             <div className="text-[#D4AF37] font-bold text-lg">R$ 9.500,00</div>
-             <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Estimativa Base</div>
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 13.000,00</div>
+             <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Adicional Ativado</div>
           </div>
         </div>
 
@@ -20794,7 +20995,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 194.500,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 198.000,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>
@@ -26868,7 +27069,7 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../lib/firebase';
 import { collection, query, getDocs, orderBy, doc, getDoc, addDoc, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { BookOpen, Search, Lock, Unlock, ExternalLink, Sparkles, Filter, CheckCircle, DollarSign, Bookmark, ArrowLeft, Shield, Award, Landmark, HelpCircle, Copy, Check, ChevronDown } from 'lucide-react';
+import { BookOpen, Search, Lock, Unlock, ExternalLink, Sparkles, Filter, CheckCircle, DollarSign, Bookmark, ArrowLeft, Shield, Award, Landmark, HelpCircle, Copy, Check, ChevronDown, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const GRAUS = ['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'];
@@ -26898,6 +27099,7 @@ export function LibraryPage() {
   const [selectedCost, setSelectedCost] = useState<string>('Público'); // 'Público', 'Premium'
   const [selectedCategoria, setSelectedCategoria] = useState<string>('Todos');
   const [showUnlockModal, setShowUnlockModal] = useState<LibraryItem | null>(null);
+  const [showReadModal, setShowReadModal] = useState<LibraryItem | null>(null);
   const [remetentePix, setRemetentePix] = useState('');
   const [copied, setCopied] = useState(false);
   const [treasuryConfig, setTreasuryConfig] = useState({ pixKey: '', pixName: '' });
@@ -27060,7 +27262,7 @@ export function LibraryPage() {
     if (item.isPaid && !isBookUnlockedForUser(item.id)) {
       setShowUnlockModal(item);
     } else {
-      window.open(item.urlDrive, '_blank', 'noopener,noreferrer');
+      setShowReadModal(item);
     }
   };
 
@@ -27643,6 +27845,56 @@ export function LibraryPage() {
                 </button>
               </div>
             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Reader Modal (Secure Pop-up) */}
+      <AnimatePresence>
+        {showReadModal && (
+          <div 
+            className="fixed inset-0 bg-[#070A13]/95 backdrop-blur-xl z-[200] flex flex-col print:hidden select-none"
+            onContextMenu={(e) => e.preventDefault()}
+            onCopy={(e) => e.preventDefault()}
+            onCut={(e) => e.preventDefault()}
+            onPaste={(e) => e.preventDefault()}
+          >
+            {/* Global style to prevent printing */}
+            <style>{`@media print { body { display: none !important; } }`}</style>
+
+            <div className="flex justify-between items-center px-6 py-4 border-b border-[#D4AF37]/30 bg-[#0A0E1A] shadow-md z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full border border-[#D4AF37]/40 bg-black flex items-center justify-center text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                  <BookOpen size={18} />
+                </div>
+                <div>
+                  <h3 className="text-[#D4AF37] font-serif font-bold uppercase tracking-widest text-sm md:text-base leading-tight">
+                    {showReadModal.titulo}
+                  </h3>
+                  <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">
+                    Modo Leitura Segura — Cópia Restrita
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowReadModal(null)}
+                className="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-2.5 rounded-xl transition-all border border-transparent hover:border-white/10"
+                title="Fechar e Retornar ao Acervo"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="flex-1 w-full relative bg-black flex justify-center overflow-hidden">
+              {/* If it's a google drive link, it typically can be embedded with /preview, but we use what we have */}
+              <iframe 
+                src={showReadModal.urlDrive.includes('view') ? showReadModal.urlDrive.replace('/view', '/preview') : showReadModal.urlDrive} 
+                className="w-full h-full border-none max-w-5xl bg-white"
+                title={showReadModal.titulo}
+              />
+              {/* Invisible overlay around iframe edges to prevent easy right clicks outside iframe if any, though iframe content itself controls its own context menu. */}
+              <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_30px_rgba(0,0,0,0.8)]"></div>
+            </div>
           </div>
         )}
       </AnimatePresence>
@@ -39022,4 +39274,5 @@ export function GestorDashboard() {
 
 ```
 
-\n\n
+
+
