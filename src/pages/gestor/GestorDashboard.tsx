@@ -447,7 +447,7 @@ export function GestorDashboard() {
     { id: "telemetria", label: "Telemetria", icon: Activity },
     { id: "forum", label: "Fórum / Instrutores", icon: MessageSquare },
     { id: "configuracoes", label: "Configurações", icon: Settings },
-    ...(isOwner
+    ...(isOwner || isMaster || user?.role === "gestor"
       ? [{ id: "avaliacao", label: "Valuation do Sistema", icon: BarChart3 }]
       : []),
   ];

@@ -240,12 +240,6 @@ Ao fazer login com a conta Google, o sistema exige:
 
 ## 5. Changelog e Histórico de Evolução
 
-- **2026-07-01 (Módulo Premium "Câmara de Criação" Integrado):**
-  1. **Gerador de Conteúdos por IA**: Desenvolvido um portal premium (Câmara de Criação) exclusivo para o e-mail 'tazmaniacrvg@gmail.com'. Permite a geração estruturada, autônoma e editorial de Cursos Interativos e Livros (Manuais) com profundidade maçônica.
-  2. **Estrutura Hierárquica Aprofundada**: O motor de geração no backend utiliza o Gemini 3.1 Pro para criar e aninhar Módulos, Unidades, Aulas e Exercícios, formatados em JSON e persistidos nativamente no Firestore.
-  3. **Visualizador de "Câmara de Estudos"**: Criada a listagem restrita aos alunos de "Obras Premium e Manuais", respeitando a trava de Graus e permissões de visibilidade.
-  4. **Atualização Oficial do Valuation**: Incorporação orçamentária do motor avançado de IA (Gerador Premium), adicionando R$ 22.000,00 e elevando o **Valor Global Estimado (Valuation) da Plataforma para R$ 220.000,00**.
-
 - **2026-07-01 (Leitor Seguro em Modal na Biblioteca Virtual & Atualização no Valuation):**
   1. **Visualizador Seguro Restrito**: Substituído o redirecionamento externo para abertura de links por um Leitor Seguro (Pop-up/Modal) integrado na própria plataforma, isolando a leitura dos cursos/livros da Biblioteca Virtual em iframe.
   2. **Bloqueios Anti-Pirataria**: Implementados bloqueios robustos via React e Tailwind (CSS) para proibir a cópia, impressão e salvamento direto do acervo (restrições via `onContextMenu`, `select-none`, ocultação total da página na fila de impressão global e desativação dos atalhos de corte e cola).
@@ -429,6 +423,12 @@ Ao fazer login com a conta Google, o sistema exige:
   2. **Confirmação Símplice & Link WhatsApp**: O Obreiro seleciona a competência (mês de referência) e clica em "Confirmar Pagamento". O sistema cria um registro na coleção `mensalidades` com `status: 'em_analise'` e redireciona síncronamente o irmão para o WhatsApp do Tesoureiro (`21984750005`) com os dados preenchidos contendo o número CIM, nome completo do membro, competência e valor.
   3. **Validação Rápida da Tesouraria**: Na Área do Gestor, o Tesoureiro visualiza a fila e dá baixa mudando o status diretamente para "Pago" (aprovado) ou "Recusado" se identificar incongruência em seu extrato real.
   4. **Retrocompatibilidade Resiliente**: O sistema mantém a renderização de botões para download de comprovantes antigos de forma 100% segura; para os registros sem anexo, o sistema exibe apenas o badge elegante "Confirmação Direta".
+
+  1. **GCK (Groq Cloud Key) / Groq API**: Integrado suporte síncrono a modelos do Groq (como Llama 3.3 70B, Llama 3.1 8B e Mixtral) operando no backend via chamadas síncronas `/api/premium/*`. O gestor pode alternar dinamicamente e salvar sua chave API local (`gsk_...`) no navegador.
+  2. **Modo Duplo de Geração (Parâmetros Completos vs. Grade Template de Linguagem Natural)**: Adicionada a aba "Forma Rápida (Grade de Aulas Pronta)" que permite descrever o programa do curso e o syllabus de forma natural e livre. A IA lê e interpreta todo o texto (NLP Parsing) de forma inteligente, mapeando Módulos, Unidades e Lições estruturadas nos bastidores, sem exigir JSON ou formatações estritas. Adicionados parâmetros dedicados como "Carga Horária Estimada", "Quem poderá visualizar" (Grau Permitido) e "Nível de Profundidade".
+  3. **Sistema de Resiliência Antifalhas (Fallback Automático de Cotas/Rate Limits)**: Para combater as interrupções de geração causadas por limites de cota da API Free Tier (429 Quota Exceeded), o backend foi instrumentado com um motor de failover automático. Ao detectar falha no modelo primário selecionado (ex: `gemini-3.1-pro-preview`), o sistema realiza tentativas em cascata com modelos de alta disponibilidade e ultra-velocidade (`gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash` ou modelos adicionais da Groq/Llama), garantindo a finalização impecável da obra sem interrupções.
+  4. **Personalidade Best-Seller Editor**: No modo de geração rápida, a IA atua explicitamente como um "Renomado Editor e Escritor de vários Best-Sellers", com regras estritas de alta fidelidade literária, diagramação em Markdown e 5 exercícios reflexivos ou factuais de fixação por aula.
+  5. **Atualização Oficial do Valuation**: Incorporação do módulo de criação multi-motor antifalhas e NLP no card do Valuation do Gestor (valorado em R$ 31.500,00), elevando o **Valor Global Estimado (Valuation) da Plataforma para R$ 229.500,00**.
 
 - **2026-05-21 (Today):** **Integração de Contribuição e Mensalidades Diretamente no Perfil do Membro & Liberação Geral**:
   1. **Módulo Financeiro no Perfil do Membro**: Para resolver definitivamente a acessibilidade, o módulo de Contribuição/Tesouraria foi embutido diretamente no Perfil do Membro (`ProfilePage.tsx`). Qualquer obreiro (incluindo `calepi@gmail.com`) agora visualiza seus dados financeiros diretamente no seu perfil.

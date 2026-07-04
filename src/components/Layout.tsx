@@ -96,7 +96,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const userEmail = (user?.email || auth.currentUser?.email || '').toLowerCase().trim();
   const isOwner = ['gomau.ead@gmail.com', 'calepi@gmail.com', 'calepe@gmail.com'].includes(userEmail);
-  const isPremiumAdmin = userEmail === 'tazmaniacrvg@gmail.com' || user?.role === 'adminPremium';
+  const isPremiumAdmin = userEmail === 'tazmaniacrvg@gmail.com' || (user?.role as string) === 'adminPremium' || isOwner;
   const canAccessGestor = isMaster || user?.role === 'gestor' || user?.cim === '3330' || user?.cim === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user?.delegatedPastas && user.delegatedPastas.length > 0);
 
   const navItems = [
@@ -105,8 +105,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { icon: Sparkles, label: 'Cadeia de União', path: '/cadeia-uniao' },
     { icon: BookOpen, label: 'Conteúdos', path: '/contents' },
     { icon: GraduationCap, label: 'Cursos EAD', path: '/cursos' },
-    { icon: BookOpen, label: 'Câmara de Estudos', path: '/estudos' },
-    { icon: MessageSquare, label: 'Fórum de Estudos', path: '/forum' },
+    { icon: MessageSquare, label: 'Fórum', path: '/forum' },
     { icon: FileText, label: 'Solicitações', path: '/requests' },
     { icon: Calendar, label: 'Calendário', path: '/calendar' },
     { icon: History, label: 'Histórico', path: '/history' },
@@ -117,7 +116,7 @@ export function Layout({ children }: { children: ReactNode }) {
   ];
   
   if (isPremiumAdmin) {
-    adminItems.push({ icon: Target, label: 'Câmara de Criação', path: '/criacao' });
+    
   }
 
   return (
@@ -229,16 +228,6 @@ export function Layout({ children }: { children: ReactNode }) {
           <span className="text-[10px] font-medium">Início</span>
         </NavLink>
         <NavLink
-          to="/contents"
-          className={({ isActive }) => cn(
-            "flex flex-col items-center justify-center flex-1 py-1 gap-1 transition-all",
-            isActive ? "text-[#D4AF37]" : "text-gray-500"
-          )}
-        >
-          <BookOpen size={18} />
-          <span className="text-[10px] font-medium">Estudos</span>
-        </NavLink>
-        <NavLink
           to="/cadeia-uniao"
           className={({ isActive }) => cn(
             "flex flex-col items-center justify-center flex-1 py-1 gap-1 transition-all",
@@ -309,7 +298,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   { icon: Calendar, label: 'Calendário', path: '/calendar' },
                   { icon: History, label: 'Histórico', path: '/history' },
                   { icon: User, label: 'Meu Perfil', path: '/profile' }
-                ].map((item) => {
+                ].map((item: any) => {
                   const isActive = location.pathname === item.path;
                   return (
                     <button
@@ -322,10 +311,12 @@ export function Layout({ children }: { children: ReactNode }) {
                         "p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-2 transition-all duration-200 cursor-pointer",
                         isActive
                           ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]"
-                          : "bg-[#0F172A]/80 border-[#1e293b]/70 hover:border-slate-700 text-gray-300"
+                          : item.highlight
+                            ? "bg-gradient-to-b from-[#D4AF37]/20 to-transparent border-[#D4AF37]/50 text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] animate-pulse"
+                            : "bg-[#0F172A]/80 border-[#1e293b]/70 hover:border-slate-700 text-gray-300"
                       )}
                     >
-                      <item.icon size={22} className={isActive ? "text-[#D4AF37]" : "text-gray-400"} />
+                      <item.icon size={22} className={isActive ? "text-[#D4AF37]" : item.highlight ? "text-[#D4AF37]" : "text-gray-400"} />
                       <span className="text-[10px] font-medium leading-tight truncate w-full">{item.label}</span>
                     </button>
                   );

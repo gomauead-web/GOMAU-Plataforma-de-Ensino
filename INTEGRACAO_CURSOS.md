@@ -43,10 +43,20 @@ A plataforma agora possui seu próprio LMS (Learning Management System) integrad
 
 ## 4. Evolução (2026-07-01): Câmara de Criação Premium
 
-O sistema evoluiu para comportar obras ainda mais complexas (Livros, Cursos Interativos e Formatos Híbridos) operando com o `gemini-3.1-pro-preview` através de um Backend Full-Stack Server (Express). 
+O sistema evoluiu para comportar obras ainda mais complexas (Livros, Cursos Interativos e Formatos Híbridos) através de um Backend Full-Stack Server (Express).
 
-O módulo "Câmara de Criação", exclusivo para acesso Premium/Administrativo, gera estruturas de dados ainda mais ricas:
+O módulo "Câmara de Criação", exclusivo para acesso Premium/Administrativo, gera estruturas de dados ainda mais ricas com máxima resiliência:
 - **Hierarquia:** Curso -> Módulos -> Unidades -> Aulas -> Exercícios.
 - **Validação Server-Side:** A API Key do Gemini foi movida definitivamente para o `server.ts` (`/api/premium/generate`), garantindo proteção absoluta e processamento off-loaded do cliente.
+- **Geração por Etapas Resiliente**: O processo de geração foi desacoplado para evitar timeouts de requisições longas ou quebras de JSON. O backend divide a tarefa em duas etapas sequenciais:
+  1. Geração da ementa estrutural com todos os tópicos planejados.
+  2. Redação e refinamento de cada lição, uma de cada vez, com até 3 retentativas automáticas em caso de falha.
+- **Terminal de Logs & Retomada Automática**: A interface da Câmara de Criação exibe um console/terminal de logs que rastreia detalhadamente o progresso em tempo real, permitindo pausar e retomar a qualquer momento. Se houver interrupções, o sistema detecta e resgata o estado inacabado diretamente do Firestore, permitindo ao gestor continuar exatamente de onde parou.
+- **Padrão Google AI Studio / Gemini**: Oferece suporte completo e integrado para modelos do Google Gemini (incluindo Gemini 3.1 Pro Preview, Gemini 2.5 Pro/Flash, Gemini 2.0 Flash e Gemini 1.5 Pro/Flash) rodando sob demanda de forma segura através do servidor.
+- **Chave API do Gemini Personalizada (Opcional)**: Para assegurar o pleno funcionamento independente de limites ou bloqueios de cota globais do servidor, o gestor pode informar sua própria chave API do Google Gemini (`AIzaSy...`) diretamente na interface. A chave é salva localmente via `localStorage` e transmitida de forma segura para o backend, permitindo geração ilimitada e direta de cursos sem fricções.
+- **Suporte Multimotor GCK (Groq Cloud Key - Novo)**: Além do ecossistema Google Gemini, a plataforma foi integrada com a API GCK/Groq (Llama 3.3 70B, Llama 3.1 8B, Mixtral). O gestor pode alternar instantaneamente entre modelos Google e Groq, além de fornecer sua própria API Key da Groq (`gsk_...`) de forma totalmente independente e persistente para bypass de cotas.
+- **Suporte Duplo de Criação (Novo)**:
+  1. **Forma Completa (Parâmetros)**: O sistema gera os tópicos, módulos e unidades de forma autônoma através dos inputs configurados.
+  2. **Forma Rápida (Grade de Aulas Pronta via Linguagem Natural)**: O gestor pode fornecer uma ementa, grade, syllabus ou rascunho de texto livre totalmente natural e sem formatação obrigatória. A inteligência artificial analisa e interpreta todo o texto de forma contextualizada, mapeando com extrema resiliência os Módulos, Unidades e Lições ocultas no rascunho, enriquecendo-os com sinopses premium e garantindo que nada do que o usuário escreveu seja desconsiderado ou cause falhas.
 - **Visualizador Próprio:** Os cursos/manuais gerados são acessados via `PremiumCourseViewerPage`, que orquestra a visibilidade da nova arquitetura hierárquica baseada no Grau do aluno.
 
