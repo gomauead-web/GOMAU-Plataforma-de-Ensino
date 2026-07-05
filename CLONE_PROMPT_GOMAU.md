@@ -3,6 +3,9 @@
 Este documento é a especificação técnica absoluta, completa e exaustiva para clonar a **Plataforma Maçônica G∴O∴M∴A∴U∴**.
 O objetivo deste arquivo é alimentar uma Inteligência Artificial Sênior de Engenharia (como Gemini, Claude, ChatGPT, etc.) para recriar **100% da plataforma, linha por linha, com toda a sua arquitetura, frontend, backend no Firebase, regras de negócio, gamificação, motores de inteligência artificial e interfaces dinâmicas**, sem perder nenhuma regra de negócio oculta.
 
+> [!CRITICAL]
+> **MÓDULO DE MENSALIDADES REMOVIDO:** Conforme decisão administrativa e solicitação expressa, todo e qualquer recurso relacionado a contribuições financeiras, mensalidades, faturamento via Pix e conciliação bancária da Tesouraria foi **COMPLETAMENTE REMOVIDO** do sistema (das interfaces de usuário, menus de navegação do Layout e abas do Perfil do Membro). O Valuation do sistema foi recalculado para R$ 179.000,00 excluindo esses módulos. Do not implement any monthly fee logic or menu options in new clones.
+
 **Stack Tecnológica Obrigatória:** React 18+ (Vite), TypeScript, Tailwind CSS, Firebase (Firestore, Authentication, Storage), Lucide React (Ícones), React Router DOM (v6+), XSLX (Manipulação de Excel), html2canvas/jspdf (CIM/Relatórios), Google GenAI SDK.
 
 ---

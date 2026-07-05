@@ -240,6 +240,11 @@ Ao fazer login com a conta Google, o sistema exige:
 
 ## 5. Changelog e Histórico de Evolução
 
+- **2026-07-05 (Remoção Definitiva do Módulo de Mensalidades & Contribuição Financeira):**
+  1. **Remoção das Telas e Menus**: Eliminação completa de todas as referências ao módulo de mensalidades. O menu de "Mensalidades" foi removido em absoluto de todas as opções de navegação.
+  2. **Perfil do Membro sem Financeiro**: A aba "Contribuição & Mensalidades" foi inteiramente extirpada do perfil dos obreiros, removendo Chave Pix, instruções de pagamento, formulários e histórico de faturamento.
+  3. **Atualização Oficial do Valuation**: Em conformidade com a desativação permanente do módulo financeiro (Tesouraria & Finanças de R$ 14.000,00 e Auditoria "Livro Preto" & Finanças de R$ 5.000,00), removemos estes valores da precificação nominal ativa. Isso recalcula o **Valor Global Estimado (Valuation) da Plataforma para R$ 179.000,00**.
+
 - **2026-07-05 (Adição da Categoria Egrégora na Cadeia de União):**
   1. **Novas Vibrações**: Inclusão de "Egrégora" como categoria oficial de vibração mental na Cadeia de União, oferecendo mais uma opção ritualística e espiritual para os pedidos de amparo mental coletivo.
 
