@@ -240,6 +240,9 @@ Ao fazer login com a conta Google, o sistema exige:
 
 ## 5. Changelog e Histórico de Evolução
 
+- **2026-07-05 (Remoção Momentânea da Área Gestor para o e-mail tazmaniacrvg@gmail.com):**
+  1. **Remoção da Área Gestor**: Ocultada e bloqueada a opção "Área Gestor" para o usuário tazmaniacrvg@gmail.com, garantindo a suspensão temporária de acesso ao painel de administração e rotas do Gestor.
+
 - **2026-07-01 (Leitor Seguro em Modal na Biblioteca Virtual & Atualização no Valuation):**
   1. **Visualizador Seguro Restrito**: Substituído o redirecionamento externo para abertura de links por um Leitor Seguro (Pop-up/Modal) integrado na própria plataforma, isolando a leitura dos cursos/livros da Biblioteca Virtual em iframe.
   2. **Bloqueios Anti-Pirataria**: Implementados bloqueios robustos via React e Tailwind (CSS) para proibir a cópia, impressão e salvamento direto do acervo (restrições via `onContextMenu`, `select-none`, ocultação total da página na fila de impressão global e desativação dos atalhos de corte e cola).

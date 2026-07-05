@@ -70,7 +70,7 @@ function ProtectedRoute({ children, requireGestor = false }: { children: React.R
   }
 
   const userEmail = (user.email || auth.currentUser?.email || '').toLowerCase().trim();
-  const hasRestrictedAccess = user.cim === '3330' || user.cim === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user.delegatedPastas && user.delegatedPastas.length > 0);
+  const hasRestrictedAccess = (user.cim === '3330' || user.cim === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user.delegatedPastas && user.delegatedPastas.length > 0)) && userEmail !== 'tazmaniacrvg@gmail.com';
   if (requireGestor && user.role !== 'gestor' && !isMaster && !hasRestrictedAccess) return <Navigate to="/" replace />;
   
   return children;

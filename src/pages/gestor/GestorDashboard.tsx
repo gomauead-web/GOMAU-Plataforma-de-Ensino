@@ -91,7 +91,8 @@ export function GestorDashboard() {
         userEmail,
       )) &&
     user?.role !== "gestor" &&
-    !isOwner;
+    !isOwner &&
+    userEmail !== "tazmaniacrvg@gmail.com";
 
   const isMaster = ["gomau.ead@gmail.com", "calepi@gmail.com", "calepe@gmail.com"].includes(userEmail) || user?.role === "gestor";
   const isDelegatedUser = !isMaster && user?.role !== 'gestor' && !isRestrictedFaltas && user?.delegatedPastas && user.delegatedPastas.length > 0;
