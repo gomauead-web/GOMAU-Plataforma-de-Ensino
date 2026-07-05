@@ -127,7 +127,6 @@ export function Layout({ children }: { children: ReactNode }) {
       title: "Secretaria & Tesouraria",
       items: [
         { icon: FileText, label: 'Solicitações', path: '/requests' },
-        { icon: DollarSign, label: 'Mensalidade', path: '/mensalidade' },
         { icon: History, label: 'Histórico', path: '/history' },
       ]
     }
