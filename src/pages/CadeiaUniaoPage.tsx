@@ -31,7 +31,8 @@ export function CadeiaUniaoPage() {
     'Recuperação de Saúde',
     'Vibrações de Harmonia',
     'Força Espiritual',
-    'Apoio Fraterno'
+    'Apoio Fraterno',
+    'Egrégora'
   ];
 
   const fetchRequests = async () => {

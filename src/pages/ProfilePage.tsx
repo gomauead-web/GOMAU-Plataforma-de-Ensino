@@ -1264,16 +1264,7 @@ export function ProfilePage() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.05),transparent_70%)] pointer-events-none" />
             <div className="flex justify-center w-full max-w-full overflow-hidden">
               <img
-                src={
-                  [
-                    "calepi@gmail.com",
-                    "calepe@gmail.com",
-                    "tazmaniacrvg@gmail.com",
-                    "tazmanicrvg@gmail.com",
-                  ].includes((user.email || "").toLowerCase().trim())
-                    ? "/CIM%20Frente.png"
-                    : "/carteira.png"
-                }
+                src="/carteira.png"
                 alt="Carteira Maçônica"
                 className="w-[800px] max-w-full h-auto object-contain rounded-2xl shadow-2xl border border-[#D4AF37]/20"
               />

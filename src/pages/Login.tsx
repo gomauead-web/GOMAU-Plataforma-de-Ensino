@@ -302,7 +302,8 @@ export function Login() {
             </div>
             <p className="text-[14px] sm:text-[16px] leading-relaxed text-gray-200 italic font-serif font-medium">"Qual a sua idade?" — O conhecimento do grau simbólico destranca as portas da sabedoria.</p>
             <input 
-              type="number" 
+              type="password" 
+              inputMode="numeric"
               value={ageResponse}
               onChange={(e) => setAgeResponse(e.target.value)}
               className="w-full bg-[#030508] border border-[#D4AF37]/30 text-white p-3.5 rounded-xl focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/30 text-sm font-mono"

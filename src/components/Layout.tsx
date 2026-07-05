@@ -99,25 +99,43 @@ export function Layout({ children }: { children: ReactNode }) {
   const isPremiumAdmin = (userEmail === 'tazmaniacrvg@gmail.com' ? false : true) && (userEmail === 'tazmaniacrvg@gmail.com' || (user?.role as string) === 'adminPremium' || isOwner);
   const canAccessGestor = (isMaster || user?.role === 'gestor' || user?.cim === '3330' || user?.cim === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user?.delegatedPastas && user.delegatedPastas.length > 0)) && userEmail !== 'tazmaniacrvg@gmail.com';
 
-  const navItems = [
-    { icon: Home, label: 'Dashboard', path: '/' },
-    { icon: Library, label: 'Biblioteca Digital', path: '/library' },
-    { icon: Sparkles, label: 'Cadeia de União', path: '/cadeia-uniao' },
-    { icon: BookOpen, label: 'Conteúdos', path: '/contents' },
-    { icon: GraduationCap, label: 'Cursos EAD', path: '/cursos' },
-    { icon: MessageSquare, label: 'Fórum', path: '/forum' },
-    { icon: FileText, label: 'Solicitações', path: '/requests' },
-    { icon: Calendar, label: 'Calendário', path: '/calendar' },
-    { icon: History, label: 'Histórico', path: '/history' },
+  const categories = [
+    {
+      title: "Principal",
+      items: [
+        { icon: Home, label: 'Dashboard', path: '/' },
+        { icon: User, label: 'Meu Perfil', path: '/profile' },
+      ]
+    },
+    {
+      title: "Estudos & Formação",
+      items: [
+        { icon: BookOpen, label: 'Conteúdos', path: '/contents' },
+        { icon: GraduationCap, label: 'Cursos EAD', path: '/cursos' },
+        { icon: Library, label: 'Biblioteca Digital', path: '/library' },
+        { icon: MessageSquare, label: 'Fórum', path: '/forum' },
+      ]
+    },
+    {
+      title: "Egrégora & Vida em Loja",
+      items: [
+        { icon: Sparkles, label: 'Cadeia de União', path: '/cadeia-uniao' },
+        { icon: Calendar, label: 'Calendário', path: '/calendar' },
+      ]
+    },
+    {
+      title: "Secretaria & Tesouraria",
+      items: [
+        { icon: FileText, label: 'Solicitações', path: '/requests' },
+        { icon: DollarSign, label: 'Mensalidade', path: '/mensalidade' },
+        { icon: History, label: 'Histórico', path: '/history' },
+      ]
+    }
   ];
 
   const adminItems = [
     { icon: Shield, label: 'Área Gestor', path: '/gestor' },
   ];
-  
-  if (isPremiumAdmin) {
-    
-  }
 
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-[#05070A]/40 text-[#E5E7EB] font-sans relative overflow-hidden">
@@ -157,18 +175,27 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Nav Links */}
-        <nav className="flex-1 py-6 flex flex-col gap-1 px-4">
-          {navItems.map((item) => (
-            <NavItem key={item.path} item={item} />
+        <nav className="flex-1 py-6 flex flex-col gap-5 px-4 overflow-y-auto">
+          {categories.map((category) => (
+            <div key={category.title} className="flex flex-col gap-1">
+              <span className="text-[10px] font-black text-[#D4AF37]/50 tracking-[0.2em] uppercase px-4 pb-1">
+                {category.title}
+              </span>
+              {category.items.map((item) => (
+                <NavItem key={item.path} item={item} />
+              ))}
+            </div>
           ))}
 
           {canAccessGestor && (
-            <>
-              <div className="my-4 border-t border-[#D4AF37]/15"></div>
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-black text-red-500/60 tracking-[0.2em] uppercase px-4 pb-1">
+                Administração
+              </span>
               {adminItems.map((item) => (
                 <NavItem key={item.path} item={item} />
               ))}
-            </>
+            </div>
           )}
 
           <div className="mt-auto pt-4 border-t border-[#D4AF37]/15 flex flex-col gap-1">
@@ -285,57 +312,60 @@ export function Layout({ children }: { children: ReactNode }) {
                 </button>
               </div>
 
-              {/* Options Grid */}
-              <div className="grid grid-cols-3 gap-3 pb-6">
-                {[
-                  { icon: Home, label: 'Início', path: '/' },
-                  ...(isOwner ? [{ icon: Library, label: 'Biblioteca', path: '/library' }] : []),
-                  { icon: Sparkles, label: 'Cadeia União', path: '/cadeia-uniao' },
-                  { icon: BookOpen, label: 'Conteúdos', path: '/contents' },
-                  { icon: GraduationCap, label: 'Cursos EAD', path: '/cursos' },
-                  { icon: MessageSquare, label: 'Fórum', path: '/forum' },
-                  { icon: FileText, label: 'Solicitações', path: '/requests' },
-                  { icon: Calendar, label: 'Calendário', path: '/calendar' },
-                  { icon: History, label: 'Histórico', path: '/history' },
-                  { icon: User, label: 'Meu Perfil', path: '/profile' }
-                ].map((item: any) => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <button
-                      key={item.path}
-                      onClick={() => {
-                        navigate(item.path);
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={cn(
-                        "p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-2 transition-all duration-200 cursor-pointer",
-                        isActive
-                          ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]"
-                          : item.highlight
-                            ? "bg-gradient-to-b from-[#D4AF37]/20 to-transparent border-[#D4AF37]/50 text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] animate-pulse"
-                            : "bg-[#0F172A]/80 border-[#1e293b]/70 hover:border-slate-700 text-gray-300"
-                      )}
-                    >
-                      <item.icon size={22} className={isActive ? "text-[#D4AF37]" : item.highlight ? "text-[#D4AF37]" : "text-gray-400"} />
-                      <span className="text-[10px] font-medium leading-tight truncate w-full">{item.label}</span>
-                    </button>
-                  );
-                })}
+              {/* Options Grouped */}
+              <div className="space-y-6 pb-6">
+                {categories.map((category) => (
+                  <div key={category.title} className="space-y-2">
+                    <span className="text-[10px] font-black text-[#D4AF37]/50 tracking-[0.2em] uppercase block">
+                      {category.title}
+                    </span>
+                    <div className="grid grid-cols-3 gap-2.5">
+                      {category.items
+                        .filter(item => item.path !== '/library' || isOwner)
+                        .map((item: any) => {
+                          const isActive = location.pathname === item.path;
+                          return (
+                            <button
+                              key={item.path}
+                              onClick={() => {
+                                navigate(item.path);
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className={cn(
+                                "p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-2 transition-all duration-200 cursor-pointer",
+                                isActive
+                                  ? "bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37]"
+                                  : "bg-[#0F172A]/80 border-[#1e293b]/70 hover:border-slate-700 text-gray-300"
+                              )}
+                            >
+                              <item.icon size={20} className={isActive ? "text-[#D4AF37]" : "text-gray-400"} />
+                              <span className="text-[9px] font-bold leading-tight truncate w-full">{item.label}</span>
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </div>
+                ))}
 
                 {/* Optional Gestor access */}
                 {canAccessGestor && (
-                  <button
-                    onClick={() => {
-                      navigate('/gestor');
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={cn(
-                      "p-3 rounded-xl border flex flex-col items-center justify-center text-center gap-2 transition-all duration-200 bg-red-950/20 border-red-900/30 text-rose-400 col-span-3 text-xs font-bold uppercase tracking-wider cursor-pointer"
-                    )}
-                  >
-                    <Shield size={22} className="text-red-500" />
-                    <span>Acessar Painel do Gestor</span>
-                  </button>
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black text-red-500/60 tracking-[0.2em] uppercase block">
+                      Administração
+                    </span>
+                    <button
+                      onClick={() => {
+                        navigate('/gestor');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={cn(
+                        "w-full p-3.5 rounded-xl border flex items-center justify-center gap-2.5 transition-all duration-200 bg-red-950/20 border-red-900/30 text-rose-400 text-xs font-bold uppercase tracking-wider cursor-pointer"
+                      )}
+                    >
+                      <Shield size={20} className="text-red-500" />
+                      <span>Acessar Painel do Gestor</span>
+                    </button>
+                  </div>
                 )}
               </div>
 

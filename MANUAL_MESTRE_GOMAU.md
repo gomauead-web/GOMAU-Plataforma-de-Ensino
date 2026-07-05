@@ -240,6 +240,19 @@ Ao fazer login com a conta Google, o sistema exige:
 
 ## 5. Changelog e Histórico de Evolução
 
+- **2026-07-05 (Adição da Categoria Egrégora na Cadeia de União):**
+  1. **Novas Vibrações**: Inclusão de "Egrégora" como categoria oficial de vibração mental na Cadeia de União, oferecendo mais uma opção ritualística e espiritual para os pedidos de amparo mental coletivo.
+
+- **2026-07-05 (Disponibilização de Nova Carteira Maçônica para Todos os Membros):**
+  1. **Template Unificado**: Configuração para exibir o arquivo `/carteira.png` no perfil de todos os obreiros como o modelo oficial de "Identidade Maçônica Digital", eliminando restrições anteriores baseadas em e-mails específicos.
+
+- **2026-07-05 (Organização e Usabilidade do Menu de Navegação):**
+  1. **Menu Categorizado e Agrupado**: Reestruturação completa do menu lateral (desktop) e do menu inferior flutuante (gaveta mobile) em categorias lógicas: *Principal*, *Estudos & Formação*, *Egrégora & Vida em Loja* e *Secretaria & Tesouraria*.
+  2. **Melhoria de Usabilidade**: Inclusão de atalhos rápidos como "Meu Perfil" e visualização facilitada do menu "Mensalidade" de forma ordenada, com cabeçalhos elegantes em dourado discreto para melhor escaneabilidade visual e navegação intuitiva.
+
+- **2026-07-05 (Ocultação da Idade Maçônica no Login):**
+  1. **Segurança no Login**: Alterado o tipo do campo "Idade Maçônica" no primeiro portal do formulário de login para `password` (ocultado com asteriscos `*`), com suporte a `inputMode="numeric"` para otimizar a usabilidade em dispositivos móveis, reforçando a discrição e privacidade ritualística do obreiro.
+
 - **2026-07-05 (Remoção Momentânea da Área Gestor para o e-mail tazmaniacrvg@gmail.com):**
   1. **Remoção da Área Gestor**: Ocultada e bloqueada a opção "Área Gestor" para o usuário tazmaniacrvg@gmail.com, garantindo a suspensão temporária de acesso ao painel de administração e rotas do Gestor.
 
