@@ -24,6 +24,34 @@ body {
   background-position: center;
   background-attachment: fixed;
   font-family: var(--font-sans);
+  
+  /* Prevent copy, paste, select start, long-press */
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+html, #root {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+img {
+  -webkit-user-drag: none !important;
+  user-drag: none !important;
+  pointer-events: none !important;
+}
+
+@media print {
+  body, html, #root {
+    display: none !important;
+    visibility: hidden !important;
+  }
 }
 
 /* Custom Scrollbar for a luxurious look */

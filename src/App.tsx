@@ -77,44 +77,47 @@ function ProtectedRoute({ children, requireGestor = false }: { children: React.R
 }
 
 import { Toaster } from 'react-hot-toast';
+import { SecurityWrapper } from './components/SecurityWrapper';
 
 export default function App() {
   return (
     <AuthProvider>
-      <Toaster position="top-right" toastOptions={{
-        style: {
-          background: '#1e293b',
-          color: '#fff',
-          border: '1px solid #D4AF3733',
-        }
-      }} />
-      <NotificationManager />
-      <WelcomePopup />
-      <PWAInstallPrompt />
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-          <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />
-          <Route path="/contents" element={<ProtectedRoute><Layout><ContentPage /></Layout></ProtectedRoute>} />
-          <Route path="/cursos" element={<ProtectedRoute><Layout><CursosExternos /></Layout></ProtectedRoute>} />
-          <Route path="/cursos/:courseId" element={<ProtectedRoute><Layout><CursoDetail /></Layout></ProtectedRoute>} />
-          <Route path="/forum" element={<ProtectedRoute><Layout><Forum /></Layout></ProtectedRoute>} />
-          <Route path="/requests" element={<ProtectedRoute><Layout><RequestsPage /></Layout></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
-          <Route path="/calendar" element={<ProtectedRoute><Layout><CalendarPage /></Layout></ProtectedRoute>} />
-          <Route path="/mensalidade" element={<ProtectedRoute><Layout><TreasuryPage /></Layout></ProtectedRoute>} />
-          <Route path="/cadeia-uniao" element={<ProtectedRoute><Layout><CadeiaUniaoPage /></Layout></ProtectedRoute>} />
-          <Route path="/history" element={<ProtectedRoute><Layout><HistoryPage /></Layout></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Layout><div className="p-8 text-gray-200"><h1 className="text-3xl text-[#D4AF37] mb-4">Configurações</h1><p>Em breve.</p></div></Layout></ProtectedRoute>} />
-          <Route path="/help" element={<ProtectedRoute><Layout><div className="p-8 text-gray-200"><h1 className="text-3xl text-[#D4AF37] mb-4">Ajuda</h1><p>Em breve.</p></div></Layout></ProtectedRoute>} />
-          
-          <Route path="/gestor/*" element={<ProtectedRoute requireGestor={true}><Layout><GestorDashboard /></Layout></ProtectedRoute>} />
-          
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
+      <SecurityWrapper>
+        <Toaster position="top-right" toastOptions={{
+          style: {
+            background: '#1e293b',
+            color: '#fff',
+            border: '1px solid #D4AF3733',
+          }
+        }} />
+        <NotificationManager />
+        <WelcomePopup />
+        <PWAInstallPrompt />
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            
+            <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+            <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />
+            <Route path="/contents" element={<ProtectedRoute><Layout><ContentPage /></Layout></ProtectedRoute>} />
+            <Route path="/cursos" element={<ProtectedRoute><Layout><CursosExternos /></Layout></ProtectedRoute>} />
+            <Route path="/cursos/:courseId" element={<ProtectedRoute><Layout><CursoDetail /></Layout></ProtectedRoute>} />
+            <Route path="/forum" element={<ProtectedRoute><Layout><Forum /></Layout></ProtectedRoute>} />
+            <Route path="/requests" element={<ProtectedRoute><Layout><RequestsPage /></Layout></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
+            <Route path="/calendar" element={<ProtectedRoute><Layout><CalendarPage /></Layout></ProtectedRoute>} />
+            <Route path="/mensalidade" element={<ProtectedRoute><Layout><TreasuryPage /></Layout></ProtectedRoute>} />
+            <Route path="/cadeia-uniao" element={<ProtectedRoute><Layout><CadeiaUniaoPage /></Layout></ProtectedRoute>} />
+            <Route path="/history" element={<ProtectedRoute><Layout><HistoryPage /></Layout></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Layout><div className="p-8 text-gray-200"><h1 className="text-3xl text-[#D4AF37] mb-4">Configurações</h1><p>Em breve.</p></div></Layout></ProtectedRoute>} />
+            <Route path="/help" element={<ProtectedRoute><Layout><div className="p-8 text-gray-200"><h1 className="text-3xl text-[#D4AF37] mb-4">Ajuda</h1><p>Em breve.</p></div></Layout></ProtectedRoute>} />
+            
+            <Route path="/gestor/*" element={<ProtectedRoute requireGestor={true}><Layout><GestorDashboard /></Layout></ProtectedRoute>} />
+            
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </SecurityWrapper>
     </AuthProvider>
   );
 }
