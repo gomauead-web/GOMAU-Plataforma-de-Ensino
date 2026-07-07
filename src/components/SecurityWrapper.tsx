@@ -39,19 +39,17 @@ export function SecurityWrapper({ children }: SecurityWrapperProps) {
       });
     };
 
-    const handlePaste = (e: ClipboardEvent) => {
-      e.preventDefault();
-      toast.error("A colagem de conteúdo é desativada nesta área.", {
-        id: "sec-paste"
-      });
-    };
-
     // 3. Prevent Drag and Selection
     const handleDragStart = (e: DragEvent) => {
       e.preventDefault();
     };
 
     const handleSelectStart = (e: Event) => {
+      // Allow selection inside inputs and textareas
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
       e.preventDefault();
     };
 
@@ -152,7 +150,6 @@ export function SecurityWrapper({ children }: SecurityWrapperProps) {
     document.addEventListener('contextmenu', handleContextMenu);
     document.addEventListener('copy', handleCopy);
     document.addEventListener('cut', handleCut);
-    document.addEventListener('paste', handlePaste);
     document.addEventListener('dragstart', handleDragStart);
     document.addEventListener('selectstart', handleSelectStart);
     window.addEventListener('keydown', handleKeyDown);
@@ -166,7 +163,6 @@ export function SecurityWrapper({ children }: SecurityWrapperProps) {
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('copy', handleCopy);
       document.removeEventListener('cut', handleCut);
-      document.removeEventListener('paste', handlePaste);
       document.removeEventListener('dragstart', handleDragStart);
       document.removeEventListener('selectstart', handleSelectStart);
       window.removeEventListener('keydown', handleKeyDown);
