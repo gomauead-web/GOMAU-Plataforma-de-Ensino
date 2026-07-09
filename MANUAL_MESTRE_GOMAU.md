@@ -240,12 +240,15 @@ Ao fazer login com a conta Google, o sistema exige:
 
 ## 5. Changelog e Histórico de Evolução
 
-- **2026-07-05 (Bloqueio Geral de Cópia, Impressão e Captura de Tela - DRM de Alta Segurança):**
+- **2026-07-08 (Desativação Temporária do DRM e Módulo Anti-Cópia):**
+  1. **Remoção das Proteções**: A pedido da administração, a camada de proteção `SecurityWrapper` e as regras CSS que impediam seleção, cópia, colagem e clique direito foram temporariamente desativadas. O conteúdo voltou a ser selecionável e o preenchimento de campos voltou à normalidade sem restrições.
+  2. **Atualização do Valuation**: O "Módulo de Proteção DRM & Anti-Vazamento" de R$ 10.000,00 foi retirado do cômputo momentaneamente. O **Valor Global Estimado (Valuation) da Plataforma retorna para R$ 179.000,00**.
+
+- **2026-07-05 (Bloqueio Geral de Cópia, Impressão e Captura de Tela - DRM de Alta Segurança - DESATIVADO TEMPORARIAMENTE):**
   1. **Bloqueio de Cópia e Seleção**: Desativados em todas as telas o clique do botão direito (menu de contexto), a seleção de textos (`user-select: none` via CSS e escutas de `selectstart`), o arrasto de imagens e a colagem/corte de conteúdos.
   2. **Bloqueio de Atalhos e Ferramentas**: Bloqueio completo de teclas de atalho como `Ctrl+C`, `Cmd+C`, `Ctrl+X`, `Cmd+X`, `Ctrl+P`, `Cmd+P`, `F12`, `Ctrl+Shift+I`, `Cmd+Opt+I`, e a tecla `PrintScreen`. Ao tentar capturar ou copiar, o clipboard é automaticamente sobrescrito por segurança.
   3. **Proteção de Impressão (CSS Print)**: Implementação de folha de estilo de impressão que oculta por completo toda a tela (`display: none`) caso o usuário tente imprimir a página (seja via navegador ou PDF).
   4. **Proteção Anti-Gravação de Tela / Captura**: Implementação de blur de segurança de 24px (`filter: blur(24px)`) com tela de bloqueio dourada e elegante quando a página perde o foco (`blur`) ou entra em segundo plano (`visibilitychange`), impedindo que aplicativos de captura gravem conteúdos rituais confidenciais em segundo plano ou em alternadores de apps.
-  5. **Atualização do Valuation**: Inclusão do "Módulo de Proteção DRM & Anti-Vazamento" avaliado em R$ 10.000,00, recalculando o **Valor Global Estimado (Valuation) da Plataforma para R$ 189.000,00**.
 
 - **2026-07-05 (Remoção Definitiva do Módulo de Mensalidades & Contribuição Financeira):**
   1. **Remoção das Telas e Menus**: Eliminação completa de todas as referências ao módulo de mensalidades. O menu de "Mensalidades" foi removido em absoluto de todas as opções de navegação.

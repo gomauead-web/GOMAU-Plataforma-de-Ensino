@@ -6,7 +6,7 @@ O objetivo deste arquivo é alimentar uma Inteligência Artificial Sênior de En
 > [!CRITICAL]
 > **MÓDULO DE MENSALIDADES REMOVIDO:** Conforme decisão administrativa e solicitação expressa, todo e qualquer recurso relacionado a contribuições financeiras, mensalidades, faturamento via Pix e conciliação bancária da Tesouraria foi **COMPLETAMENTE REMOVIDO** do sistema (das interfaces de usuário, menus de navegação do Layout e abas do Perfil do Membro). Do not implement any monthly fee logic or menu options in new clones.
 >
-> **MÓDULO DRM DE PROTEÇÃO & ANTI-CÓPIA ATIVADO:** Todo o sistema possui proteção DRM de ponta contra cópias, seleção de texto (`user-select: none` global), menu de contexto (clique direito), atalhos de desenvolvedor/inspeção (F12, Ctrl+Shift+I), tentativas de impressão (ocultando a tela com `display: none` via CSS @media print) e blur automático de segurança de 24px com tela de proteção dourada quando a página perde o foco ou entra em segundo plano, garantindo o sigilo absoluto de rituais e informações rituais. O Valuation do sistema foi recalculado para **R$ 189.000,00**.
+> **MÓDULO DRM DE PROTEÇÃO & ANTI-CÓPIA (DESATIVADO TEMPORARIAMENTE):** A proteção DRM contra cópias, impressão e captura de tela foi temporariamente desativada a pedido da administração, retornando a seleção nativa e restaurando o Valuation para **R$ 179.000,00**. O código da `SecurityWrapper` foi mantido mas neutralizado (`return <>{children}</>`).
 
 **Stack Tecnológica Obrigatória:** React 18+ (Vite), TypeScript, Tailwind CSS, Firebase (Firestore, Authentication, Storage), Lucide React (Ícones), React Router DOM (v6+), XSLX (Manipulação de Excel), html2canvas/jspdf (CIM/Relatórios), Google GenAI SDK.
 
