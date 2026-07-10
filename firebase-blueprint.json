@@ -205,6 +205,17 @@
         }
       },
       "required": ["userId", "courseId", "updatedAt"]
+    },
+    "LibraryCategory": {
+      "title": "LibraryCategory",
+      "description": "Categories for cataloged virtual library items.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": ["name"]
     }
   },
   "firestore": {
@@ -249,6 +260,12 @@
         "$ref": "#/entities/Progress"
       },
       "description": "Stores user progress."
+    },
+    "/library_categories/{categoryId}": {
+      "schema": {
+        "$ref": "#/entities/LibraryCategory"
+      },
+      "description": "Stores categories of library items."
     }
   }
 }

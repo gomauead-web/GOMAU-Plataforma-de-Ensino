@@ -22743,6 +22743,11 @@ service cloud.firestore {
       allow write: if isGestor();
     }
 
+    match /library_categories/{categoryId} {
+      allow read: if isSignedIn();
+      allow write: if isGestor();
+    }
+
     match /configs/{configId} {
       allow read: if isSignedIn();
       allow write: if isGestor();

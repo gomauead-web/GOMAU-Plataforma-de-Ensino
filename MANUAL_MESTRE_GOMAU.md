@@ -561,7 +561,8 @@ Ao fazer login com a conta Google, o sistema exige:
   3. **Visualização por Player de Áudio Imersivo**: Todos os 100 vídeos de instruções carregados estão mapeados para serem ouvidos no Player de Áudio Imersivo (SafeVideoPlayer) com capa rituálica estática e ocultação de vídeo/logos do YouTube, garantindo o máximo foco e imersão iniciática.
   4. **Sanetização e Formatação de Títulos**: Implementada substituição automatizada de caracteres ordinais truncados (como `^` para `ª`), assegurando exibição gramaticalmente correta em todos os tomos.
   5. **Ordenação Numérica Ascendente**: Substituição da listagem cronológica padrão por uma ordenação numérica inteligente baseada no número de instrução extraído dos títulos, organizando a biblioteca de forma sequencial (do menor para o maior).
-  6. **Atualização Oficial do Valuation**: Inclusão do módulo de Seeder e Ingestão Avançada valorado em R$ 5.500,00, elevando o **Valor Global Estimado (Valuation) da Plataforma para R$ 193.500,00**.
+  6. **Resolução de Permissão de Categorias**: Corrigido o erro "Missing or insufficient permissions" adicionando regras robustas de leitura para membros logados e escrita para gestores na coleção `library_categories`.
+  7. **Atualização Oficial do Valuation**: Inclusão do módulo de Seeder e Ingestão Avançada valorado em R$ 5.500,00, elevando o **Valor Global Estimado (Valuation) da Plataforma para R$ 193.500,00**.
 - **2026-05-15 (Update):** **Novo Dashboard e Monitoramento Real-time**:
   1. **Aba Dashboard (Início)**: Criada uma nova aba principal que centraliza todas as métricas da oficina. Agora, ao entrar no Painel do Gestor, o Mestre vê imediatamente o contador de Obreiros Online, Aprendizes, Companheiros e Mestres.
   2. **Monitoramento de Presença**: O sistema de "Online Agora" foi aprimorado com uma janela de tolerância de 10 minutos e suporte a múltiplos formatos de data, garantindo que o contador reflita fielmente quem está navegando no sistema.
