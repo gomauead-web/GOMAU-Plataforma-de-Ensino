@@ -22532,6 +22532,18 @@ service cloud.firestore {
       );
     }
 
+    function getUserCim() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) ? 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.cim : "";
+    }
+
+    function isDelegatedToPasta(pasta) {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/adminPermissions/$(getUserCim() + "_" + pasta)) ||
+        (pasta == '2° Vigilante' && getUserCim() == '3324')
+      );
+    }
+
     function isRestrictedFaltas() {
       return isSignedIn() && (
         (request.auth.token.email != null && (
@@ -22750,7 +22762,7 @@ service cloud.firestore {
 
     match /configs/{configId} {
       allow read: if isSignedIn();
-      allow write: if isGestor();
+      allow write: if isGestor() || (configId == 'segundo_vigilante' && isDelegatedToPasta('2° Vigilante'));
     }
 
     match /forumTopics/{topicId} {
@@ -22839,7 +22851,7 @@ service cloud.firestore {
 
     match /officersNotifications/{notificationId} {
       allow read, list: if isSignedIn();
-      allow write: if isGestor();
+      allow write: if isGestor() || isDelegatedToPasta('2° Vigilante');
     }
   }
 }

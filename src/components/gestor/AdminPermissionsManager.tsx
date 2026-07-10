@@ -5,6 +5,7 @@ import {
   addDoc,
   deleteDoc,
   doc,
+  setDoc,
   onSnapshot,
   query,
   orderBy
@@ -75,7 +76,8 @@ export default function AdminPermissionsManager({ members }: AdminPermissionsMan
 
     setSaving(true);
     try {
-      await addDoc(collection(db, "adminPermissions"), {
+      const docId = `${targetCim}_${newPasta}`;
+      await setDoc(doc(db, "adminPermissions", docId), {
         cim: targetCim,
         pasta: newPasta,
         createdAt: new Date().toISOString()
