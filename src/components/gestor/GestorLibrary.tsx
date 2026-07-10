@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc } from 'firebase/firestore';
-import { Plus, Trash2, Edit2, Save, X, BookOpen, Link, Star, Lock, HelpCircle, Users, Unlock, CheckCircle2, Search, Coins, Sparkles, BookMarked, Settings } from 'lucide-react';
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, getDoc, setDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { Plus, Trash2, Edit2, Save, X, BookOpen, Link, Star, Lock, HelpCircle, Users, Unlock, CheckCircle2, Search, Coins, Sparkles, BookMarked, Settings, Video } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { videoInstructions } from '../../data/videoInstructions';
 
 const GRAUS = ['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'];
 
@@ -43,12 +44,135 @@ export function GestorLibrary() {
   const [corCapa, setCorCapa] = useState('golden');
   const [whatsappPersonalizado, setWhatsappPersonalizado] = useState('');
   const [destaqueConversion, setDestaqueConversion] = useState(false);
+  const [tipoMidia, setTipoMidia] = useState<'documento' | 'video'>('documento');
+  const [categories, setCategories] = useState<string[]>(['Livro', 'Ritual', 'Artigo', 'Apostila', 'Estudo', 'Instruções do Aprendiz']);
+
+  const [seeding, setSeeding] = useState(false);
+
+  const handleImportStandardVideos = async () => {
+    if (!confirm("Deseja importar as 100 Instruções do Aprendiz em vídeo para a Biblioteca Digital?")) {
+      return;
+    }
+    setSeeding(true);
+    const toastId = toast.loading("Verificando vídeos existentes...");
+    try {
+      // 1. Fetch existing items
+      const snap = await getDocs(collection(db, 'library_items'));
+      const existingTitles = new Set(snap.docs.map(doc => doc.data().titulo));
+
+      // 2. Filter out duplicates
+      const toImport = videoInstructions.filter(vid => !existingTitles.has(vid.titulo));
+
+      if (toImport.length === 0) {
+        toast.success("Todos os vídeos já estão importados!", { id: toastId });
+        setSeeding(false);
+        return;
+      }
+
+      toast.loading(`Importando ${toImport.length} novos vídeos de instruções...`, { id: toastId });
+
+      // 3. Perform batch writes in chunks of 50 to avoid any limitations or overhead
+      const chunks = [];
+      for (let i = 0; i < toImport.length; i += 50) {
+        chunks.push(toImport.slice(i, i + 50));
+      }
+
+      for (const chunk of chunks) {
+        const batch = writeBatch(db);
+        for (const vid of chunk) {
+          const docRef = doc(collection(db, 'library_items'));
+          const sanitizedTitle = vid.titulo.replace(/(\d+)\s*\^/g, '$1ª');
+          batch.set(docRef, {
+            titulo: sanitizedTitle,
+            descricao: `Vídeo aula oficial correspondente à ${sanitizedTitle.split(':')[0] || 'Instrução'} de Aprendiz Maçom.`,
+            grauMinimo: "Aprendiz",
+            categoria: "Instruções do Aprendiz",
+            preco: "",
+            isPaid: false,
+            urlDrive: vid.urlDrive,
+            tipoMidia: "video",
+            imagemCapa: "",
+            corCapa: "golden",
+            whatsappPersonalizado: "",
+            destaqueConversion: false,
+            createdAt: serverTimestamp()
+          });
+        }
+        await batch.commit();
+      }
+
+      toast.success(`${toImport.length} vídeos de instruções importados com sucesso!`, { id: toastId });
+      fetchItems();
+    } catch (err) {
+      console.error("Erro ao importar instruções:", err);
+      toast.error("Erro ao importar vídeos de instruções.", { id: toastId });
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   useEffect(() => {
     fetchItems();
     fetchUsersAndPayments();
     fetchConfig();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const snap = await getDocs(collection(db, 'library_categories'));
+      if (snap.empty) {
+        const defaults = ['Livro', 'Ritual', 'Artigo', 'Apostila', 'Estudo', 'Instruções do Aprendiz'];
+        for (const cat of defaults) {
+          await setDoc(doc(db, 'library_categories', cat), { name: cat });
+        }
+        setCategories(defaults);
+      } else {
+        const fetched = snap.docs.map(doc => doc.id);
+        if (!fetched.includes('Instruções do Aprendiz')) {
+          await setDoc(doc(db, 'library_categories', 'Instruções do Aprendiz'), { name: 'Instruções do Aprendiz' });
+          fetched.push('Instruções do Aprendiz');
+        }
+        setCategories(fetched);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar categorias:", err);
+    }
+  };
+
+  const handleAddCategory = async (name: string) => {
+    try {
+      await setDoc(doc(db, 'library_categories', name), { name });
+      setCategories(prev => {
+        if (prev.includes(name)) return prev;
+        return [...prev, name];
+      });
+      setCategoria(name);
+      toast.success(`Categoria "${name}" cadastrada com sucesso!`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao cadastrar categoria.");
+    }
+  };
+
+  const handleDeleteCategory = async (name: string) => {
+    if (['Livro', 'Ritual', 'Artigo', 'Apostila', 'Estudo'].includes(name)) {
+      toast.error("Categorias originais do sistema não podem ser removidas.");
+      return;
+    }
+    if (!confirm(`Deseja mesmo remover a categoria "${name}" do cadastro?`)) {
+      return;
+    }
+    try {
+      await deleteDoc(doc(db, 'library_categories', name));
+      setCategories(prev => prev.filter(c => c !== name));
+      setCategoria('Livro');
+      toast.success(`Categoria "${name}" removida.`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao remover categoria.");
+    }
+  };
 
   const fetchConfig = async () => {
     setLoadingConfig(true);
@@ -94,10 +218,40 @@ export function GestorLibrary() {
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, 'library_items'), orderBy('createdAt', 'desc'));
+      const q = query(collection(db, 'library_items'));
       const snap = await getDocs(q);
-      const fetched = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setItems(fetched);
+      const fetched = snap.docs.map(doc => {
+        const data = doc.data();
+        let titulo = data.titulo || '';
+        // Sanitize ^ to ª
+        titulo = titulo.replace(/\^/g, 'ª');
+        return { id: doc.id, ...data, titulo };
+      });
+
+      // Sort from smallest to largest based on the instruction number
+      const getInstructionNumber = (title: string): number => {
+        const match = title.match(/^(\d+)/);
+        if (match) return parseInt(match[1], 10);
+        
+        const matchAnywhere = title.match(/(\d+)\s*(?:ª|º|\^|th|nd|rd|st)?\s*(?:INSTRUÇÃO|INSTRUCTION)/i);
+        if (matchAnywhere) return parseInt(matchAnywhere[1], 10);
+
+        const matchFirstNum = title.match(/(\d+)/);
+        if (matchFirstNum) return parseInt(matchFirstNum[1], 10);
+
+        return 999999;
+      };
+
+      const sorted = fetched.sort((a: any, b: any) => {
+        const numA = getInstructionNumber(a.titulo);
+        const numB = getInstructionNumber(b.titulo);
+        if (numA !== numB) {
+          return numA - numB;
+        }
+        return a.titulo.localeCompare(b.titulo);
+      });
+
+      setItems(sorted);
     } catch (err) {
       console.error("Erro ao carregar biblioteca virtual:", err);
     } finally {
@@ -228,6 +382,7 @@ export function GestorLibrary() {
     setCorCapa(item.corCapa || 'golden');
     setWhatsappPersonalizado(item.whatsappPersonalizado || '');
     setDestaqueConversion(item.destaqueConversion || false);
+    setTipoMidia(item.tipoMidia || (item.urlDrive && (item.urlDrive.includes('youtube.com') || item.urlDrive.includes('youtu.be')) ? 'video' : 'documento'));
     setShowAddForm(true);
   };
 
@@ -249,24 +404,27 @@ export function GestorLibrary() {
     setCorCapa('golden');
     setWhatsappPersonalizado('');
     setDestaqueConversion(false);
+    setTipoMidia('documento');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!titulo || !urlDrive) {
-      toast.error("Por favor, preencha o Título e o Link do Google Drive.");
+      toast.error("Por favor, preencha o Título e o Link/URL.");
       return;
     }
 
     setSubmitting(true);
+    const sanitizedTitulo = titulo.replace(/(\d+)\s*\^/g, '$1ª');
     const payload = {
-      titulo,
+      titulo: sanitizedTitulo,
       descricao,
       grauMinimo,
       categoria,
       preco: isPaid ? preco : '',
       isPaid,
       urlDrive,
+      tipoMidia,
       imagemCapa,
       corCapa,
       whatsappPersonalizado,
@@ -359,13 +517,26 @@ export function GestorLibrary() {
               </h2>
               <p className="text-xs text-gray-400 mt-1">Configure livros rituais, livros gerais do Oriente e materiais pagos ou gratuitos.</p>
             </div>
-            <button 
-              type="button"
-              onClick={() => { setShowAddForm(!showAddForm); setEditingItem(null); resetForm(); }}
-              className="bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-black px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider hover:scale-[1.03] transition-all"
-            >
-              {showAddForm ? 'Voltar para Lista' : 'Adicionar Nova Obra'}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {!showAddForm && (
+                <button 
+                  type="button"
+                  onClick={handleImportStandardVideos}
+                  disabled={seeding}
+                  className="bg-black/60 border border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37]/10 disabled:opacity-50 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Video size={14} className="animate-pulse" />
+                  {seeding ? "Importando..." : "Importar 100 Instruções"}
+                </button>
+              )}
+              <button 
+                type="button"
+                onClick={() => { setShowAddForm(!showAddForm); setEditingItem(null); resetForm(); }}
+                className="bg-gradient-to-r from-[#D4AF37] to-[#C9A227] text-black px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider hover:scale-[1.03] transition-all"
+              >
+                {showAddForm ? 'Voltar para Lista' : 'Adicionar Nova Obra'}
+              </button>
+            </div>
           </div>
 
       {showAddForm && (
@@ -393,20 +564,63 @@ export function GestorLibrary() {
               />
             </div>
 
-            {/* Categoria */}
+            {/* Tipo de Mídia */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Categoria</label>
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Tipo de Conteúdo</label>
               <select 
-                value={categoria}
-                onChange={e => setCategoria(e.target.value)}
+                value={tipoMidia}
+                onChange={e => {
+                  const media = e.target.value as 'documento' | 'video';
+                  setTipoMidia(media);
+                  if (media === 'video') {
+                    setCategoria('Instruções do Aprendiz');
+                  }
+                }}
                 className="bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
               >
-                <option value="Livro">Livro</option>
-                <option value="Ritual">Ritual</option>
-                <option value="Artigo">Artigo Acadêmico</option>
-                <option value="Apostila">Apostila de Apoio</option>
-                <option value="Estudo">Estudo Maçônico</option>
+                <option value="documento">Documento (PDF/Drive)</option>
+                <option value="video">Vídeo (YouTube)</option>
               </select>
+            </div>
+
+            {/* Categoria */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex justify-between items-center">
+                <span>Categoria</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newCatName = prompt("Digite o nome da nova categoria:");
+                    if (newCatName && newCatName.trim()) {
+                      handleAddCategory(newCatName.trim());
+                    }
+                  }}
+                  className="text-[10px] text-[#D4AF37] hover:underline font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus size={10} /> Nova Categoria
+                </button>
+              </label>
+              <div className="flex gap-2">
+                <select 
+                  value={categoria}
+                  onChange={e => setCategoria(e.target.value)}
+                  className="flex-1 bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37]/60 focus:outline-none"
+                >
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                {categoria && !['Livro', 'Ritual', 'Artigo', 'Apostila', 'Estudo'].includes(categoria) && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCategory(categoria)}
+                    className="p-3 bg-red-950/40 text-red-400 border border-red-900/30 rounded-xl hover:bg-red-900/20"
+                    title="Remover esta categoria do cadastro"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Grau Mínimo */}
@@ -451,16 +665,16 @@ export function GestorLibrary() {
               />
             </div>
 
-            {/* Link do Google Drive */}
+            {/* Link do Google Drive ou YouTube */}
             <div className="flex flex-col gap-1 col-span-1 md:col-span-2">
               <label className="text-xs font-bold text-[#D4AF37] uppercase tracking-wider flex items-center gap-1">
-                <Link size={12} /> Link do Google Drive *
+                <Link size={12} /> {tipoMidia === 'video' ? 'Link do Vídeo (YouTube) *' : 'Link do Google Drive *'}
               </label>
               <input 
                 type="url" 
                 value={urlDrive}
                 onChange={e => setUrlDrive(e.target.value)}
-                placeholder="https://drive.google.com/file/d/..."
+                placeholder={tipoMidia === 'video' ? 'https://www.youtube.com/watch?v=...' : 'https://drive.google.com/file/d/...'}
                 className="bg-black/60 border border-[#D4AF37]/30 rounded-xl px-4 py-3 text-sm text-white focus:border-[#D4AF37] focus:outline-none font-mono"
                 required
               />

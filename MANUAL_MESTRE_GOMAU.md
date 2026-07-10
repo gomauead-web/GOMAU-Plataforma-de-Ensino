@@ -240,6 +240,11 @@ Ao fazer login com a conta Google, o sistema exige:
 
 ## 5. Changelog e Histórico de Evolução
 
+- **2026-07-09 (Lançamento do Player de Áudio Imersivo & Caderno de Estudos para Vídeos):**
+  1. **Player de Áudio Imersivo**: Introdução de um reprodutor de alta-fidelidade (`SafeVideoPlayer`) para as instruções em vídeo da biblioteca que substitui por completo os players tradicionais do YouTube. Ele exibe uma capa protetora de alto padrão com a logo dourada oficial da plataforma (`logotrad.png`) e o título do vídeo de forma imponente que permanece 100% estática e ativa durante a reprodução. O vídeo em si e os logos do YouTube ficam completamente ocultos e invisíveis, permitindo que o obreiro foque unicamente no áudio do ensinamento sagrado.
+  2. **Caderno de Estudos Integrado**: Os áudios de instruções agora contam com o mesmo bloco de notas ritualístico privado do leitor de PDF, permitindo que o irmão anote suas reflexões e meditações em tempo real de forma síncrona com salvamento seguro no Firestore.
+  3. **Atualização do Valuation**: O "Player Cinematográfico & Caderno de Estudos" de R$ 9.000,00 foi ativado e somado ao total. **O Valuation Global da Plataforma sobe para R$ 188.000,00**.
+
 - **2026-07-08 (Desativação Temporária do DRM e Módulo Anti-Cópia):**
   1. **Remoção das Proteções**: A pedido da administração, a camada de proteção `SecurityWrapper` e as regras CSS que impediam seleção, cópia, colagem e clique direito foram temporariamente desativadas. O conteúdo voltou a ser selecionável e o preenchimento de campos voltou à normalidade sem restrições.
   2. **Atualização do Valuation**: O "Módulo de Proteção DRM & Anti-Vazamento" de R$ 10.000,00 foi retirado do cômputo momentaneamente. O **Valor Global Estimado (Valuation) da Plataforma retorna para R$ 179.000,00**.
@@ -550,7 +555,14 @@ Ao fazer login com a conta Google, o sistema exige:
   8. **Separação Automática de Eventos**: No Calendário (Membro) e na Gestão de Eventos (Gestor), os eventos agora são divididos entre "Próximos" e "Histórico (Realizados)".
   9. **Indicadores Visuais**: Eventos passados ganham um aviso de "Realizado" com checkmark verde e títulos riscados, enquanto eventos futuros exibem um indicador pulsante de atividade no Calendário do Membro.
   10. **Histórico Ordenado**: O histórico de eventos passados é organizado de forma decrescente (o recém-realizado primeiro), mantendo a agenda limpa.
-- **2026-05-15 (Latest Update):** **Novo Dashboard e Monitoramento Real-time**:
+- **2026-07-10 (Latest Update - Seeder de Instruções & Acervo Automático):**
+  1. **Seeder de Vídeos de Instruções**: Desenvolvido um motor de importação em lote para carregar as 100 Instruções Litúrgicas de Aprendiz Maçom de forma totalmente integrada à "Biblioteca Digital".
+  2. **Lookup e Prevenção de Duplicados**: O seeder analisa o banco de dados e pula de forma inteligente qualquer vídeo já importado para economizar consumo de quota e escrita no Firestore.
+  3. **Visualização por Player de Áudio Imersivo**: Todos os 100 vídeos de instruções carregados estão mapeados para serem ouvidos no Player de Áudio Imersivo (SafeVideoPlayer) com capa rituálica estática e ocultação de vídeo/logos do YouTube, garantindo o máximo foco e imersão iniciática.
+  4. **Sanetização e Formatação de Títulos**: Implementada substituição automatizada de caracteres ordinais truncados (como `^` para `ª`), assegurando exibição gramaticalmente correta em todos os tomos.
+  5. **Ordenação Numérica Ascendente**: Substituição da listagem cronológica padrão por uma ordenação numérica inteligente baseada no número de instrução extraído dos títulos, organizando a biblioteca de forma sequencial (do menor para o maior).
+  6. **Atualização Oficial do Valuation**: Inclusão do módulo de Seeder e Ingestão Avançada valorado em R$ 5.500,00, elevando o **Valor Global Estimado (Valuation) da Plataforma para R$ 193.500,00**.
+- **2026-05-15 (Update):** **Novo Dashboard e Monitoramento Real-time**:
   1. **Aba Dashboard (Início)**: Criada uma nova aba principal que centraliza todas as métricas da oficina. Agora, ao entrar no Painel do Gestor, o Mestre vê imediatamente o contador de Obreiros Online, Aprendizes, Companheiros e Mestres.
   2. **Monitoramento de Presença**: O sistema de "Online Agora" foi aprimorado com uma janela de tolerância de 10 minutos e suporte a múltiplos formatos de data, garantindo que o contador reflita fielmente quem está navegando no sistema.
   3. **Marcação de Membros Ausentes**: Na seção de Membros, o sistema agora compara a lista do banco de dados com o arquivo `validado.xlsx`. Nomes que não constam na planilha oficial são marcados com um alerta vermelho pulsante ("Ausente na Planilha"), ajudando a identificar cadastros manuais ou órfãos.

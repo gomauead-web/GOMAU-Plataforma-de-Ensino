@@ -7,6 +7,7 @@ import { handleFirestoreError, OperationType } from '../lib/errorHandler';
 import { BookOpen, FileText, PlayCircle, Grid, Play, Lock, Compass, Landmark, Upload, Link, X, Download, ShieldAlert, ChevronDown, Edit2, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { SessionTimer } from '../components/Layout';
+import { SafeVideoPlayer } from '../components/SafeVideoPlayer';
 
 interface ContentItem {
   id: string;
@@ -321,6 +322,7 @@ export function ContentPage() {
   const [editingPranchaId, setEditingPranchaId] = useState<string | null>(null);
   const [deletingPranchaId, setDeletingPranchaId] = useState<string | null>(null);
   const [viewingPdf, setViewingPdf] = useState<ContentItem | null>(null);
+  const [viewingVideo, setViewingVideo] = useState<ContentItem | null>(null);
 
   const [userNotes, setUserNotes] = useState<{ [itemId: string]: string }>({});
   const [savingNoteId, setSavingNoteId] = useState<string | null>(null);
@@ -542,6 +544,8 @@ export function ContentPage() {
     // Abrir o conteúdo imediatamente antes de operações async para evitar bloqueio de popup pelo navegador
     if (file.tipo === 'pdf') {
       setViewingPdf(file);
+    } else if (file.tipo === 'video') {
+      setViewingVideo(file);
     } else {
       if (file.fileUrl) {
         window.open(file.fileUrl, '_blank', 'noopener,noreferrer');
@@ -845,6 +849,19 @@ export function ContentPage() {
           onClose={() => setViewingPdf(null)} 
           itemId={viewingPdf.id}
           initialNoteText={userNotes[viewingPdf.id] || ''}
+          onSaveNote={handleSaveNote}
+          savingNoteId={savingNoteId}
+        />
+      )}
+
+      {/* Video Viewer Modal */}
+      {viewingVideo && (
+        <SafeVideoPlayer
+          url={viewingVideo.fileUrl}
+          title={viewingVideo.titulo}
+          onClose={() => setViewingVideo(null)}
+          itemId={viewingVideo.id}
+          initialNoteText={userNotes[viewingVideo.id] || ''}
           onSaveNote={handleSaveNote}
           savingNoteId={savingNoteId}
         />

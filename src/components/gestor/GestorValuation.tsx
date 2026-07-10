@@ -353,12 +353,44 @@ export function GestorValuation() {
              </div>
              <h3 className="font-bold text-gray-400 line-through uppercase tracking-wide text-sm">Proteção DRM & Anti-Vazamento</h3>
           </div>
-          <p className="text-xs text-gray-600 leading-relaxed font-sans">
+          <p className="text-xs text-[#D4AF37] leading-relaxed font-sans">
              [TEMPORARIAMENTE DESATIVADO] Sistema de segurança que bloqueia cópias, seleções de textos, menu de contexto (botão direito), atalhos de desenvolvedor/inspeção, tentativas de impressão e blura automaticamente a tela quando fora de foco.
           </p>
           <div className="mt-auto">
              <div className="text-gray-500 font-bold text-lg">R$ 0,00</div>
              <div className="text-[10px] text-red-500 font-bold uppercase mt-1 tracking-widest font-sans">Módulo Desativado</div>
+          </div>
+        </div>
+
+        <div className="bg-[#0A0E1A] p-6 rounded-xl border border-[#1e293b] flex flex-col gap-4 shadow-xl hover:border-[#D4AF37]/50 transition-colors">
+          <div className="flex items-center gap-3">
+             <div className="p-3 rounded-lg bg-[#1e293b] text-[#D4AF37]">
+                <BookOpen size={24} />
+             </div>
+             <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm font-sans">Player Cinematográfico & Caderno</h3>
+          </div>
+          <p className="text-xs text-gray-500 leading-relaxed font-sans">
+             Player customizado de vídeo rituálico com capa protetora de alta-fidelidade (Logo G.O.M.A.U. + Título) integrado a um Bloco de Notas Ritualístico com autosalvamento síncrono no Firestore.
+          </p>
+          <div className="mt-auto">
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 9.000,00</div>
+             <div className="text-[10px] text-[#D4AF37] font-bold uppercase mt-1 tracking-widest font-sans">Módulo Ativo</div>
+          </div>
+        </div>
+
+        <div className="bg-[#0A0E1A] p-6 rounded-xl border border-[#1e293b] flex flex-col gap-4 shadow-xl hover:border-[#D4AF37]/50 transition-colors">
+          <div className="flex items-center gap-3">
+             <div className="p-3 rounded-lg bg-[#1e293b] text-[#D4AF37]">
+                <BrainCircuit size={24} />
+             </div>
+             <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm font-sans">Seeder de Instruções & Sincronizador de Acervo</h3>
+          </div>
+          <p className="text-xs text-gray-500 leading-relaxed font-sans">
+             Lógica síncrona de ingestão em massa para carregamento das 100 Instruções Litúrgicas de Aprendiz Maçom, com prevenção automatizada de duplicidade para economia de requisições Firestore.
+          </p>
+          <div className="mt-auto">
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 5.500,00</div>
+             <div className="text-[10px] text-[#D4AF37] font-bold uppercase mt-1 tracking-widest font-sans">Módulo Ativo</div>
           </div>
         </div>
       </div>
@@ -372,7 +404,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 179.000,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 193.500,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>

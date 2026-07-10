@@ -6,7 +6,9 @@ O objetivo deste arquivo é alimentar uma Inteligência Artificial Sênior de En
 > [!CRITICAL]
 > **MÓDULO DE MENSALIDADES REMOVIDO:** Conforme decisão administrativa e solicitação expressa, todo e qualquer recurso relacionado a contribuições financeiras, mensalidades, faturamento via Pix e conciliação bancária da Tesouraria foi **COMPLETAMENTE REMOVIDO** do sistema (das interfaces de usuário, menus de navegação do Layout e abas do Perfil do Membro). Do not implement any monthly fee logic or menu options in new clones.
 >
-> **MÓDULO DRM DE PROTEÇÃO & ANTI-CÓPIA (DESATIVADO TEMPORARIAMENTE):** A proteção DRM contra cópias, impressão e captura de tela foi temporariamente desativada a pedido da administração, retornando a seleção nativa e restaurando o Valuation para **R$ 179.000,00**. O código da `SecurityWrapper` foi mantido mas neutralizado (`return <>{children}</>`).
+> **MÓDULO DRM DE PROTEÇÃO & ANTI-CÓPIA (DESATIVADO TEMPORARIAMENTE):** A proteção DRM contra cópias, impressão e captura de tela foi temporariamente desativada a pedido da administração, retornando a seleção nativa. O código da `SecurityWrapper` foi mantido mas neutralizado (`return <>{children}</>`).
+>
+> **PLAYER CINEMATOGRÁFICO DE VÍDEOS & SEEDER AUTOMÁTICO G.O.M.A.U.:** Implementado um componente premium de player de vídeo (`SafeVideoPlayer`) que oculta os thumbnails do YouTube com uma capa rituálica exclusiva contendo a logo dourada oficial (`logotrad.png`) e o título do vídeo, com um Caderno de Estudos síncrono que grava anotações no Firestore. Inclui também o motor de ingestão automática em lote para carregar as 100 Instruções Litúrgicas de Aprendiz. O Valuation total do sistema foi atualizado para **R$ 193.500,00**.
 
 **Stack Tecnológica Obrigatória:** React 18+ (Vite), TypeScript, Tailwind CSS, Firebase (Firestore, Authentication, Storage), Lucide React (Ícones), React Router DOM (v6+), XSLX (Manipulação de Excel), html2canvas/jspdf (CIM/Relatórios), Google GenAI SDK.
 

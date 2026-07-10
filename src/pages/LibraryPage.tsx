@@ -5,6 +5,8 @@ import { collection, query, getDocs, orderBy, doc, getDoc, addDoc, serverTimesta
 import { useAuth } from '../contexts/AuthContext';
 import { BookOpen, Search, Lock, Unlock, ExternalLink, Sparkles, Filter, CheckCircle, DollarSign, Bookmark, ArrowLeft, Shield, Award, Landmark, HelpCircle, Copy, Check, ChevronDown, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import toast from 'react-hot-toast';
+import { SafeVideoPlayer } from '../components/SafeVideoPlayer';
 
 const GRAUS = ['Aprendiz', 'Companheiro', 'Mestre', 'Mestre Instalado'];
 
@@ -13,7 +15,7 @@ interface LibraryItem {
   titulo: string;
   descricao: string;
   grauMinimo: string;
-  categoria: 'Livro' | 'Ritual' | 'Artigo' | 'Apostila' | 'Estudo';
+  categoria: string;
   preco?: string;
   isPaid: boolean;
   urlDrive: string;
@@ -21,6 +23,7 @@ interface LibraryItem {
   corCapa?: 'golden' | 'blue' | 'crimson' | 'jade' | 'charcoal';
   whatsappPersonalizado?: string;
   destaqueConversion?: boolean; 
+  tipoMidia?: 'documento' | 'video';
   createdAt?: any;
 }
 
@@ -32,6 +35,7 @@ export function LibraryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCost, setSelectedCost] = useState<string>('Público'); // 'Público', 'Premium'
   const [selectedCategoria, setSelectedCategoria] = useState<string>('Todos');
+  const [categories, setCategories] = useState<string[]>(['Todos', 'Livro', 'Ritual', 'Artigo', 'Apostila', 'Estudo', 'Instruções do Aprendiz']);
   const [showUnlockModal, setShowUnlockModal] = useState<LibraryItem | null>(null);
   const [showReadModal, setShowReadModal] = useState<LibraryItem | null>(null);
   const [remetentePix, setRemetentePix] = useState('');
@@ -54,7 +58,21 @@ export function LibraryPage() {
         console.error(e);
       }
     };
+    
+    const fetchCategories = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'library_categories'));
+        if (!snap.empty) {
+          const fetched = snap.docs.map(doc => doc.id);
+          setCategories(['Todos', ...fetched]);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar categorias:", err);
+      }
+    };
+
     loadTreasuryConfig();
+    fetchCategories();
   }, []);
 
   // Controle de progresso local para marcar livros como guardados na estante pessoal
@@ -91,7 +109,7 @@ export function LibraryPage() {
     }
   };
 
-  const handleSaveNote = async (itemId: string, noteText: string) => {
+  const handleSaveNote = async (itemId: string, noteText: string, silent = false) => {
     if (!user) return;
     setSavingNoteId(itemId);
     try {
@@ -103,10 +121,14 @@ export function LibraryPage() {
         updatedAt: serverTimestamp()
       }, { merge: true });
       setUserNotes(prev => ({ ...prev, [itemId]: noteText.trim() }));
-      alert('Sua reflexão de estudo privada foi gravada com sucesso!');
+      if (!silent) {
+        toast.success('Sua reflexão de estudo privada foi gravada com sucesso!');
+      }
     } catch (err) {
       console.error(err);
-      alert('Erro ao salvar anotação. Tente novamente.');
+      if (!silent) {
+        toast.error('Erro ao salvar anotação. Tente novamente.');
+      }
     } finally {
       setSavingNoteId(null);
     }
@@ -127,10 +149,40 @@ export function LibraryPage() {
   const fetchLibraryItems = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, 'library_items'), orderBy('createdAt', 'desc'));
+      const q = query(collection(db, 'library_items'));
       const snap = await getDocs(q);
-      const fetched = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as LibraryItem[];
-      setItems(fetched);
+      const fetched = snap.docs.map(doc => {
+        const data = doc.data();
+        let titulo = data.titulo || '';
+        // Sanitize ^ to ª
+        titulo = titulo.replace(/\^/g, 'ª');
+        return { id: doc.id, ...data, titulo };
+      }) as LibraryItem[];
+
+      // Sort from smallest to largest based on the instruction number
+      const getInstructionNumber = (title: string): number => {
+        const match = title.match(/^(\d+)/);
+        if (match) return parseInt(match[1], 10);
+        
+        const matchAnywhere = title.match(/(\d+)\s*(?:ª|º|\^|th|nd|rd|st)?\s*(?:INSTRUÇÃO|INSTRUCTION)/i);
+        if (matchAnywhere) return parseInt(matchAnywhere[1], 10);
+
+        const matchFirstNum = title.match(/(\d+)/);
+        if (matchFirstNum) return parseInt(matchFirstNum[1], 10);
+
+        return 999999;
+      };
+
+      const sorted = fetched.sort((a, b) => {
+        const numA = getInstructionNumber(a.titulo);
+        const numB = getInstructionNumber(b.titulo);
+        if (numA !== numB) {
+          return numA - numB;
+        }
+        return a.titulo.localeCompare(b.titulo);
+      });
+
+      setItems(sorted);
     } catch (err) {
       console.error("Erro ao carregar biblioteca virtual:", err);
       setItems([]);
@@ -468,7 +520,7 @@ export function LibraryPage() {
               <span className="text-xs text-gray-700 uppercase tracking-widest mr-1 flex items-center gap-1">
                 <Filter size={14} className="text-[#664601]" /> Categoria:
               </span>
-              {['Todos', 'Livro', 'Ritual', 'Artigo', 'Apostila', 'Estudo'].map(cat => (
+              {categories.map(cat => (
                 <button 
                   key={cat}
                   onClick={() => setSelectedCategoria(cat)}
@@ -610,7 +662,7 @@ export function LibraryPage() {
                           )}
                         </div>
 
-                        <h3 className="font-bold text-gray-900 text-lg sm:text-xl uppercase tracking-wider group-hover:text-[#664601] transition-colors leading-snug line-clamp-2" style={{ fontFamily: 'Cinzel' }}>
+                        <h3 className="font-bold text-gray-900 text-lg sm:text-xl uppercase tracking-wider group-hover:text-[#664601] transition-colors leading-snug line-clamp-2 font-serif">
                           {item.titulo}
                         </h3>
                         <p className="text-sm text-gray-800 line-clamp-3 leading-relaxed font-serif">
@@ -713,7 +765,7 @@ export function LibraryPage() {
                 <span className="text-black text-[10px] font-black uppercase tracking-widest bg-gradient-to-r from-[#D4AF37] to-[#C9A227] px-4 py-1.5 rounded-full shadow-sm inline-block">
                   Aquisição Premium — Pix Direto
                 </span>
-                <h3 className="text-2xl font-black text-white uppercase tracking-wider mt-2 font-sans" style={{ fontFamily: 'Cinzel' }}>
+                <h3 className="text-2xl font-black text-white uppercase tracking-wider mt-2 font-serif">
                   {showUnlockModal.titulo}
                 </h3>
                 <p className="text-sm text-gray-300 font-sans font-medium">
@@ -796,52 +848,73 @@ export function LibraryPage() {
       {/* Reader Modal (Secure Pop-up) */}
       <AnimatePresence>
         {showReadModal && (
-          <div 
-            className="fixed inset-0 bg-[#070A13]/95 backdrop-blur-xl z-[200] flex flex-col print:hidden select-none"
-            onContextMenu={(e) => e.preventDefault()}
-            onCopy={(e) => e.preventDefault()}
-            onCut={(e) => e.preventDefault()}
-            onPaste={(e) => e.preventDefault()}
-          >
-            {/* Global style to prevent printing */}
-            <style>{`@media print { body { display: none !important; } }`}</style>
+          (() => {
+            const isVideo = showReadModal.tipoMidia === 'video' || 
+              (showReadModal.urlDrive && (showReadModal.urlDrive.includes('youtube.com') || showReadModal.urlDrive.includes('youtu.be')));
 
-            <div className="flex justify-between items-center px-6 py-4 border-b border-[#D4AF37]/30 bg-[#0A0E1A] shadow-md z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full border border-[#D4AF37]/40 bg-black flex items-center justify-center text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]">
-                  <BookOpen size={18} />
+            if (isVideo) {
+              return (
+                <SafeVideoPlayer
+                  url={showReadModal.urlDrive}
+                  title={showReadModal.titulo}
+                  onClose={() => setShowReadModal(null)}
+                  itemId={showReadModal.id}
+                  initialNoteText={userNotes[showReadModal.id] || ''}
+                  onSaveNote={handleSaveNote}
+                  savingNoteId={savingNoteId}
+                />
+              );
+            }
+
+            return (
+              <div 
+                className="fixed inset-0 bg-[#070A13]/95 backdrop-blur-xl z-[200] flex flex-col print:hidden select-none"
+                onContextMenu={(e) => e.preventDefault()}
+                onCopy={(e) => e.preventDefault()}
+                onCut={(e) => e.preventDefault()}
+                onPaste={(e) => e.preventDefault()}
+              >
+                {/* Global style to prevent printing */}
+                <style>{`@media print { body { display: none !important; } }`}</style>
+
+                <div className="flex justify-between items-center px-6 py-4 border-b border-[#D4AF37]/30 bg-[#0A0E1A] shadow-md z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full border border-[#D4AF37]/40 bg-black flex items-center justify-center text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                      <BookOpen size={18} />
+                    </div>
+                    <div>
+                      <h3 className="text-[#D4AF37] font-serif font-bold uppercase tracking-widest text-sm md:text-base leading-tight">
+                        {showReadModal.titulo}
+                      </h3>
+                      <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">
+                        Modo Leitura Segura — Cópia Restrita
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setShowReadModal(null)}
+                      className="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-2.5 rounded-xl transition-all border border-transparent hover:border-white/10"
+                      title="Fechar e Retornar ao Acervo"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-[#D4AF37] font-serif font-bold uppercase tracking-widest text-sm md:text-base leading-tight">
-                    {showReadModal.titulo}
-                  </h3>
-                  <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">
-                    Modo Leitura Segura — Cópia Restrita
-                  </p>
+                
+                <div className="flex-1 w-full relative bg-black flex justify-center overflow-hidden">
+                  {/* If it's a google drive link, it typically can be embedded with /preview, but we use what we have */}
+                  <iframe 
+                    src={showReadModal.urlDrive.includes('view') ? showReadModal.urlDrive.replace('/view', '/preview') : showReadModal.urlDrive} 
+                    className="w-full h-full border-none max-w-5xl bg-white"
+                    title={showReadModal.titulo}
+                  />
+                  {/* Invisible overlay around iframe edges to prevent easy right clicks outside iframe if any, though iframe content itself controls its own context menu. */}
+                  <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_30px_rgba(0,0,0,0.8)]"></div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setShowReadModal(null)}
-                  className="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-2.5 rounded-xl transition-all border border-transparent hover:border-white/10"
-                  title="Fechar e Retornar ao Acervo"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-            </div>
-            
-            <div className="flex-1 w-full relative bg-black flex justify-center overflow-hidden">
-              {/* If it's a google drive link, it typically can be embedded with /preview, but we use what we have */}
-              <iframe 
-                src={showReadModal.urlDrive.includes('view') ? showReadModal.urlDrive.replace('/view', '/preview') : showReadModal.urlDrive} 
-                className="w-full h-full border-none max-w-5xl bg-white"
-                title={showReadModal.titulo}
-              />
-              {/* Invisible overlay around iframe edges to prevent easy right clicks outside iframe if any, though iframe content itself controls its own context menu. */}
-              <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_30px_rgba(0,0,0,0.8)]"></div>
-            </div>
-          </div>
+            );
+          })()
         )}
       </AnimatePresence>
     </div>
