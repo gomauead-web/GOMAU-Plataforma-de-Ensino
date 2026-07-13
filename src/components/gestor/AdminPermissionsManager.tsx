@@ -42,7 +42,23 @@ export default function AdminPermissionsManager({ members }: AdminPermissionsMan
     const unsubscribe = onSnapshot(
       q,
       (snap) => {
-        setDelegations(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        const list = snap.docs.map((d) => {
+          const data = d.data();
+          const expectedId = `${data.cim?.toString().trim()}_${data.pasta}`;
+          if (d.id !== expectedId) {
+            console.log(`Auto-migrating legacy permission ${d.id} to ${expectedId}`);
+            setDoc(doc(db, "adminPermissions", expectedId), {
+              ...data,
+              createdAt: data.createdAt || new Date().toISOString()
+            }).then(() => {
+              deleteDoc(doc(db, "adminPermissions", d.id));
+            }).catch(err => {
+              console.error("Erro ao migrar delegação:", err);
+            });
+          }
+          return { id: d.id, ...data };
+        });
+        setDelegations(list);
         setLoading(false);
       },
       (err) => {

@@ -8,10 +8,31 @@ import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { MASTER_ADMINS } from '../constants';
 
+const HexagramIcon = () => (
+  <div className="text-[#D4AF37] animate-pulse drop-shadow-[0_0_8px_rgba(212,175,55,0.8)] mr-1">
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      stroke="#D4AF37"
+      strokeWidth="2.2"
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polygon points="12,3 20,17 4,17" />
+      <polygon points="12,21 20,7 4,7" />
+    </svg>
+  </div>
+);
+
 export function SessionTimer() {
   const [timeLeft, setTimeLeft] = useState<string>('--:--');
-  const { logout, sessionTimeout } = useAuth();
+  const { logout, sessionTimeout, user } = useAuth();
   const navigate = useNavigate();
+
+  const userEmail = (user?.email || auth.currentUser?.email || '').toLowerCase().trim();
+  const isOwner = ['gomau.ead@gmail.com', 'calepi@gmail.com', 'calepe@gmail.com'].includes(userEmail);
 
   useEffect(() => {
     // Garantir que o timer exista se o usuário estiver logado
@@ -60,6 +81,7 @@ export function SessionTimer() {
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-[#D4AF37]/20 border-2 border-[#D4AF37] rounded-xl text-xs sm:text-sm font-mono text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.3)] animate-pulse">
+      {isOwner && <HexagramIcon />}
       <div className="bg-[#D4AF37] text-black rounded p-0.5">
         <Clock size={14} />
       </div>

@@ -22534,13 +22534,18 @@ service cloud.firestore {
 
     function getUserCim() {
       return exists(/databases/$(database)/documents/users/$(request.auth.uid)) ? 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.cim : "";
+             string(get(/databases/$(database)/documents/users/$(request.auth.uid)).data.cim) : "";
     }
 
     function isDelegatedToPasta(pasta) {
       return isSignedIn() && (
         exists(/databases/$(database)/documents/adminPermissions/$(getUserCim() + "_" + pasta)) ||
-        (pasta == '2° Vigilante' && getUserCim() == '3324')
+        (pasta == '2° Vigilante' && (
+          getUserCim() == '3324' || 
+          getUserCim() == '331' ||
+          exists(/databases/$(database)/documents/adminPermissions/$(getUserCim() + "_2º Vigilante")) ||
+          exists(/databases/$(database)/documents/adminPermissions/$(getUserCim() + "_2° Vigilante"))
+        ))
       );
     }
 

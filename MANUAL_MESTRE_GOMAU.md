@@ -555,7 +555,12 @@ Ao fazer login com a conta Google, o sistema exige:
   8. **Separação Automática de Eventos**: No Calendário (Membro) e na Gestão de Eventos (Gestor), os eventos agora são divididos entre "Próximos" e "Histórico (Realizados)".
   9. **Indicadores Visuais**: Eventos passados ganham um aviso de "Realizado" com checkmark verde e títulos riscados, enquanto eventos futuros exibem um indicador pulsante de atividade no Calendário do Membro.
   10. **Histórico Ordenado**: O histórico de eventos passados é organizado de forma decrescente (o recém-realizado primeiro), mantendo a agenda limpa.
-- **2026-07-10 (Latest Update - Seeder de Instruções & Acervo Automático):**
+- **2026-07-13 (Latest Update - Correção de Tipos do CIM & Estrela do Owner):**
+  1. **Tipagem Forte e Conversão no Firestore Rules**: Identificado e resolvido o erro crítico de avaliação nas regras do Firestore que impedia delegados com CIM numérico (como o 2º Vigilante) de salvar configurações. Convertemos a verificação do CIM para `string()` no `firestore.rules` prevenindo erros de concatenação (`int` + `string`).
+  2. **Migração Dinâmica de Permissões**: Adicionado sistema autolimpante/autocurativo no `AdminPermissionsManager.tsx`. O sistema converte automaticamente registros antigos com ID randômico para IDs estruturados e previsíveis (`CIM_PASTA`) em tempo de execução sem requerer intervenção manual.
+  3. **Estrela de 6 Pontas para Conta de Owner**: Implementada a inclusão estética de uma Estrela de 6 Pontas (Hexagrama Maçônico) dourada com brilho pulsante e efeito neon (`drop-shadow`) na barra superior ao lado do SessionTimer para contas de Owner (`gomau.ead@gmail.com`).
+  4. **Atualização Oficial do Valuation**: Inclusão do módulo de Segurança de Regras Resilientes de Delegação e Estética Iniciática valorado em R$ 3.500,00, elevando o **Valor Global Estimado (Valuation) da Plataforma para R$ 197.000,00**.
+- **2026-07-10 (Seeder de Instruções & Acervo Automático):**
   1. **Seeder de Vídeos de Instruções**: Desenvolvido um motor de importação em lote para carregar as 100 Instruções Litúrgicas de Aprendiz Maçom de forma totalmente integrada à "Biblioteca Digital".
   2. **Lookup e Prevenção de Duplicados**: O seeder analisa o banco de dados e pula de forma inteligente qualquer vídeo já importado para economizar consumo de quota e escrita no Firestore.
   3. **Visualização por Player de Áudio Imersivo**: Todos os 100 vídeos de instruções carregados estão mapeados para serem ouvidos no Player de Áudio Imersivo (SafeVideoPlayer) com capa rituálica estática e ocultação de vídeo/logos do YouTube, garantindo o máximo foco e imersão iniciática.
