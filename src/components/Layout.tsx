@@ -33,6 +33,12 @@ export function SessionTimer() {
 
   const userEmail = (user?.email || auth.currentUser?.email || '').toLowerCase().trim();
   const isOwner = ['gomau.ead@gmail.com', 'calepi@gmail.com', 'calepe@gmail.com'].includes(userEmail);
+  const userCim = user?.cim?.toString().trim();
+  const hasDelegated2Vig = user?.delegatedPastas?.some(
+    (pasta: string) => pasta === '2° Vigilante' || pasta === '2º Vigilante'
+  );
+  const is2Vig = userCim === '3324' || hasDelegated2Vig;
+  const showHexagram = isOwner || is2Vig;
 
   useEffect(() => {
     // Garantir que o timer exista se o usuário estiver logado
@@ -81,7 +87,7 @@ export function SessionTimer() {
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-[#D4AF37]/20 border-2 border-[#D4AF37] rounded-xl text-xs sm:text-sm font-mono text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.3)] animate-pulse">
-      {isOwner && <HexagramIcon />}
+      {showHexagram && <HexagramIcon />}
       <div className="bg-[#D4AF37] text-black rounded p-0.5">
         <Clock size={14} />
       </div>
