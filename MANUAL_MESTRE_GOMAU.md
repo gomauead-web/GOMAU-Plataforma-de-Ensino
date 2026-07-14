@@ -251,10 +251,11 @@ Ao fazer login com a conta Google, o sistema exige:
 
 ## 5. Changelog e Histórico de Evolução
 
-- **2026-07-13 (Liberação Geral da Biblioteca Virtual & Triagem Cumulativa de Graus):**
-  1. **Acesso Total**: Remoção completa da restrição de acesso que limitava o uso da Biblioteca Virtual aos emails de administradores. O acervo agora é 100% funcional e acessível para todos os membros logados da plataforma.
-  2. **Triagem de Grau Inteligente**: Atualização do mecanismo de triagem estrita de graus. Anteriormente, um irmão de grau superior não visualizava materiais de graus inferiores; agora, a filtragem é cumulativa. O membro visualiza perfeitamente todos os livros, artigos e rituais correspondentes ao seu grau atual e abaixo, preservando a hierarquia tradicional iniciática.
-  3. **Acesso Mobile Desbloqueado**: Correção no menu de navegação mobile que impedia a visualização do botão de acesso à Biblioteca Virtual para os membros comuns.
+- **2026-07-13 (Liberação Geral da Biblioteca Virtual, Correção do Player de Vídeo & Triagem Cumulativa de Graus):**
+  1. **Correção Crítica de Transmissão de Vídeo**: Correção do comportamento em que ao clicar no play do vídeo a tela ficava preta e nada acontecia. O player (`SafeVideoPlayer`) foi redefinido para renderizar diretamente a transmissão de vídeo do YouTube em alta definição com controles nativos assim que o usuário clicar no play, eliminando bloqueios de reprodução em segundo plano de navegadores e dispensando a necessidade de atualizar a página para funcionar. Foi adicionado um botão de escape "Voltar à Capa" para alternar de volta para o visualizador rituálico estático se desejado.
+  2. **Acesso Total**: Remoção completa da restrição de acesso que limitava o uso da Biblioteca Virtual aos emails de administradores. O acervo agora é 100% funcional e acessível para todos os membros logados da plataforma.
+  3. **Triagem de Grau Inteligente**: Atualização do mecanismo de triagem estrita de graus. Anteriormente, um irmão de grau superior não visualizava materiais de graus inferiores; agora, a filtragem é cumulativa. O membro visualiza perfeitamente todos os livros, artigos e rituais correspondentes ao seu grau atual e abaixo, preservando a hierarquia tradicional iniciática.
+  4. **Acesso Mobile Desbloqueado**: Correção no menu de navegação mobile que impedia a visualização do botão de acesso à Biblioteca Virtual para os membros comuns.
 
 - **2026-07-13 (Lançamento do Tronco de Beneficência Digital & Sigilo Absoluto):**
   1. **Módulo de Caridade Digital Anônimo**: Criação do módulo "Tronco de Beneficência Digital" acessível diretamente do Perfil de cada Membro.

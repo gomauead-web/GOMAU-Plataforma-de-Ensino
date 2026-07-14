@@ -127,98 +127,69 @@ export function SafeVideoPlayer({
           `}</style>
 
           {/* Custom G.O.M.A.U. Elegant Video Cover */}
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gradient-to-b from-[#0A0E1A] via-[#05070D] to-[#010204] p-6 text-center select-none">
-            {/* Background ambient light */}
-            <div className={cn(
-              "absolute w-[300px] h-[300px] bg-[#D4AF37]/5 rounded-full blur-[100px] pointer-events-none transition-all duration-1000",
-              isPlaying ? "scale-125 bg-[#D4AF37]/10" : ""
-            )}></div>
-            
-            {/* Logo GOMAU */}
-            <div className="relative mb-8 group cursor-pointer" onClick={() => setIsPlaying(!isPlaying)}>
-              <div className="absolute inset-0 bg-[#D4AF37]/10 rounded-full blur-2xl group-hover:bg-[#D4AF37]/20 transition-all duration-500 animate-pulse"></div>
+          {!isPlaying && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gradient-to-b from-[#0A0E1A] via-[#05070D] to-[#010204] p-6 text-center select-none animate-in fade-in duration-350">
+              {/* Background ambient light */}
+              <div className="absolute w-[300px] h-[300px] bg-[#D4AF37]/5 rounded-full blur-[100px] pointer-events-none transition-all duration-1000"></div>
               
-              {isPlaying && (
-                <>
-                  {/* Concentric glowing ritual waves */}
-                  <div className="absolute inset-[-15px] border-2 border-[#D4AF37]/20 rounded-full animate-ping opacity-35"></div>
-                  <div className="absolute inset-[-5px] border border-[#D4AF37]/35 rounded-full animate-pulse opacity-50"></div>
-                </>
-              )}
-
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-2 border-[#D4AF37]/30 p-4 bg-[#0A0E1A]/80 backdrop-blur-md flex items-center justify-center transition-all duration-500 group-hover:border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.15)] group-hover:shadow-[0_0_40px_rgba(212,175,55,0.3)] relative z-10">
-                <img 
-                  src="/logotrad.png" 
-                  alt="GOMAU Logo" 
-                  className={cn(
-                    "w-24 h-24 md:w-28 md:h-28 object-contain pointer-events-none select-none transition-transform duration-700",
-                    isPlaying ? "animate-[spin_40s_linear_infinite]" : "group-hover:scale-105"
-                  )}
-                  onError={(e) => {
-                    // Fallback in case of image missing
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              </div>
-              
-              {/* Absolute Golden Play/Pause Ring Overlay */}
-              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-[#D4AF37] hover:bg-[#c2a033] text-black w-12 h-12 rounded-full flex items-center justify-center shadow-[0_0_20px_#D4AF37] hover:scale-110 active:scale-95 transition-all z-20">
-                {isPlaying ? (
-                  <Pause size={20} className="fill-current" />
-                ) : (
+              {/* Logo GOMAU */}
+              <div className="relative mb-8 group cursor-pointer" onClick={() => setIsPlaying(true)}>
+                <div className="absolute inset-0 bg-[#D4AF37]/10 rounded-full blur-2xl group-hover:bg-[#D4AF37]/20 transition-all duration-500 animate-pulse"></div>
+                
+                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-2 border-[#D4AF37]/30 p-4 bg-[#0A0E1A]/80 backdrop-blur-md flex items-center justify-center transition-all duration-500 group-hover:border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.15)] group-hover:shadow-[0_0_40px_rgba(212,175,55,0.3)] relative z-10">
+                  <img 
+                    src="/logotrad.png" 
+                    alt="GOMAU Logo" 
+                    className="w-24 h-24 md:w-28 md:h-28 object-contain pointer-events-none select-none transition-transform duration-700 group-hover:scale-105"
+                    onError={(e) => {
+                      // Fallback in case of image missing
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+                
+                {/* Absolute Golden Play/Pause Ring Overlay */}
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-[#D4AF37] hover:bg-[#c2a033] text-black w-12 h-12 rounded-full flex items-center justify-center shadow-[0_0_20px_#D4AF37] hover:scale-110 active:scale-95 transition-all z-20">
                   <Play size={22} className="ml-0.5 fill-current" />
-                )}
+                </div>
               </div>
-            </div>
 
-            {/* Video Title */}
-            <h2 className="text-xl md:text-2xl lg:text-3xl font-bold font-sans text-gray-100 max-w-2xl px-4 leading-tight mb-2 tracking-wide group-hover:text-[#D4AF37] transition-colors relative z-10">
-              {title}
-            </h2>
-            
-            {/* Visual Equalizer / State Indicator */}
-            {isPlaying ? (
-              <div className="flex items-center gap-1.5 justify-center h-6 my-4 relative z-10">
-                <span className="w-1 h-3 bg-[#D4AF37] rounded-full bar-1"></span>
-                <span className="w-1 h-5 bg-[#D4AF37] rounded-full bar-2"></span>
-                <span className="w-1 h-4 bg-[#D4AF37] rounded-full bar-3"></span>
-                <span className="w-1 h-6 bg-[#D4AF37] rounded-full bar-4"></span>
-                <span className="w-1 h-3 bg-[#D4AF37] rounded-full bar-5"></span>
-                <span className="w-1 h-5 bg-[#D4AF37] rounded-full bar-6"></span>
-                <span className="w-1 h-4 bg-[#D4AF37] rounded-full bar-7"></span>
-              </div>
-            ) : (
+              {/* Video Title */}
+              <h2 className="text-xl md:text-2xl lg:text-3xl font-bold font-sans text-gray-100 max-w-2xl px-4 leading-tight mb-2 tracking-wide group-hover:text-[#D4AF37] transition-colors relative z-10">
+                {title}
+              </h2>
+              
+              {/* Visual Equalizer / State Indicator */}
               <div className="h-[1px] w-24 bg-gradient-to-r from-transparent via-[#D4AF37]/60 to-transparent my-6 relative z-10"></div>
-            )}
-            
-            <p className="text-gray-400 text-xs md:text-sm max-w-md leading-relaxed font-sans px-4 relative z-10">
-              {isPlaying 
-                ? "Sintonia de áudio ritualística ativa. Feche seus olhos, concentre-se nas palavras de sabedoria e faça suas anotações ao lado."
-                : "Vídeo convertido em transmissão rituálica de áudio seguro. Clique no play acima para ouvir o ensinamento."}
-            </p>
+              
+              <p className="text-gray-400 text-xs md:text-sm max-w-md leading-relaxed font-sans px-4 relative z-10">
+                Clique no botão de reprodução acima para assistir à instrução em vídeo.
+              </p>
 
-            <div className="mt-8 flex items-center gap-2 text-[10px] text-[#D4AF37]/70 uppercase tracking-widest font-bold relative z-10">
-              {isPlaying ? (
-                <>
-                  <Headphones size={14} className="animate-pulse text-[#D4AF37]" /> Transmitindo Conhecimento Silencioso
-                </>
-              ) : (
-                <>
-                  <ShieldAlert size={14} /> Reprodução Confidencial Autorizada
-                </>
-              )}
+              <div className="mt-8 flex items-center gap-2 text-[10px] text-[#D4AF37]/70 uppercase tracking-widest font-bold relative z-10">
+                <ShieldAlert size={14} /> Reprodução Confidencial Autorizada
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Secure Invisible Audio Player Iframe */}
+          {/* Secure Video Player Iframe */}
           {isPlaying && videoId && (
-            <div className="absolute w-1 h-1 -top-20 -left-20 opacity-0 pointer-events-none overflow-hidden z-0">
+            <div className="absolute inset-0 w-full h-full z-10 bg-black flex items-center justify-center animate-in fade-in duration-350">
               <iframe
                 src={embedUrl}
                 title={title}
-                className="w-1 h-1"
-                allow="autoplay; encrypted-media"
+                className="w-full h-full border-0"
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                allowFullScreen
               />
+              
+              {/* Floating button to return to cover/pause if desired */}
+              <button
+                onClick={() => setIsPlaying(false)}
+                className="absolute top-4 left-4 bg-black/80 hover:bg-black text-white px-3 py-1.5 rounded-lg border border-white/10 hover:border-[#D4AF37]/50 transition-all text-[10px] font-bold uppercase tracking-wider z-20 shadow-lg cursor-pointer"
+              >
+                Voltar à Capa
+              </button>
             </div>
           )}
 
