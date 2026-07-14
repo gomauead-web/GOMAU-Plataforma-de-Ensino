@@ -136,15 +136,10 @@ export function LibraryPage() {
 
   useEffect(() => {
     if (user) {
-      const isOwner = ['gomau.ead@gmail.com', 'calepi@gmail.com', 'calepe@gmail.com'].includes((user?.email || '').toLowerCase().trim());
-      if (!isOwner) {
-        navigate('/');
-        return;
-      }
       fetchLibraryItems();
       fetchUserNotes();
     }
-  }, [user, navigate]);
+  }, [user]);
 
   const fetchLibraryItems = async () => {
     setLoading(true);
@@ -205,10 +200,14 @@ export function LibraryPage() {
 
   const userGrau = user?.grau || 'Aprendiz';
 
-  // REGRA DE TRIAGEM AUTOMÁTICA: O membro visualiza estritamente os materiais correspondentes ao seu grau atual!
+  const getGrauIndex = (grau: string) => {
+    return GRAUS.indexOf(grau);
+  };
+
+  // REGRA DE TRIAGEM INTELIGENTE: O membro visualiza materiais correspondentes ao seu grau atual e inferiores!
   const filteredItems = items.filter(item => {
-    // Triagem estrita por grau (o aluno só enxerga as obras do seu próprio grau para manter a regularidade iniciática)
-    if (item.grauMinimo !== userGrau) return false;
+    // Triagem cumulativa por grau (o aluno enxerga as obras do seu próprio grau e inferiores)
+    if (getGrauIndex(item.grauMinimo) > getGrauIndex(userGrau)) return false;
 
     // Filtro de Preço/Acesso
     if (selectedCost === 'Público' && item.isPaid) return false;
@@ -229,9 +228,9 @@ export function LibraryPage() {
   });
 
   const getPremiumFeaturedCard = () => {
-    // Retorna o item marcado com destaqueConversion do respectivo grau do usuário
-    return items.find(item => item.destaqueConversion && item.grauMinimo === userGrau) || 
-           items.find(item => item.isPaid && item.grauMinimo === userGrau);
+    // Retorna o item marcado com destaqueConversion do respectivo grau do usuário ou abaixo
+    return items.find(item => item.destaqueConversion && getGrauIndex(item.grauMinimo) <= getGrauIndex(userGrau)) || 
+           items.find(item => item.isPaid && getGrauIndex(item.grauMinimo) <= getGrauIndex(userGrau));
   };
 
   const featuredPremiumItem = getPremiumFeaturedCard();

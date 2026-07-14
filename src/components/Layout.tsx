@@ -348,7 +348,6 @@ export function Layout({ children }: { children: ReactNode }) {
                     </span>
                     <div className="grid grid-cols-3 gap-2.5">
                       {category.items
-                        .filter(item => item.path !== '/library' || isOwner)
                         .map((item: any) => {
                           const isActive = location.pathname === item.path;
                           return (
