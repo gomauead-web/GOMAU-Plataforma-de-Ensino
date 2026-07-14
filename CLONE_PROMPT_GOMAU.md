@@ -22858,6 +22858,21 @@ service cloud.firestore {
       allow read, list: if isSignedIn();
       allow write: if isGestor() || isDelegatedToPasta('2° Vigilante');
     }
+
+    match /tronco_doacoes/{doacaoId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && 
+        !(request.resource.data.keys().hasAny(['uid', 'userId', 'nome', 'cim', 'email', 'userEmail', 'memberId', 'sender'])) &&
+        request.resource.data.loja is string &&
+        request.resource.data.amount is number &&
+        request.resource.data.isSacolaLimpa is bool;
+      allow update, delete: if false;
+    }
+
+    match /tronco_lojas/{lojaId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
   }
 }
 

@@ -33,6 +33,7 @@ import {
 import { cn } from "../lib/utils";
 import { auth, db, storage } from "../lib/firebase";
 import { useNavigate } from "react-router-dom";
+import { TroncoBeneficencia } from "../components/TroncoBeneficencia";
 import {
   doc,
   updateDoc,
@@ -684,6 +685,11 @@ export function ProfilePage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Tronco de Beneficência Digital */}
+      <div className="mt-6">
+        <TroncoBeneficencia />
       </div>
 
       {editing && (

@@ -216,9 +216,65 @@
         }
       },
       "required": ["name"]
+    },
+    "TroncoDoacao": {
+      "title": "TroncoDoacao",
+      "description": "Anonymous donation to the Lodge's general charity bag.",
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "number"
+        },
+        "loja": {
+          "type": "string"
+        },
+        "isSacolaLimpa": {
+          "type": "boolean"
+        },
+        "timestamp": {
+          "type": "object"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["completed", "sacola_limpa"]
+        }
+      },
+      "required": ["amount", "loja", "isSacolaLimpa", "status"]
+    },
+    "TroncoLoja": {
+      "title": "TroncoLoja",
+      "description": "Consolidated general charity bag balances for each Lodge.",
+      "type": "object",
+      "properties": {
+        "totalBalance": {
+          "type": "number"
+        },
+        "donationsCount": {
+          "type": "number"
+        },
+        "sacolasLimpaCount": {
+          "type": "number"
+        },
+        "lastUpdate": {
+          "type": "object"
+        }
+      },
+      "required": ["totalBalance", "donationsCount", "sacolasLimpaCount"]
     }
   },
   "firestore": {
+    "/tronco_doacoes/{doacaoId}": {
+      "schema": {
+        "$ref": "#/entities/TroncoDoacao"
+      },
+      "description": "Anonymous donations registry."
+    },
+    "/tronco_lojas/{lojaId}": {
+      "schema": {
+        "$ref": "#/entities/TroncoLoja"
+      },
+      "description": "Lodge charity balances."
+    },
     "/users/{userId}": {
       "schema": {
         "$ref": "#/entities/User"

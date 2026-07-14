@@ -110,6 +110,15 @@ Ao fazer login com a conta Google, o sistema exige:
     5. **Aprovação da Loja:** Endosso do Venerável Mestre (atribuído via Painel do Gestor).
 - **Acompanhamento no Dashboard:** No topo de seu painel inicial, o obreiro cadastrado (ex: tazmaniacrvg@gmail.com, ou administradores em teste) poderá checar seus medidores em tempo real e ver seu progresso de medalhas. Uma vez outorgada, ela reluzirá no seu perfil público.
 
+### 2.10 Tronco de Beneficência Digital (Bolsa de Beneficência)
+
+- **O que é:** O Tronco de Beneficência recolhe as contribuições financeiras voluntárias e anônimas dos obreiros destinadas ao amparo dos necessitados (hospitalaria).
+- **Sigilo Absoluto (Mandato):** Para preservar o pudor e a pureza rituálica da caridade maçônica, **não há qualquer registro do nome, UID, CIM ou e-mail do doador no banco de dados visível para a Loja**. A doação é feita de forma anônima e direta para a conta institucional da faculdade.
+- **Opções e Ações no Perfil:**
+  1. **Exibição de Chave Pix:** Apresentação elegante e direta da chave Pix oficial `faculdademaconicamg@gmail.com` com botão de cópia rápida.
+  2. **QR Code Dinâmico/Estático:** Geração síncrona de QR Code Pix padrão Banco Central do Brasil para digitalização simplificada sem valor pré-definido, permitindo que o irmão determine o valor do óbolo diretamente em seu aplicativo bancário.
+  3. **Passar de Sacola Limpa:** Botão rituálico que permite que o obreiro simule o gesto rituálico de passar sem transacionar valores financeiros (registrando um evento de sacola limpa anônima para quórum solidário).
+
 ---
 
 ## 3. Guia Passo a Passo: Gestor (Administrador)
@@ -219,6 +228,8 @@ Ao fazer login com a conta Google, o sistema exige:
     - `attendance/`: Sub-coleção com a lista de presença (Nome, CIM, Grau, Hora de Entrada).
     - `ata/`: Armazena a ata gerada (Em desenvolvimento).
   - **`birthday_messages/`**: Mensagens temporárias de feliz aniversário enviadas aos Irmãos. Campos-chave: `toUserId`, `fromUserId`, `fromUserName`, `fromUserGrau`, `message`, `sentAt`, `dateStr`.
+  - **`tronco_doacoes/`**: Registros 100% anônimos de contribuições rituais. Atua com restrição estrita contra a gravação de campos identificadores (`uid`, `userId`, `nome`, `cim`, `email`). Campos: `amount` (número), `loja` (string), `isSacolaLimpa` (booleano), `timestamp` (ServerTimestamp), `status` (string).
+  - **`tronco_lojas/`**: Consolidados gerais e cumulativos de caridade por Loja. Campos: `totalBalance` (número), `donationsCount` (número), `sacolasLimpaCount` (número), `lastUpdate` (ServerTimestamp).
 
 ### 4.2 Motores (Engines)
 
@@ -239,6 +250,13 @@ Ao fazer login com a conta Google, o sistema exige:
 - **DOCUMENTACAO_DETALHADA_SISTEMA.md**: Para um raio-X completo, contendo o mapeamento exaustivo tela a tela, regras de negócio minuciosas (Bastidores, Regras Ocultas, Precedências), consulte este arquivo recém-gerado.
 
 ## 5. Changelog e Histórico de Evolução
+
+- **2026-07-13 (Lançamento do Tronco de Beneficência Digital & Sigilo Absoluto):**
+  1. **Módulo de Caridade Digital Anônimo**: Criação do módulo "Tronco de Beneficência Digital" acessível diretamente do Perfil de cada Membro.
+  2. **Sigilo Absoluto**: Desenvolvida lógica de isolamento de identidade no Firestore Rules. Uma regra estrita (`!request.resource.data.keys().hasAny(...)`) bloqueia e proíbe a escrita de qualquer dado identificador (`uid`, `email`, `cim`, `nome`) no banco de dados da Loja, garantindo sigilo absoluto da doação. Corrigido o erro de permissão ao remover a restrição redundante de timestamp em favor de maior resiliência síncrona.
+  3. **Motor Pix CRC16**: Implementação de renderização vetorial de QR Code Pix e cópia textual com cálculo polinomial padrão BCB (polinômio de CRC16 0x1021).
+  4. **Sacola Limpa**: Botão para simulação ritualística de passagem da sacola vazia com gravação estatística anônima.
+  5. **Atualização do Valuation**: Incorporação do módulo de Solidariedade Iniciática e Sigilo Absoluto valorado em R$ 11.500,00, além do módulo de RBAC/Estética e Correção de CIM corrigidos no dia anterior valorados em R$ 3.500,00. **O Valuation Global da Plataforma sobe oficialmente para R$ 208.500,00**.
 
 - **2026-07-09 (Lançamento do Player de Áudio Imersivo & Caderno de Estudos para Vídeos):**
   1. **Player de Áudio Imersivo**: Introdução de um reprodutor de alta-fidelidade (`SafeVideoPlayer`) para as instruções em vídeo da biblioteca que substitui por completo os players tradicionais do YouTube. Ele exibe uma capa protetora de alto padrão com a logo dourada oficial da plataforma (`logotrad.png`) e o título do vídeo de forma imponente que permanece 100% estática e ativa durante a reprodução. O vídeo em si e os logos do YouTube ficam completamente ocultos e invisíveis, permitindo que o obreiro foque unicamente no áudio do ensinamento sagrado.
