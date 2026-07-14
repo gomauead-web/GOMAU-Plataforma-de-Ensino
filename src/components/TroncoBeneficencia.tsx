@@ -117,12 +117,12 @@ export function TroncoBeneficencia() {
   const [copied, setCopied] = useState<boolean>(false);
   const [sacolaLimpaAtivada, setSacolaLimpaAtivada] = useState<boolean>(false);
 
-  const pixKey = "faculdademaconicamg@gmail.com";
-  const pixName = "Faculdade Maçônica de Minas Gerais";
+  const pixKey = "contato@faculdademaconicamg.com.br";
+  const pixName = "Darlan Martins da Silva";
   const currentLoja = user?.loja || "GOMAU EAD";
 
   // Generate open-amount Pix payload (amount = 0 allows the user to type any value in their bank app)
-  const pixPayload = generatePixPayload(pixKey, pixName, 0);
+  const pixPayload = generatePixPayload(pixKey, pixName, 0, "BELO HORIZONTE");
 
   const handleCopyPix = () => {
     navigator.clipboard.writeText(pixKey);

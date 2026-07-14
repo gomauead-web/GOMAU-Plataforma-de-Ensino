@@ -115,7 +115,7 @@ Ao fazer login com a conta Google, o sistema exige:
 - **O que é:** O Tronco de Beneficência recolhe as contribuições financeiras voluntárias e anônimas dos obreiros destinadas ao amparo dos necessitados (hospitalaria).
 - **Sigilo Absoluto (Mandato):** Para preservar o pudor e a pureza rituálica da caridade maçônica, **não há qualquer registro do nome, UID, CIM ou e-mail do doador no banco de dados visível para a Loja**. A doação é feita de forma anônima e direta para a conta institucional da faculdade.
 - **Opções e Ações no Perfil:**
-  1. **Exibição de Chave Pix:** Apresentação elegante e direta da chave Pix oficial `faculdademaconicamg@gmail.com` com botão de cópia rápida.
+  1. **Exibição de Chave Pix:** Apresentação elegante e direta da chave Pix oficial `contato@faculdademaconicamg.com.br` com botão de cópia rápida.
   2. **QR Code Dinâmico/Estático:** Geração síncrona de QR Code Pix padrão Banco Central do Brasil para digitalização simplificada sem valor pré-definido, permitindo que o irmão determine o valor do óbolo diretamente em seu aplicativo bancário.
   3. **Passar de Sacola Limpa:** Botão rituálico que permite que o obreiro simule o gesto rituálico de passar sem transacionar valores financeiros (registrando um evento de sacola limpa anônima para quórum solidário).
 
