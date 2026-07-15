@@ -377,28 +377,38 @@ export function ContentPage() {
     async function loadData() {
       if (!user) return;
       try {
-        // Load Contents (Files)
         const qContents = query(collection(db, 'contents'));
         const contentsSnapshot = await getDocs(qContents);
         setContents(contentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ContentItem)));
+      } catch (err) {
+        console.error("Erro ao carregar conteúdos:", err);
+      }
 
-        // Load Courses (Links)
+      try {
         const qCourses = query(collection(db, 'courses'));
         const coursesSnapshot = await getDocs(qCourses);
         setCourses(coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CourseItem)));
+      } catch (err) {
+        console.error("Erro ao carregar cursos (provavelmente restrição de permissão):", err);
+      }
 
-        // Load user's own pranchas
+      try {
         const qPranchas = query(collection(db, 'requests'), where('userId', '==', user.uid));
         const pranchasSnapshot = await getDocs(qPranchas);
-        setPranchas(pranchasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter((p: any) => p.tipo === 'Envio de Prancha' || p.tipo === 'Prancha' || p.tipo === 'Prancha (Resumo/Estudo)'));
+        const fetched = pranchasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('Fetched requests for user:', fetched.length);
+        setPranchas(fetched.filter((p: any) => p.tipo === 'Envio de Prancha' || p.tipo === 'Prancha' || p.tipo === 'Prancha (Resumo/Estudo)' || (p.titulo && p.titulo.toLowerCase().includes('prancha'))));
+      } catch (err) {
+        console.error("Erro ao carregar pranchas:", err);
+      }
 
-        // Load notes of studies
+      try {
         await fetchUserNotes();
       } catch (err) {
-        handleFirestoreError(err, OperationType.LIST, 'contents/courses/requests');
-      } finally {
-        setLoading(false);
+        console.error("Erro ao carregar notas:", err);
       }
+      
+      setLoading(false);
     }
     loadData();
   }, [user]);
@@ -467,7 +477,7 @@ export function ContentPage() {
           updateData.arquivoUrl = arquivoUrl;
         }
         await updateDoc(pranchaRef, updateData);
-        setPranchas(pranchas.map(p => p.id === editingPranchaId ? { ...p, ...updateData } : p));
+        setPranchas(prev => prev.map(p => p.id === editingPranchaId ? { ...p, ...updateData } : p));
       } else {
         const newDoc = await addDoc(collection(db, 'requests'), {
           userId: user.uid,
@@ -482,8 +492,9 @@ export function ContentPage() {
           status: 'pendente',
           criadoEm: serverTimestamp()
         });
-        setPranchas([...pranchas, { 
+        setPranchas(prev => [...prev, { 
           id: newDoc.id, 
+          tipo: 'Envio de Prancha', 
           titulo: pranchaTitle, 
           numero: pranchaNumero,
           temaCentral: pranchaTema,
@@ -530,7 +541,7 @@ export function ContentPage() {
     setDeletingPranchaId(pranchaId);
     try {
       await deleteDoc(doc(db, 'requests', pranchaId));
-      setPranchas(pranchas.filter(p => p.id !== pranchaId));
+      setPranchas(prev => prev.filter(p => p.id !== pranchaId));
     } catch (err: any) {
       alert("Erro ao excluir prancha: " + err.message);
     } finally {

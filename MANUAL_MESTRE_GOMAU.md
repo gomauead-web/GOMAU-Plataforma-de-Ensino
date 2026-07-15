@@ -250,6 +250,9 @@ Ao fazer login com a conta Google, o sistema exige:
 - **DOCUMENTACAO_DETALHADA_SISTEMA.md**: Para um raio-X completo, contendo o mapeamento exaustivo tela a tela, regras de negócio minuciosas (Bastidores, Regras Ocultas, Precedências), consulte este arquivo recém-gerado.
 
 ## 5. Changelog e Histórico de Evolução
+- **2026-07-15 (Correção da Aba Minhas Pranchas e Envio):**
+  1. **Hotfix de Permissões Isoladas (LoadData)**: O carregamento da página "Conteúdo" foi dividido em blocos `try-catch` isolados. Anteriormente, se um usuário comum tentasse carregar a lista de cursos sem a query de restrição (status publicado), o Firestore recusava por segurança, o que interrompia todo o fluxo e impedia que as pranchas fossem consultadas na sequência (fazendo com que a lista "Minhas Pranchas" ficasse vazia para não-gestores).
+  2. **Stale Closure no Envio**: Corrigido um problema na função de envio de Pranchas que usava um estado anterior vazio do array React para atualizar a lista pós-submissão. Utilizado atualização funcional no `setPranchas` para que a nova prancha apareça imediatamente no menu após o envio bem-sucedido.
 
 - **2026-07-15 (Correção de Consulta de Pranchas):**
   1. **Hotfix de Consulta (Composite Index)**: Resolvido um problema onde a aba "Minhas Pranchas" no menu Conteúdos estava retornando vazia para todos os usuários. O erro ocorria devido à exigência do Firestore de um Índice Composto para consultas com múltiplos `where` em campos diferentes (userId e tipo). A solução aplicada foi realizar uma consulta simples por `userId` no banco de dados e filtrar os tipos de prancha em memória no lado do cliente.

@@ -31,7 +31,7 @@ export function CursosExternos() {
       const grauOrder = { 'Aprendiz': 1, 'Companheiro': 2, 'Mestre': 3 };
       const userGrauVal = (grauOrder as any)[user?.grau || 'Aprendiz'] || 1;
       
-      const filtered = allCourses.filter((c: any) => {
+      const filtered: any[] = allCourses.filter((c: any) => {
         const courseGrauVal = (grauOrder as any)[c.grauMinimo || 'Aprendiz'] || 1;
         return userGrauVal >= courseGrauVal;
       });
