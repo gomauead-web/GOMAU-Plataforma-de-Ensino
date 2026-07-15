@@ -388,9 +388,9 @@ export function ContentPage() {
         setCourses(coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CourseItem)));
 
         // Load user's own pranchas
-        const qPranchas = query(collection(db, 'requests'), where('userId', '==', user.uid), where('tipo', '==', 'Envio de Prancha'));
+        const qPranchas = query(collection(db, 'requests'), where('userId', '==', user.uid));
         const pranchasSnapshot = await getDocs(qPranchas);
-        setPranchas(pranchasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setPranchas(pranchasSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter((p: any) => p.tipo === 'Envio de Prancha' || p.tipo === 'Prancha' || p.tipo === 'Prancha (Resumo/Estudo)'));
 
         // Load notes of studies
         await fetchUserNotes();

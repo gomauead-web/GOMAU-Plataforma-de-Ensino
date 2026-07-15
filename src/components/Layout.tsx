@@ -1,6 +1,7 @@
 import React, { ReactNode, useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useSessionTelemetry } from '../hooks/useSessionTelemetry';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, BookOpen, FileText, Calendar, Target, User, History, Settings, HelpCircle, LogOut, Shield, GraduationCap, Clock, Video, MessageSquare, DollarSign, Library, Sparkles, Menu, X, Heart } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -100,6 +101,7 @@ export function SessionTimer() {
 }
 
 export function Layout({ children }: { children: ReactNode }) {
+  useSessionTelemetry();
   const { user, logout: contextLogout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();

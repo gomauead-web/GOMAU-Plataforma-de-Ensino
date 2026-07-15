@@ -117,27 +117,28 @@ export function TelemetryView() {
             dailyCounts[dateStr]++;
           }
           
-          if (!key) return;
-          
-          // Agrupamento por Usuário
-          if (!userCounts[key]) {
-            userCounts[key] = { 
-              nome: data.nome || 'Desconhecido', 
-              count: 0, 
-              cim: data.cim || 'S/N',
-              lastAccess: timestamp
-            };
-          }
-          userCounts[key].count++;
-          if (timestamp > userCounts[key].lastAccess) {
-             userCounts[key].lastAccess = timestamp;
-          }
+                          });
+
+        // 3. Buscar Ranking de Engajamento por Tempo de Tela (userMetrics)
+        const metricsQuery = query(
+          collection(db, "userMetrics"),
+          orderBy("totalStudyTime", "desc"),
+          limit(10)
+        );
+        const metricsSnap = await getDocs(metricsQuery);
+        
+        const sortedUsers = [];
+        metricsSnap.forEach(doc => {
+          const data = doc.data();
+          sortedUsers.push({
+            nome: data.nome,
+            cim: data.cim,
+            totalStudyTime: data.totalStudyTime,
+            monthlyStudyTime: data.monthlyStudyTime,
+            lastAccess: data.lastActive?.toDate ? data.lastActive.toDate() : new Date()
+          });
         });
         
-        const sortedUsers = Object.values(userCounts)
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 5);
-          
         const formattedChartData = Object.entries(dailyCounts).map(([date, count]) => ({
           date,
           acessos: count
@@ -326,7 +327,7 @@ export function TelemetryView() {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-gray-100">Líderes de Engajamento</h3>
-                    <p className="text-sm text-gray-400 mt-1">Os 5 Irmãos mais ativos em 30 dias</p>
+                    <p className="text-sm text-gray-400 mt-1">Os 10 Irmãos com mais tempo de estudo na plataforma</p>
                   </div>
                 </div>
                 <div className="p-6 flex-1 overflow-y-auto">
@@ -353,8 +354,14 @@ export function TelemetryView() {
                             </div>
                           </div>
                           <div className="shrink-0 text-right pr-2">
-                            <div className="text-3xl font-black text-[#D4AF37]">{user.count}</div>
-                            <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">acessos</div>
+                            <div className="text-2xl font-black text-[#D4AF37]">
+                              {user.totalStudyTime ? (
+                                user.totalStudyTime > 3600 ? 
+                                  `${Math.floor(user.totalStudyTime / 3600)}h ${Math.floor((user.totalStudyTime % 3600) / 60)}m` : 
+                                  `${Math.floor((user.totalStudyTime % 3600) / 60)}m`
+                              ) : '0m'}
+                            </div>
+                            <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">tempo total</div>
                           </div>
                         </div>
                       ))}

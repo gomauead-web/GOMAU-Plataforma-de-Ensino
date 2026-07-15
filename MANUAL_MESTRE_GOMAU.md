@@ -251,6 +251,20 @@ Ao fazer login com a conta Google, o sistema exige:
 
 ## 5. Changelog e Histórico de Evolução
 
+- **2026-07-15 (Correção de Consulta de Pranchas):**
+  1. **Hotfix de Consulta (Composite Index)**: Resolvido um problema onde a aba "Minhas Pranchas" no menu Conteúdos estava retornando vazia para todos os usuários. O erro ocorria devido à exigência do Firestore de um Índice Composto para consultas com múltiplos `where` em campos diferentes (userId e tipo). A solução aplicada foi realizar uma consulta simples por `userId` no banco de dados e filtrar os tipos de prancha em memória no lado do cliente.
+
+- **2026-07-14 (Guia Interativo do Membro):**
+  1. **Documentação e Guia Interativo**: Criação do arquivo `GUIA_DO_MEMBRO.md` contendo as instruções didáticas de todas as 9 áreas da plataforma.
+  2. **Slides Interativos (Onboarding)**: Implementação da rota `/workshop` contendo um deck imersivo para apresentação do Guia do Membro, baseado no arquivo gerado.
+  3. **Integração no Catálogo**: O Guia do Membro foi disponibilizado como o primeiro item do catálogo em `Cursos EAD`, acessível a todos (desde Aprendiz).
+
+- **2026-07-14 (Telemetria Avançada & Ranqueamento de Tempo de Tela):**
+  1. **Motor de Telemetria de Sessão**: Criação do hook `useSessionTelemetry` que mensura passivamente o tempo real de tela e foco do obreiro na plataforma, contabilizando os segundos de sessão de forma inteligente apenas quando a aba está ativa.
+  2. **Sincronização em Lote (Zero-Cost)**: Para não comprometer a cota gratuita do banco de dados, o hook envia as métricas ao Firestore em lotes agregados (a cada 2 minutos ou no evento `visibilitychange` / fechamento de aba), reduzindo drasticamente as operações de escrita no `userMetrics`.
+  3. **Ranking de Engajamento**: O módulo de Telemetria (Gestor) agora foi aprimorado para ler a coleção `userMetrics` e exibir os "10 Irmãos com mais tempo de estudo" na plataforma, fornecendo visibilidade quantitativa profunda para premiação de membros.
+  4. **Atualização Valuation**: O Valuation foi incrementado em R$ 1.500,00, totalizando **R$ 210.000,00**.
+
 - **2026-07-13 (Liberação Geral da Biblioteca Virtual, Correção do Player de Vídeo & Triagem Cumulativa de Graus):**
   1. **Correção Crítica de Transmissão de Vídeo**: Correção do comportamento em que ao clicar no play do vídeo a tela ficava preta e nada acontecia. O player (`SafeVideoPlayer`) foi redefinido para renderizar diretamente a transmissão de vídeo do YouTube em alta definição com controles nativos assim que o usuário clicar no play, eliminando bloqueios de reprodução em segundo plano de navegadores e dispensando a necessidade de atualizar a página para funcionar. Foi adicionado um botão de escape "Voltar à Capa" para alternar de volta para o visualizador rituálico estático se desejado.
   2. **Acesso Total**: Remoção completa da restrição de acesso que limitava o uso da Biblioteca Virtual aos emails de administradores. O acervo agora é 100% funcional e acessível para todos os membros logados da plataforma.

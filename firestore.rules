@@ -93,6 +93,12 @@ service cloud.firestore {
       ));
     }
 
+    match /userMetrics/{userId} {
+      allow get, list: if isSignedIn() && (isGestor() || userId == request.auth.uid);
+      allow create, update: if isSignedIn() && (isGestor() || userId == request.auth.uid);
+      allow delete: if isGestor();
+    }
+
     match /grades/{gradeId} {
       allow read: if isSignedIn();
       allow write: if isGestor();

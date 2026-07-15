@@ -338,10 +338,10 @@ export function GestorValuation() {
              <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm">Telemetria & Engajamento</h3>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-             Módulo de monitoramento ativo, com painéis agregados, contagem inteligente no Firebase (zero-cost) e rankeamento de uso para acompanhamento analítico do engajamento dos membros.
+             Módulo de monitoramento ativo com telemetria contínua via `visibilitychange`, sincronização otimizada em lote para economia de requisições, armazenamento analítico do tempo real de tela dos membros e ranqueamento de engajamento diário/mensal e histórico.
           </p>
           <div className="mt-auto">
-             <div className="text-[#D4AF37] font-bold text-lg">R$ 8.000,00</div>
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 9.500,00</div>
              <div className="text-[10px] text-[#D4AF37] font-bold uppercase mt-1 tracking-widest">Módulo Agregado</div>
           </div>
         </div>
@@ -436,7 +436,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 208.500,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 210.000,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>

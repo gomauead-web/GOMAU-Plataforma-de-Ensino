@@ -35,8 +35,20 @@ export function CursosExternos() {
         const courseGrauVal = (grauOrder as any)[c.grauMinimo || 'Aprendiz'] || 1;
         return userGrauVal >= courseGrauVal;
       });
-
+      // GUIA DO MEMBRO
+      filtered.unshift({
+        id: 'guia-do-membro',
+        title: 'Guia Completo do Membro',
+        description: 'Manual interativo detalhado com todas as telas, menus e funcionalidades da plataforma GOMAU.',
+        grauMinimo: 'Aprendiz',
+        category: 'Instrução',
+        duration: '30 minutos',
+        modulesCount: 9,
+        instructor: 'Equipe GOMAU',
+        thumbnailUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop'
+      });
       setCourses(filtered);
+
     } catch (err) {
       console.error("Error fetching courses:", err);
     } finally {
@@ -88,7 +100,7 @@ export function CursosExternos() {
           {courses.map((course) => (
             <div 
               key={course.id}
-              onClick={() => navigate(`/cursos/${course.id}`)}
+              onClick={() => course.id === 'guia-do-membro' ? navigate('/workshop') : navigate(`/cursos/${course.id}`)}
               className="bg-[#1e293b]/30 border border-[#1e293b] rounded-2xl overflow-hidden hover:border-[#D4AF37]/50 transition-all cursor-pointer group flex flex-col h-full active:scale-[0.98]"
             >
               <div className="p-6 flex-1">

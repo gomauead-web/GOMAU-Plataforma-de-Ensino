@@ -12,6 +12,7 @@ import { RequestsPage } from './pages/RequestsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { GestorDashboard } from './pages/gestor/GestorDashboard';
 import { CursosExternos } from './pages/CursosExternos';
+import { WorkshopPresentation } from './pages/WorkshopPresentation';
 import { CursoDetail } from './pages/CursoDetail';
 import { LibraryPage } from './pages/LibraryPage';
 
@@ -101,6 +102,7 @@ export default function App() {
             <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />
             <Route path="/contents" element={<ProtectedRoute><Layout><ContentPage /></Layout></ProtectedRoute>} />
             <Route path="/cursos" element={<ProtectedRoute><Layout><CursosExternos /></Layout></ProtectedRoute>} />
+            <Route path="/workshop" element={<ProtectedRoute><WorkshopPresentation /></ProtectedRoute>} />
             <Route path="/cursos/:courseId" element={<ProtectedRoute><Layout><CursoDetail /></Layout></ProtectedRoute>} />
             <Route path="/forum" element={<ProtectedRoute><Layout><Forum /></Layout></ProtectedRoute>} />
             <Route path="/requests" element={<ProtectedRoute><Layout><RequestsPage /></Layout></ProtectedRoute>} />

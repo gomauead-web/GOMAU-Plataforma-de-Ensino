@@ -60,3 +60,17 @@ O módulo "Câmara de Criação", exclusivo para acesso Premium/Administrativo, 
   2. **Forma Rápida (Grade de Aulas Pronta via Linguagem Natural)**: O gestor pode fornecer uma ementa, grade, syllabus ou rascunho de texto livre totalmente natural e sem formatação obrigatória. A inteligência artificial analisa e interpreta todo o texto de forma contextualizada, mapeando com extrema resiliência os Módulos, Unidades e Lições ocultas no rascunho, enriquecendo-os com sinopses premium e garantindo que nada do que o usuário escreveu seja desconsiderado ou cause falhas.
 - **Visualizador Próprio:** Os cursos/manuais gerados são acessados via `PremiumCourseViewerPage`, que orquestra a visibilidade da nova arquitetura hierárquica baseada no Grau do aluno.
 
+
+
+## Nova Funcionalidade (14/07/2026) - Guia Interativo do Membro
+Foi criado um curso embutido ("Guia Completo do Membro") dentro da aba "Cursos EAD". Em vez de abrir um player de vídeo tradicional, este card redireciona o membro para a rota `/workshop`, que inicializa um Deck de Slides Interativo em tela cheia (baseado no GUIA_DO_MEMBRO.md). 
+Módulos Apresentados:
+1. Dashboard (Painel Inicial)
+2. Meu Perfil (Configurações)
+3. Biblioteca (Acervo de Pranchas)
+4. Cursos EAD (Catálogo e Player)
+5. Fórum e Comunidade
+6. Solicitações e Envios (Pranchas)
+7. Calendário Maçônico
+8. Cadeia de União (Irmãos)
+9. Histórico Maçônico
