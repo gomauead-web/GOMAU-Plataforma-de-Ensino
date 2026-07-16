@@ -467,11 +467,19 @@ export function GestorDashboard() {
   useEffect(() => {
     loadContents();
     loadCourses();
-    loadRequests();
     loadEvents();
     loadEvolutionRules();
     seedInitialSecurity();
     loadExcelEmails();
+
+    // Listener em tempo real para solicitações
+    const unsubRequests = onSnapshot(query(collection(db, "requests"), where("status", "==", "pendente")), (snap) => {
+      let data = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+      if (isRestrictedFaltas) {
+        data = data.filter((d) => d.tipo === "Justificativa de Falta");
+      }
+      setRequests(data);
+    }, (err) => console.error("Erro real-time requests:", err));
 
     // Listener em tempo real para accessLogs
     const qLogs = query(
@@ -2449,20 +2457,7 @@ export function GestorDashboard() {
     }
   };
 
-  const loadRequests = async () => {
-    try {
-      const snap = await getDocs(
-        query(collection(db, "requests"), where("status", "==", "pendente")),
-      );
-      let data = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
-      if (isRestrictedFaltas) {
-        data = data.filter((d) => d.tipo === "Justificativa de Falta");
-      }
-      setRequests(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const loadRequests = () => {};
 
   const handleAddContent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -2574,7 +2569,6 @@ export function GestorDashboard() {
         criadoEm: serverTimestamp(),
       });
 
-      loadRequests();
       setEvaluatingRequest(null);
     } catch (err) {
       console.error(err);

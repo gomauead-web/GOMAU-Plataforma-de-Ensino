@@ -120,8 +120,8 @@ export function Layout({ children }: { children: ReactNode }) {
   const isMaster = MASTER_ADMINS.includes(user?.email || '');
 
   const handleLogout = async () => {
-    await contextLogout();
-    navigate('/login');
+    try { await contextLogout(); } catch(e) {}
+    window.location.href = '/login';
   };
 
   const userEmail = (user?.email || auth.currentUser?.email || '').toLowerCase().trim();

@@ -250,6 +250,11 @@ Ao fazer login com a conta Google, o sistema exige:
 - **DOCUMENTACAO_DETALHADA_SISTEMA.md**: Para um raio-X completo, contendo o mapeamento exaustivo tela a tela, regras de negócio minuciosas (Bastidores, Regras Ocultas, Precedências), consulte este arquivo recém-gerado.
 
 ## 5. Changelog e Histórico de Evolução
+- **2026-07-16 (Correção do Painel de Aprovações):**
+  1. **Painel em Tempo Real**: A área de aprovações de solicitações do Gestor agora utiliza `onSnapshot` do Firestore para receber novas pranchas e justificativas instantaneamente, resolvendo o problema das solicitações exigirem recarregamento manual da página para aparecerem.
+  2. **Sincronia Membro/Gestor**: Validado o fluxo de exclusão. Quando um membro exclui uma prancha na aba pessoal, o sistema reflete imediatamente a exclusão na aba do gestor graças à reatividade em tempo real.
+- **2026-07-15 (Correção de Sessão em Ambiente de Preview/Iframe):**
+  1. **Hotfix de Logout (Cache/IndexedDB)**: Resolvido um problema onde o logout não encerrava a sessão corretamente no ambiente de visualização devido a retenção de cache do Firebase Auth em Iframe e `react-router`. Substituída a navegação leve por um `window.location.href` forçando um reload completo da página e limpeza bruta do Local/Session Storage, desativando a persistência acidental do login.
 - **2026-07-15 (Correção da Aba Minhas Pranchas e Envio):**
   1. **Hotfix de Permissões Isoladas (LoadData)**: O carregamento da página "Conteúdo" foi dividido em blocos `try-catch` isolados. Anteriormente, se um usuário comum tentasse carregar a lista de cursos sem a query de restrição (status publicado), o Firestore recusava por segurança, o que interrompia todo o fluxo e impedia que as pranchas fossem consultadas na sequência (fazendo com que a lista "Minhas Pranchas" ficasse vazia para não-gestores).
   2. **Stale Closure no Envio**: Corrigido um problema na função de envio de Pranchas que usava um estado anterior vazio do array React para atualizar a lista pós-submissão. Utilizado atualização funcional no `setPranchas` para que a nova prancha apareça imediatamente no menu após o envio bem-sucedido.

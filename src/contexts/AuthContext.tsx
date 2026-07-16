@@ -67,10 +67,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     console.log("Executando Logout Geral...");
-    sessionStorage.clear(); // Limpa todo o estado da sessão
-    localStorage.removeItem('session_expires_at'); // Limpa o timer de sessão
-    await signOut(auth);
+    sessionStorage.clear();
+    localStorage.clear();
+    try {
+      await signOut(auth);
+    } catch(e) {
+      console.error('Erro no signOut:', e);
+    }
     setUser(null);
+    // Force clear indexedDB firebase local storage just in case
+    try {
+      indexedDB.deleteDatabase('firebaseLocalStorageDb');
+    } catch(e) {}
   };
 
   const updateUserWithCache = (newUser: AppUser | null, uidArg?: string) => {
