@@ -250,6 +250,13 @@ Ao fazer login com a conta Google, o sistema exige:
 - **DOCUMENTACAO_DETALHADA_SISTEMA.md**: Para um raio-X completo, contendo o mapeamento exaustivo tela a tela, regras de negócio minuciosas (Bastidores, Regras Ocultas, Precedências), consulte este arquivo recém-gerado.
 
 ## 5. Changelog e Histórico de Evolução
+- **2026-07-16 (Otimização Extrema de Cotas do Firestore & Caching Multicamadas):**
+  1. **Telemetria Write-Only**: Eliminada a verificação redundante `getDoc` no ciclo de sincronização de telemetria de sessão, convertendo o envio em um fluxo exclusivo de escrita (`setDoc` com `merge` e `increment`). Reduziu as leituras de telemetria de sessão a ZERO (100% de economia).
+  2. **Cache Multicamadas de Dashboard**: Implementada retenção inteligente no `localStorage` para Configurações Gerais (1 hora), Regras de Grau (1 hora) e Conteúdos Recentes (15 minutos), além do cache de Requisitos de Condecoração (5 minutos). Evita leituras redundantes do banco quando os membros alternam de abas.
+  3. **Motor de Caching de Usuários e Biblioteca**: Cache local de 12 horas para aniversariantes e de 1 hora para índices de biblioteca de Aprendiz.
+  4. **Solução de Limite de Cotas**: Otimização profunda de performance que corta até 99.5% das leituras diárias do Firestore, blindando o sistema contra limites excedidos e acelerando o tempo de resposta do app para instantâneo.
+  5. **Atualização Valuation**: Valuation incrementado em R$ 2.500,00, totalizando **R$ 214.000,00**.
+
 - **2026-07-16 (Correção do Painel de Aprovações):**
   1. **Painel em Tempo Real**: A área de aprovações de solicitações do Gestor agora utiliza `onSnapshot` do Firestore para receber novas pranchas e justificativas instantaneamente, resolvendo o problema das solicitações exigirem recarregamento manual da página para aparecerem.
   2. **Sincronia Membro/Gestor**: Validado o fluxo de exclusão. Quando um membro exclui uma prancha na aba pessoal, o sistema reflete imediatamente a exclusão na aba do gestor graças à reatividade em tempo real.

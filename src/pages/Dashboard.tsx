@@ -126,15 +126,57 @@ export function Dashboard() {
     if (!user?.uid) return;
     const calcDecRequirements = async () => {
       try {
-        // Library completeness
-        const contentsSnap = await getDocs(query(collection(db, "contents")));
-        const allConts = contentsSnap.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as any),
-        }));
-        const aprendizConts = allConts.filter(
-          (c: any) => c.grauMinimo === "Aprendiz",
-        );
+        const cacheKeyDec = `gomau_dec_progress_${user.uid}`;
+        const cachedDec = localStorage.getItem(cacheKeyDec);
+        if (cachedDec) {
+          try {
+            const parsed = JSON.parse(cachedDec);
+            if (Date.now() - parsed.timestamp < 5 * 60 * 1000) { // 5 minutos
+              setDecProgress(parsed.data);
+              setLoadingDecCriteria(false);
+              return;
+            }
+          } catch (e) {
+            console.warn("Erro ao ler cache de decProgress:", e);
+          }
+        }
+
+        // Library completeness with 1-hour cache to avoid reading all contents on every render
+        const cacheKeyContents = "gomau_contents_aprendiz";
+        const cachedContents = localStorage.getItem(cacheKeyContents);
+        let aprendizConts: any[] = [];
+        let loadedContentsFromCache = false;
+
+        if (cachedContents) {
+          try {
+            const parsed = JSON.parse(cachedContents);
+            if (Date.now() - parsed.timestamp < 1 * 60 * 60 * 1000) { // 1 hora
+              aprendizConts = parsed.data;
+              loadedContentsFromCache = true;
+            }
+          } catch (e) {
+            console.warn("Erro ao decodificar cache de conteúdos:", e);
+          }
+        }
+
+        if (!loadedContentsFromCache) {
+          const contentsSnap = await getDocs(query(collection(db, "contents")));
+          const allConts = contentsSnap.docs.map((doc) => ({
+            id: doc.id,
+            grauMinimo: doc.data().grauMinimo
+          }));
+          aprendizConts = allConts.filter(
+            (c: any) => c.grauMinimo === "Aprendiz",
+          );
+          try {
+            localStorage.setItem(cacheKeyContents, JSON.stringify({
+              timestamp: Date.now(),
+              data: aprendizConts
+            }));
+          } catch (storageErr) {
+            console.warn("Falha ao salvar cache de conteúdos:", storageErr);
+          }
+        }
 
         const readingsSnap = await getDocs(
           query(
@@ -182,12 +224,23 @@ export function Dashboard() {
               ? 80
               : 0;
 
-        setDecProgress({
+        const resultData = {
           pctBiblioteca: pctBib,
           totalAprendiz: totalAp,
           completedCount: compCount,
           averageScore: avgScore,
-        });
+        };
+
+        setDecProgress(resultData);
+
+        try {
+          localStorage.setItem(cacheKeyDec, JSON.stringify({
+            timestamp: Date.now(),
+            data: resultData
+          }));
+        } catch (storageErr) {
+          console.warn("Falha ao salvar cache de decProgress:", storageErr);
+        }
       } catch (err) {
         console.error("Error calculating condecorações metrics:", err);
       } finally {
@@ -200,12 +253,38 @@ export function Dashboard() {
   useEffect(() => {
     async function loadData() {
       if (!user?.uid) return;
-      // Load recent contents
-      const qContents = query(collection(db, "contents"), limit(3));
-      const contentsSnap = await getDocs(qContents);
-      setRecentContents(
-        contentsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
-      );
+      
+      // Load recent contents with cache (15 minutes)
+      let contents: any[] = [];
+      let loadedContentsCache = false;
+      const cacheKeyRecentContents = "gomau_recent_contents";
+      const cachedRecentContents = localStorage.getItem(cacheKeyRecentContents);
+      if (cachedRecentContents) {
+        try {
+          const parsed = JSON.parse(cachedRecentContents);
+          if (Date.now() - parsed.timestamp < 15 * 60 * 1000) { // 15 mins
+            contents = parsed.data;
+            loadedContentsCache = true;
+          }
+        } catch (e) {
+          console.warn("Erro ao ler cache de recentContents:", e);
+        }
+      }
+
+      if (!loadedContentsCache) {
+        try {
+          const qContents = query(collection(db, "contents"), limit(3));
+          const contentsSnap = await getDocs(qContents);
+          contents = contentsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          localStorage.setItem(cacheKeyRecentContents, JSON.stringify({
+            timestamp: Date.now(),
+            data: contents
+          }));
+        } catch (err) {
+          console.error("Erro ao carregar conteúdos recentes:", err);
+        }
+      }
+      setRecentContents(contents);
 
       // Load recent history
       const qHistory = query(
@@ -217,17 +296,43 @@ export function Dashboard() {
       const historySnap = await getDocs(qHistory);
       setRecentAtvs(historySnap.docs.map((d) => ({ id: d.id, ...d.data() })));
 
-      // Fetch General Settings
-      try {
-        const settingsDoc = await getDoc(doc(db, "settings", "general"));
-        if (settingsDoc.exists()) {
-          setSettings(settingsDoc.data());
-          if (settingsDoc.data().diasPrazoResumo) {
-            setDiasPrazoResumo(settingsDoc.data().diasPrazoResumo);
+      // Fetch General Settings with cache (1 hour)
+      let settingsData: any = null;
+      let loadedSettingsCache = false;
+      const cacheKeySettings = "gomau_general_settings";
+      const cachedSettings = localStorage.getItem(cacheKeySettings);
+      if (cachedSettings) {
+        try {
+          const parsed = JSON.parse(cachedSettings);
+          if (Date.now() - parsed.timestamp < 1 * 60 * 60 * 1000) { // 1 hour
+            settingsData = parsed.data;
+            loadedSettingsCache = true;
           }
+        } catch (e) {
+          console.warn("Erro ao ler cache de generalSettings:", e);
         }
-      } catch (e) {
-        console.log("No general settings found or error fetching", e);
+      }
+
+      if (!loadedSettingsCache) {
+        try {
+          const settingsDoc = await getDoc(doc(db, "settings", "general"));
+          if (settingsDoc.exists()) {
+            settingsData = settingsDoc.data();
+            localStorage.setItem(cacheKeySettings, JSON.stringify({
+              timestamp: Date.now(),
+              data: settingsData
+            }));
+          }
+        } catch (e) {
+          console.log("No general settings found or error fetching", e);
+        }
+      }
+
+      if (settingsData) {
+        setSettings(settingsData);
+        if (settingsData.diasPrazoResumo) {
+          setDiasPrazoResumo(settingsData.diasPrazoResumo);
+        }
       }
 
       // Fetch pending readings
@@ -264,14 +369,44 @@ export function Dashboard() {
       }
 
       if (user.grau !== "Mestre") {
-        // Fetch rules
-        const qRules = query(
-          collection(db, "evolutionRules"),
-          where("grauOrigem", "==", user.grau),
-        );
-        const rulesSnap = await getDocs(qRules);
-        if (!rulesSnap.empty) {
-          setRule(rulesSnap.docs[0].data());
+        // Fetch rules with cache (1 hour)
+        let ruleData: any = null;
+        let loadedRulesCache = false;
+        const cacheKeyRules = `gomau_rules_${user.grau}`;
+        const cachedRules = localStorage.getItem(cacheKeyRules);
+        if (cachedRules) {
+          try {
+            const parsed = JSON.parse(cachedRules);
+            if (Date.now() - parsed.timestamp < 1 * 60 * 60 * 1000) { // 1 hour
+              ruleData = parsed.data;
+              loadedRulesCache = true;
+            }
+          } catch (e) {
+            console.warn("Erro ao ler cache de rules:", e);
+          }
+        }
+
+        if (!loadedRulesCache) {
+          try {
+            const qRules = query(
+              collection(db, "evolutionRules"),
+              where("grauOrigem", "==", user.grau),
+            );
+            const rulesSnap = await getDocs(qRules);
+            if (!rulesSnap.empty) {
+              ruleData = rulesSnap.docs[0].data();
+              localStorage.setItem(cacheKeyRules, JSON.stringify({
+                timestamp: Date.now(),
+                data: ruleData
+              }));
+            }
+          } catch (errRules) {
+            console.error("Erro ao carregar regras de evolução:", errRules);
+          }
+        }
+
+        if (ruleData) {
+          setRule(ruleData);
         }
 
         // Fetch approved pranchas for progress
@@ -287,31 +422,61 @@ export function Dashboard() {
         setPranchasAprovadas(pranchasCount);
       }
 
-      // Fetch Birthdays of the Month
+      // Fetch Birthdays of the Month with cache
       try {
-        const usersSnap = await getDocs(query(collection(db, "users")));
+        const cacheKeyBirthdays = "gomau_monthly_birthdays";
+        const cachedBirthdays = localStorage.getItem(cacheKeyBirthdays);
         const currentMonth = new Date().getMonth() + 1;
+        let monthlyBirthdays: any[] = [];
+        let loadedBirthdaysFromCache = false;
 
-        const monthlyBirthdays = usersSnap.docs
-          .map((d) => ({ id: d.id, ...(d.data() as any) }))
-          .filter((u) => {
-            if (!u.dataNascimento) return false;
-            let month = -1;
-            if (u.dataNascimento.includes("-")) {
-              month = parseInt(u.dataNascimento.split("-")[1]);
-            } else if (u.dataNascimento.includes("/")) {
-              month = parseInt(u.dataNascimento.split("/")[1]);
+        if (cachedBirthdays) {
+          try {
+            const parsed = JSON.parse(cachedBirthdays);
+            // Cache is valid if it's the same month and was saved less than 12 hours ago
+            if (parsed.month === currentMonth && (Date.now() - parsed.timestamp < 12 * 60 * 60 * 1000)) {
+              monthlyBirthdays = parsed.data;
+              loadedBirthdaysFromCache = true;
             }
-            return month === currentMonth;
-          })
-          .sort((a, b) => {
-            const getDay = (dateStr: string) => {
-              if (dateStr.includes("-")) return parseInt(dateStr.split("-")[2]);
-              if (dateStr.includes("/")) return parseInt(dateStr.split("/")[0]);
-              return 0;
-            };
-            return getDay(a.dataNascimento) - getDay(b.dataNascimento);
-          });
+          } catch (e) {
+            console.warn("Erro ao ler cache de aniversariantes:", e);
+          }
+        }
+
+        if (!loadedBirthdaysFromCache) {
+          const usersSnap = await getDocs(query(collection(db, "users")));
+          monthlyBirthdays = usersSnap.docs
+            .map((d) => ({ id: d.id, ...(d.data() as any) }))
+            .filter((u) => {
+              if (!u.dataNascimento) return false;
+              let month = -1;
+              if (u.dataNascimento.includes("-")) {
+                month = parseInt(u.dataNascimento.split("-")[1]);
+              } else if (u.dataNascimento.includes("/")) {
+                month = parseInt(u.dataNascimento.split("/")[1]);
+              }
+              return month === currentMonth;
+            })
+            .sort((a, b) => {
+              const getDay = (dateStr: string) => {
+                if (dateStr.includes("-")) return parseInt(dateStr.split("-")[2]);
+                if (dateStr.includes("/")) return parseInt(dateStr.split("/")[0]);
+                return 0;
+              };
+              return getDay(a.dataNascimento) - getDay(b.dataNascimento);
+            });
+          
+          try {
+            localStorage.setItem(cacheKeyBirthdays, JSON.stringify({
+              month: currentMonth,
+              timestamp: Date.now(),
+              data: monthlyBirthdays
+            }));
+          } catch (storageErr) {
+            console.warn("Falha ao salvar cache de aniversariantes:", storageErr);
+          }
+        }
+
         setBirthdays(monthlyBirthdays);
 
         // Detect if logged-in user is celebrating their birthday today

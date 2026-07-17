@@ -17,34 +17,23 @@ export function useSessionTelemetry() {
 
       try {
         const metricsRef = doc(db, 'userMetrics', user.uid);
-        const metricsSnap = await getDoc(metricsRef);
 
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const monthKey = `${yyyy}-${mm}`;
 
-        if (!metricsSnap.exists()) {
-          await setDoc(metricsRef, {
-            uid: user.uid,
-            nome: user.nome || 'Desconhecido',
-            cim: user.cim || '',
-            email: user.email || '',
-            totalStudyTime: timeToSyncInSeconds,
-            monthlyStudyTime: {
-              [monthKey]: timeToSyncInSeconds
-            },
-            lastActive: serverTimestamp()
-          });
-        } else {
-          await updateDoc(metricsRef, {
-            nome: user.nome || 'Desconhecido', // Ensure it stays updated
-            cim: user.cim || '',
-            totalStudyTime: increment(timeToSyncInSeconds),
-            [`monthlyStudyTime.${monthKey}`]: increment(timeToSyncInSeconds),
-            lastActive: serverTimestamp()
-          });
-        }
+        await setDoc(metricsRef, {
+          uid: user.uid,
+          nome: user.nome || 'Desconhecido',
+          cim: user.cim || '',
+          email: user.email || '',
+          totalStudyTime: increment(timeToSyncInSeconds),
+          monthlyStudyTime: {
+            [monthKey]: increment(timeToSyncInSeconds)
+          },
+          lastActive: serverTimestamp()
+        }, { merge: true });
       } catch (err) {
         console.error("Error syncing telemetry:", err);
       }
