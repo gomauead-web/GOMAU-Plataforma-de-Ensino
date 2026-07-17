@@ -51,9 +51,10 @@ interface AuthContextType {
   loading: boolean;
   sessionTimeout: number;
   logout: () => Promise<void>;
+  dbQuotaExceeded?: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true, sessionTimeout: 60, logout: async () => {} });
+const AuthContext = createContext<AuthContextType>({ user: null, loading: true, sessionTimeout: 60, logout: async () => {}, dbQuotaExceeded: false });
 
 export const useAuth = () => useContext(AuthContext);
 
@@ -64,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionTimeout, setSessionTimeout] = useState(60); // Padrão 60 minutos (atendendo pedido)
+  const [dbQuotaExceeded, setDbQuotaExceeded] = useState(false);
 
   const logout = async () => {
     console.log("Executando Logout Geral...");
@@ -98,14 +100,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log("Auth State Changed:", firebaseUser?.email || "null");
       
-      // Fetch dynamic settings early
-      try {
-        const settingsDoc = await getDoc(doc(db, 'settings', 'general'));
-        if (settingsDoc.exists() && settingsDoc.data().tempoSessaoMin) {
-           setSessionTimeout(settingsDoc.data().tempoSessaoMin);
+      // Fetch dynamic settings early with local storage cache to minimize reads
+      let loadedSettings = false;
+      const cacheKeySettings = "gomau_general_settings";
+      const cachedSettings = localStorage.getItem(cacheKeySettings);
+      if (cachedSettings) {
+        try {
+          const parsed = JSON.parse(cachedSettings);
+          // Cache validity: 1 hour
+          if (Date.now() - parsed.timestamp < 1 * 60 * 60 * 1000) {
+            if (parsed.data && parsed.data.tempoSessaoMin) {
+              setSessionTimeout(parsed.data.tempoSessaoMin);
+              loadedSettings = true;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!loadedSettings) {
+        try {
+          const settingsDoc = await getDoc(doc(db, 'settings', 'general'));
+          if (settingsDoc.exists()) {
+             const sData = settingsDoc.data();
+             if (sData.tempoSessaoMin) {
+                setSessionTimeout(sData.tempoSessaoMin);
+             }
+             try {
+               localStorage.setItem(cacheKeySettings, JSON.stringify({
+                 timestamp: Date.now(),
+                 data: sData
+               }));
+             } catch(se) {}
+          }
+        } catch (e: any) {
+          console.warn("Failed to fetch custom session timeout, using default 60min", e);
+          const isQuota = e?.code === 'resource-exhausted' || (e?.message && e.message.includes('Quota limit exceeded')) || (e?.message && e.message.includes('quota'));
+          if (isQuota) {
+             setDbQuotaExceeded(true);
+          }
         }
-      } catch (e) {
-        console.warn("Failed to fetch custom session timeout, using default 60min", e);
       }
 
       if (firebaseUser) {
@@ -119,7 +152,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
            localStorage.setItem('session_expires_at', (Date.now() + SESSION_DURATION).toString());
         }
         
-        setLoading(true);
+        // SWR (Stale-While-Revalidate): Carregar dados em cache imediatamente
+        const cachedProfileKey = 'gomau-profile-' + firebaseUser.uid;
+        const cachedProfile = localStorage.getItem(cachedProfileKey) || localStorage.getItem('gomau-last-profile');
+        let profileLoadedFromSWR = false;
+
+        if (cachedProfile) {
+          try {
+            const parsed = JSON.parse(cachedProfile);
+            if (parsed && parsed.uid === firebaseUser.uid) {
+              console.log("SWR: Carregando perfil em cache imediatamente:", parsed.email);
+              setUser(parsed);
+              setLoading(false);
+              profileLoadedFromSWR = true;
+            }
+          } catch (e) {
+            console.error("Erro ao ler cache SWR do perfil:", e);
+          }
+        }
+
+        if (!profileLoadedFromSWR) {
+          setLoading(true);
+        }
         console.log("Starting Auth Flow for:", firebaseUser.email);
         
         const originalEmail = firebaseUser.email || '';
@@ -170,34 +224,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               console.error("Firestore onSnapshot Error:", err);
               if (err?.code === 'resource-exhausted') {
                  console.warn("Cota do Firestore atingida no listener do perfil.");
-                 // Tenta usar snapshot local ou fallback se houver necessidade
               }
             });
             
-            // Initial cleanup logic (still one-time)
-            const dbUser = initialCheck.data();
-            const cleanCPF = dbUser.cpf ? dbUser.cpf.replace(/\D/g, '') : '';
-            
-            const qCleanup1 = query(collection(db, 'users'), where('email', '==', originalEmail));
-            const qCleanup2 = query(collection(db, 'users'), where('email', '==', cleanEmail));
-            
-            const cleanupPromises: Promise<any>[] = [getDocs(qCleanup1), getDocs(qCleanup2)];
-            if (cleanCPF) {
-              cleanupPromises.push(getDocs(query(collection(db, 'users'), where('cpf', '==', dbUser.cpf))));
+            // Initial cleanup logic (Skip redundant cleanup queries if recently executed within 7 days)
+            const cleanupKey = `gomau_cleanup_done_${firebaseUser.uid}`;
+            const lastCleanup = localStorage.getItem(cleanupKey);
+            let shouldCleanup = true;
+            if (lastCleanup) {
+              try {
+                const parsedCleanup = JSON.parse(lastCleanup);
+                if (Date.now() - parsedCleanup.timestamp < 7 * 24 * 60 * 60 * 1000) {
+                  shouldCleanup = false;
+                }
+              } catch (e) {}
             }
-            
-            Promise.all(cleanupPromises).then(results => {
-              const allToCleanup = results.flatMap(snap => snap.docs);
-              const uniqueToCleanup = allToCleanup.filter((doc, index, self) => 
-                 index === self.findIndex(d => d.id === doc.id) && doc.id !== firebaseUser.uid
-              );
-              uniqueToCleanup.forEach(async docSnap => {
-                 try { 
-                    console.log("Cleaning up redundant doc during login:", docSnap.id);
-                    await deleteDoc(doc(db, 'users', docSnap.id)); 
-                 } catch (e) {}
-              });
-            }).catch(e => console.error("Error in cleanupPromises:", e));
+
+            if (shouldCleanup) {
+              const dbUser = initialCheck.data();
+              const cleanCPF = dbUser.cpf ? dbUser.cpf.replace(/\D/g, '') : '';
+              
+              const qCleanup1 = query(collection(db, 'users'), where('email', '==', originalEmail));
+              const qCleanup2 = query(collection(db, 'users'), where('email', '==', cleanEmail));
+              
+              const cleanupPromises: Promise<any>[] = [getDocs(qCleanup1), getDocs(qCleanup2)];
+              if (cleanCPF) {
+                cleanupPromises.push(getDocs(query(collection(db, 'users'), where('cpf', '==', dbUser.cpf))));
+              }
+              
+              Promise.all(cleanupPromises).then(results => {
+                const allToCleanup = results.flatMap(snap => snap.docs);
+                const uniqueToCleanup = allToCleanup.filter((doc, index, self) => 
+                   index === self.findIndex(d => d.id === doc.id) && doc.id !== firebaseUser.uid
+                );
+                uniqueToCleanup.forEach(async docSnap => {
+                   try { 
+                      console.log("Cleaning up redundant doc during login:", docSnap.id);
+                      await deleteDoc(doc(db, 'users', docSnap.id)); 
+                   } catch (e) {}
+                });
+                try {
+                  localStorage.setItem(cleanupKey, JSON.stringify({ timestamp: Date.now() }));
+                } catch(se) {}
+              }).catch(e => console.error("Error in cleanupPromises:", e));
+            }
 
           } else {
             console.log("UID não encontrado. Iniciando busca resiliente por E-mail...");
@@ -313,8 +383,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } catch (error: any) {
           console.error("Erro crítico na leitura de perfil do AuthContext:", error);
-          if (error?.code === 'resource-exhausted') {
+          const isQuota = error?.code === 'resource-exhausted' || (error?.message && error.message.includes('Quota limit exceeded')) || (error?.message && error.message.includes('quota'));
+          if (isQuota) {
              console.warn("Cota do Firestore excedida (resource-exhausted).");
+             setDbQuotaExceeded(true);
           }
 
           // Recuperação Dinâmica Offline: Caso falhe a leitura do Firestore, tenta carregar o último perfil do cache local
@@ -405,8 +477,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     loading,
     sessionTimeout,
-    logout
-  }), [user, loading, sessionTimeout]);
+    logout,
+    dbQuotaExceeded
+  }), [user, loading, sessionTimeout, dbQuotaExceeded]);
 
   return (
     <AuthContext.Provider value={contextValue}>

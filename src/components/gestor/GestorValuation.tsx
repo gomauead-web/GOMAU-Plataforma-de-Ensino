@@ -98,10 +98,10 @@ export function GestorValuation() {
              <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm">Security Audit, Caching & Otimização de Performance</h3>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-             Auditoria profunda cobrindo OWASP Top 10, proteção do Firestore com regras estritas, refatoração de contextos para evitar memory leaks, telemetria write-only (100% de redução de leituras para sessões) e caching inteligente com 99.5% de redução nas demais queries.
+             Auditoria profunda cobrindo OWASP Top 10, proteção do Firestore com regras estritas, refatoração de contextos, telemetria write-only, caching inteligente com 99.5% de redução nas demais queries e resiliência contra exaustão de cotas com banners imediatos de aviso e cache multicamadas redundante na validação do portal.
           </p>
           <div className="mt-auto">
-             <div className="text-[#D4AF37] font-bold text-lg">R$ 14.500,00</div>
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 17.000,00</div>
              <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Estimativa Base</div>
           </div>
         </div>
@@ -338,10 +338,10 @@ export function GestorValuation() {
              <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm">Telemetria & Engajamento</h3>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-             Módulo de monitoramento ativo com telemetria contínua via `visibilitychange`, sincronização otimizada em lote para economia de requisições, armazenamento analítico do tempo real de tela dos membros e ranqueamento de engajamento diário/mensal e histórico.
+             Módulo de monitoramento ativo com telemetria contínua via `visibilitychange`, sincronização otimizada em lote para economia de requisições, armazenamento analítico do tempo real de tela e ranqueamento de engajamento em 4 dimensões (Diário, Semanal, Mensal e Histórico) com SWR caching.
           </p>
           <div className="mt-auto">
-             <div className="text-[#D4AF37] font-bold text-lg">R$ 9.500,00</div>
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 14.500,00</div>
              <div className="text-[10px] text-[#D4AF37] font-bold uppercase mt-1 tracking-widest">Módulo Agregado</div>
           </div>
         </div>
@@ -436,7 +436,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 214.000,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 221.500,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>

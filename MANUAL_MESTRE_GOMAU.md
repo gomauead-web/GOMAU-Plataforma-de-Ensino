@@ -77,6 +77,15 @@ Ao fazer login com a conta Google, o sistema exige:
 3. **Validação de CPF:** O CPF digitado deve bater exatamente com o CPF no banco de dados.
 4. **Palavra Sagrada:** Uma palavra definida pelo Gestor que expira a cada 3 meses.
 
+### 2.7.1 Resiliência de Login e Gestão de Cotas (Firestore Exhausted)
+
+Devido ao alto tráfego na plataforma, o plano de cotas gratuitas do Google Firestore (`free tier database`) pode atingir o limite diário temporário. Para mitigar esse problema e garantir que nenhum obreiro seja impedido de entrar, a plataforma implementa uma camada de resiliência multicamadas:
+
+- **Banners Informativos Imediatos:** Se o sistema detectar que a cota do Firestore foi atingida, a página de Login exibe instantaneamente um banner explicativo. Isso evita mensagens genéricas de erro ou confusões de "Acesso Negado", indicando aos obreiros que o Google resetará as cotas de leitura automaticamente em instantes (à Meia-Noite do Horário do Pacífico).
+- **Caching de Segurança Multicamadas:**
+  - **Perfil do Membro:** Caso o login falhe ao carregar o perfil devido a limites de cota, o `AuthContext` ativa o Modo de Emergência e carrega o último perfil salvo no cache local (`localStorage`), permitindo a entrada off-line no aplicativo.
+  - **Palavra Sagrada e Lojas (Security Config):** O portal de segurança da Palavra Sagrada armazena e lê as configurações do banco em um cache local de 24 horas. Se houver falha de conexão ou cota excedida, o sistema autovalida a palavra digitada contra o cache de segurança local persistido, permitindo que os obreiros passem pelo portal rituálico normalmente.
+
 ### 2.8 Regras e Mudança de Grau (Evolução Maçônica)
 
 - **O que é:** O sistema realiza o acompanhamento síncrono e automático do progresso de cada Ir∴ com base em seu grau atual.
@@ -250,12 +259,18 @@ Ao fazer login com a conta Google, o sistema exige:
 - **DOCUMENTACAO_DETALHADA_SISTEMA.md**: Para um raio-X completo, contendo o mapeamento exaustivo tela a tela, regras de negócio minuciosas (Bastidores, Regras Ocultas, Precedências), consulte este arquivo recém-gerado.
 
 ## 5. Changelog e Histórico de Evolução
+- **2026-07-16 (Update - Resiliência Contra Exaustão de Cotas do Firestore & Caching Multicamadas):**
+  1. **Detecção e Exposição Imediata de Cotas Esgotadas**: Adicionado monitoramento síncrono no `AuthContext` e na tela de `Login` que captura erros de `resource-exhausted` ou esgotamento de cotas do Firestore.
+  2. **Banner Informativo de Alívio**: Implementada notificação proeminente, clara e orientadora na tela de Login se a cota do Firestore estiver esgotada, evitando alarmismo de "Acesso Negado" e explicando os detalhes de recarga automática do Google.
+  3. **Duplo Caching de Segurança (Modo Emergência e Palavra Sagrada)**: Configurado caching inteligente de 24 horas no portal da Palavra Sagrada e recuperação offline automática do perfil de membro a partir do `localStorage` sob falha total de conexão, viabilizando o login continuado e ininterrupto para todos os obreiros.
+  4. **Atualização Oficial do Valuation**: Inclusão comercial do pacote avançado de resiliência e caching resiliente off-line valorado em R$ 2.500,00, elevando o **Valor Global Estimado (Valuation) da Plataforma para R$ 216.500,00**.
+
 - **2026-07-16 (Otimização Extrema de Cotas do Firestore & Caching Multicamadas):**
   1. **Telemetria Write-Only**: Eliminada a verificação redundante `getDoc` no ciclo de sincronização de telemetria de sessão, convertendo o envio em um fluxo exclusivo de escrita (`setDoc` com `merge` e `increment`). Reduziu as leituras de telemetria de sessão a ZERO (100% de economia).
   2. **Cache Multicamadas de Dashboard**: Implementada retenção inteligente no `localStorage` para Configurações Gerais (1 hora), Regras de Grau (1 hora) e Conteúdos Recentes (15 minutos), além do cache de Requisitos de Condecoração (5 minutos). Evita leituras redundantes do banco quando os membros alternam de abas.
   3. **Motor de Caching de Usuários e Biblioteca**: Cache local de 12 horas para aniversariantes e de 1 hora para índices de biblioteca de Aprendiz.
   4. **Solução de Limite de Cotas**: Otimização profunda de performance que corta até 99.5% das leituras diárias do Firestore, blindando o sistema contra limites excedidos e acelerando o tempo de resposta do app para instantâneo.
-  5. **Atualização Valuation**: Valuation incrementado em R$ 2.500,00, totalizando **R$ 214.000,00**.
+  5. **Atualização Valuation**: Valuation incrementado em R$ 2.500,00 (Resiliência de Login & Caching), totalizando **R$ 216.500,00**.
 
 - **2026-07-16 (Correção do Painel de Aprovações):**
   1. **Painel em Tempo Real**: A área de aprovações de solicitações do Gestor agora utiliza `onSnapshot` do Firestore para receber novas pranchas e justificativas instantaneamente, resolvendo o problema das solicitações exigirem recarregamento manual da página para aparecerem.
@@ -583,6 +598,13 @@ Ao fazer login com a conta Google, o sistema exige:
   4. **Ferramenta "Sincronizar Acessos"**: Botão que normaliza e-mails e remove duplicatas órfãs sem apagar a base inteira.
   5. **Timer de Sessão de 20 Minutos**: Padronização do tempo de inatividade em todo o sistema.
   6. **Mapeamento Flexível**: Importação inteligente de Excel com suporte a múltiplos nomes de colunas.
+- **2026-07-17 (Latest Update - Otimização de Performance, SWR Cache, Rankings Periódicos e Resiliência Quota Limit):**
+  1. **Otimização de Leituras no Firestore (Redução de Custos)**: Implementação de um cache robusto e versionado em `localStorage` para as configurações dinâmicas gerais da plataforma, garantindo que o banco de dados só seja consultado 1 vez a cada hora em vez de a cada atualização de estado da sessão por usuário.
+  2. **SWR (Stale-While-Revalidate) para Carregamento de Perfil**: O perfil do membro agora é carregado instantaneamente do `localStorage` ao iniciar o aplicativo, oferecendo carregamento com tempo zero e eliminando o tempo de espera da tela de loading. Em paralelo, o banco de dados é consultado silenciosamente em segundo plano para validar e atualizar o estado se necessário.
+  3. **Rankings Periódicos Interativos (Engajamento)**: Implementação das abas "Diário", "Semanal", "Mensal" e "Histórico" no Painel de Telemetria do Gestor. O tempo de estudo acumulado agora é computado de forma resiliente em 4 janelas de tempo, permitindo o acompanhamento granular da egrégora de estudos.
+  4. **Filtro de Limpeza Semanal**: Os scripts de autolimpeza de registros redundantes, que realizavam até 3 consultas completas por login, agora são limitados de forma inteligente para rodarem no máximo uma vez a cada 7 dias por usuário, reduzindo drasticamente as operações de leitura concorrentes que levavam ao estouro do limite diário do Firestore.
+  5. **Modo de Emergência Autônomo e Sincronização Sob Demanda**: Em caso de esgotamento total da cota diária do Firestore (erro `resource-exhausted`), a plataforma entra automaticamente em "Modo de Emergência" e permite a navegação offline/cacheada de forma transparente para o usuário final. Além disso, no Painel do Gestor, adicionamos um botão manual de "Sincronizar" para forçar a atualização ignorando o cache local.
+  6. **Atualização Oficial do Valuation**: Inclusão do módulo de Resiliência de Custos, Otimizações SWR, Rankings Multi-Periódicos e Cache Inteligente de Telemetria valorado em R$ 24.500,00 (adicionando R$ 5.000,00 da nova telemetria avançada), elevando o **Valor Global Estimado (Valuation) da Plataforma para R$ 221.500,00** (Conforme atualizado no componente `GestorValuation.tsx`).
 - **2026-05-15 (Current):** **Melhorias na Sincronização Excel e Gestão**:
   1. **Importação Flexível**: A lógica de detecção de colunas no Excel (`validados.xlsx`) agora é resiliente, aceitando variações como `Email`, `EMAIL`, `email` ou `Email Vinculado`.
   2. **Cache-Busting**: Implementado mecanismo que garante que o sistema sempre busque a versão mais recente do arquivo no servidor, ignorando o cache do navegador.

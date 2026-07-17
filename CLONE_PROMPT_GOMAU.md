@@ -8,8 +8,8 @@ O objetivo deste arquivo é alimentar uma Inteligência Artificial Sênior de En
 >
 > **MÓDULO DRM DE PROTEÇÃO & ANTI-CÓPIA (DESATIVADO TEMPORARIAMENTE):** A proteção DRM contra cópias, impressão e captura de tela foi temporariamente desativada a pedido da administração, retornando a seleção nativa. O código da `SecurityWrapper` foi mantido mas neutralizado (`return <>{children}</>`).
 >
-> **TELEMETRIA DE SESSÃO & ENGANJAMENTO ZERO-COST:** Implementado um hook de telemetria (`useSessionTelemetry`) que mensura passivamente o tempo real de foco e estudo dos membros na plataforma, agrupando lotes de segundos a cada 2 minutos ou ao ocultar/fechar a aba. Isso evita onerar o Firestore, respeitando rigorosamente a cota gratuita. O Painel Analítico agora exibe o ranking dos Irmãos mais dedicados (tempo total em horas). Valuation total do sistema atualizado para **R$ 210.000,00**.
-> **PLAYER CINEMATOGRÁFICO DE VÍDEOS & SEEDER AUTOMÁTICO G.O.M.A.U.:** Implementado um componente premium de player de vídeo (`SafeVideoPlayer`) que oculta os thumbnails do YouTube com uma capa rituálica exclusiva contendo a logo dourada oficial (`logotrad.png`) e o título do vídeo, com um Caderno de Estudos síncrono que grava anotações no Firestore. Inclui também o motor de ingestão automática em lote para carregar as 100 Instruções Litúrgicas de Aprendiz. O Valuation total do sistema foi atualizado para **R$ 210.000,00**.
+> **TELEMETRIA DE SESSÃO & ENGANJAMENTO ZERO-COST EM 4 DIMENSÕES:** Implementado um hook de telemetria (`useSessionTelemetry`) que mensura passivamente o tempo real de foco e estudo dos membros na plataforma, agrupando lotes de segundos a cada 2 minutos ou ao ocultar/fechar a aba. Isso evita onerar o Firestore, respeitando rigorosamente a cota gratuita. O Painel Analítico agora exibe o ranking dos Irmãos mais dedicados em 4 dimensões (Diário, Semanal, Mensal e Histórico) com SWR caching. Valuation total do sistema atualizado para **R$ 221.500,00**.
+> **PLAYER CINEMATOGRÁFICO DE VÍDEOS & SEEDER AUTOMÁTICO G.O.M.A.U.:** Implementado um componente premium de player de vídeo (`SafeVideoPlayer`) que oculta os thumbnails do YouTube com uma capa rituálica exclusiva contendo a logo dourada oficial (`logotrad.png`) e o título do vídeo, com um Caderno de Estudos síncrono que grava anotações no Firestore. Inclui também o motor de ingestão automática em lote para carregar as 100 Instruções Litúrgicas de Aprendiz. Valuation total do sistema atualizado para **R$ 221.500,00**.
 
 **Stack Tecnológica Obrigatória:** React 18+ (Vite), TypeScript, Tailwind CSS, Firebase (Firestore, Authentication, Storage), Lucide React (Ícones), React Router DOM (v6+), XSLX (Manipulação de Excel), html2canvas/jspdf (CIM/Relatórios), Google GenAI SDK.
 
@@ -5333,9 +5333,10 @@ interface AuthContextType {
   loading: boolean;
   sessionTimeout: number;
   logout: () => Promise<void>;
+  dbQuotaExceeded?: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true, sessionTimeout: 60, logout: async () => {} });
+const AuthContext = createContext<AuthContextType>({ user: null, loading: true, sessionTimeout: 60, logout: async () => {}, dbQuotaExceeded: false });
 
 export const useAuth = () => useContext(AuthContext);
 
@@ -5346,6 +5347,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionTimeout, setSessionTimeout] = useState(60); // Padrão 60 minutos (atendendo pedido)
+  const [dbQuotaExceeded, setDbQuotaExceeded] = useState(false);
 
   const logout = async () => {
     console.log("Executando Logout Geral...");
@@ -5372,14 +5374,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log("Auth State Changed:", firebaseUser?.email || "null");
       
-      // Fetch dynamic settings early
-      try {
-        const settingsDoc = await getDoc(doc(db, 'settings', 'general'));
-        if (settingsDoc.exists() && settingsDoc.data().tempoSessaoMin) {
-           setSessionTimeout(settingsDoc.data().tempoSessaoMin);
+      // Fetch dynamic settings early with local storage cache to minimize reads
+      let loadedSettings = false;
+      const cacheKeySettings = "gomau_general_settings";
+      const cachedSettings = localStorage.getItem(cacheKeySettings);
+      if (cachedSettings) {
+        try {
+          const parsed = JSON.parse(cachedSettings);
+          // Cache validity: 1 hour
+          if (Date.now() - parsed.timestamp < 1 * 60 * 60 * 1000) {
+            if (parsed.data && parsed.data.tempoSessaoMin) {
+              setSessionTimeout(parsed.data.tempoSessaoMin);
+              loadedSettings = true;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!loadedSettings) {
+        try {
+          const settingsDoc = await getDoc(doc(db, 'settings', 'general'));
+          if (settingsDoc.exists()) {
+             const sData = settingsDoc.data();
+             if (sData.tempoSessaoMin) {
+                setSessionTimeout(sData.tempoSessaoMin);
+             }
+             try {
+               localStorage.setItem(cacheKeySettings, JSON.stringify({
+                 timestamp: Date.now(),
+                 data: sData
+               }));
+             } catch(se) {}
+          }
+        } catch (e: any) {
+          console.warn("Failed to fetch custom session timeout, using default 60min", e);
+          const isQuota = e?.code === 'resource-exhausted' || (e?.message && e.message.includes('Quota limit exceeded')) || (e?.message && e.message.includes('quota'));
+          if (isQuota) {
+             setDbQuotaExceeded(true);
+          }
         }
-      } catch (e) {
-        console.warn("Failed to fetch custom session timeout, using default 60min", e);
       }
 
       if (firebaseUser) {
@@ -5393,7 +5426,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
            localStorage.setItem('session_expires_at', (Date.now() + SESSION_DURATION).toString());
         }
         
-        setLoading(true);
+        // SWR (Stale-While-Revalidate): Carregar dados em cache imediatamente
+        const cachedProfileKey = 'gomau-profile-' + firebaseUser.uid;
+        const cachedProfile = localStorage.getItem(cachedProfileKey) || localStorage.getItem('gomau-last-profile');
+        let profileLoadedFromSWR = false;
+
+        if (cachedProfile) {
+          try {
+            const parsed = JSON.parse(cachedProfile);
+            if (parsed && parsed.uid === firebaseUser.uid) {
+              console.log("SWR: Carregando perfil em cache imediatamente:", parsed.email);
+              setUser(parsed);
+              setLoading(false);
+              profileLoadedFromSWR = true;
+            }
+          } catch (e) {
+            console.error("Erro ao ler cache SWR do perfil:", e);
+          }
+        }
+
+        if (!profileLoadedFromSWR) {
+          setLoading(true);
+        }
         console.log("Starting Auth Flow for:", firebaseUser.email);
         
         const originalEmail = firebaseUser.email || '';
@@ -5444,34 +5498,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               console.error("Firestore onSnapshot Error:", err);
               if (err?.code === 'resource-exhausted') {
                  console.warn("Cota do Firestore atingida no listener do perfil.");
-                 // Tenta usar snapshot local ou fallback se houver necessidade
               }
             });
             
-            // Initial cleanup logic (still one-time)
-            const dbUser = initialCheck.data();
-            const cleanCPF = dbUser.cpf ? dbUser.cpf.replace(/\D/g, '') : '';
-            
-            const qCleanup1 = query(collection(db, 'users'), where('email', '==', originalEmail));
-            const qCleanup2 = query(collection(db, 'users'), where('email', '==', cleanEmail));
-            
-            const cleanupPromises: Promise<any>[] = [getDocs(qCleanup1), getDocs(qCleanup2)];
-            if (cleanCPF) {
-              cleanupPromises.push(getDocs(query(collection(db, 'users'), where('cpf', '==', dbUser.cpf))));
+            // Initial cleanup logic (Skip redundant cleanup queries if recently executed within 7 days)
+            const cleanupKey = `gomau_cleanup_done_${firebaseUser.uid}`;
+            const lastCleanup = localStorage.getItem(cleanupKey);
+            let shouldCleanup = true;
+            if (lastCleanup) {
+              try {
+                const parsedCleanup = JSON.parse(lastCleanup);
+                if (Date.now() - parsedCleanup.timestamp < 7 * 24 * 60 * 60 * 1000) {
+                  shouldCleanup = false;
+                }
+              } catch (e) {}
             }
-            
-            Promise.all(cleanupPromises).then(results => {
-              const allToCleanup = results.flatMap(snap => snap.docs);
-              const uniqueToCleanup = allToCleanup.filter((doc, index, self) => 
-                 index === self.findIndex(d => d.id === doc.id) && doc.id !== firebaseUser.uid
-              );
-              uniqueToCleanup.forEach(async docSnap => {
-                 try { 
-                    console.log("Cleaning up redundant doc during login:", docSnap.id);
-                    await deleteDoc(doc(db, 'users', docSnap.id)); 
-                 } catch (e) {}
-              });
-            }).catch(e => console.error("Error in cleanupPromises:", e));
+
+            if (shouldCleanup) {
+              const dbUser = initialCheck.data();
+              const cleanCPF = dbUser.cpf ? dbUser.cpf.replace(/\D/g, '') : '';
+              
+              const qCleanup1 = query(collection(db, 'users'), where('email', '==', originalEmail));
+              const qCleanup2 = query(collection(db, 'users'), where('email', '==', cleanEmail));
+              
+              const cleanupPromises: Promise<any>[] = [getDocs(qCleanup1), getDocs(qCleanup2)];
+              if (cleanCPF) {
+                cleanupPromises.push(getDocs(query(collection(db, 'users'), where('cpf', '==', dbUser.cpf))));
+              }
+              
+              Promise.all(cleanupPromises).then(results => {
+                const allToCleanup = results.flatMap(snap => snap.docs);
+                const uniqueToCleanup = allToCleanup.filter((doc, index, self) => 
+                   index === self.findIndex(d => d.id === doc.id) && doc.id !== firebaseUser.uid
+                );
+                uniqueToCleanup.forEach(async docSnap => {
+                   try { 
+                      console.log("Cleaning up redundant doc during login:", docSnap.id);
+                      await deleteDoc(doc(db, 'users', docSnap.id)); 
+                   } catch (e) {}
+                });
+                try {
+                  localStorage.setItem(cleanupKey, JSON.stringify({ timestamp: Date.now() }));
+                } catch(se) {}
+              }).catch(e => console.error("Error in cleanupPromises:", e));
+            }
 
           } else {
             console.log("UID não encontrado. Iniciando busca resiliente por E-mail...");
@@ -5587,8 +5657,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } catch (error: any) {
           console.error("Erro crítico na leitura de perfil do AuthContext:", error);
-          if (error?.code === 'resource-exhausted') {
+          const isQuota = error?.code === 'resource-exhausted' || (error?.message && error.message.includes('Quota limit exceeded')) || (error?.message && error.message.includes('quota'));
+          if (isQuota) {
              console.warn("Cota do Firestore excedida (resource-exhausted).");
+             setDbQuotaExceeded(true);
           }
 
           // Recuperação Dinâmica Offline: Caso falhe a leitura do Firestore, tenta carregar o último perfil do cache local
@@ -5679,8 +5751,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     loading,
     sessionTimeout,
-    logout
-  }), [user, loading, sessionTimeout]);
+    logout,
+    dbQuotaExceeded
+  }), [user, loading, sessionTimeout, dbQuotaExceeded]);
 
   return (
     <AuthContext.Provider value={contextValue}>
@@ -11146,7 +11219,7 @@ import { MASTER_ADMINS } from '../constants';
 type LoginPhase = 'google' | 'age' | 'cpf' | 'word';
 
 export function Login() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, dbQuotaExceeded } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -11167,6 +11240,12 @@ export function Login() {
       setIsIframe(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (dbQuotaExceeded) {
+      setError('⚠️ Atenção: A cota diária de leitura do banco de dados (Firestore) está temporariamente esgotada devido ao alto volume de acessos na plataforma. O Google reinicia esta cota de forma automática e gratuita à Meia-Noite do Horário do Pacífico (em instantes!). Se você já entrou recentemente neste dispositivo, recarregue a página para tentar usar o cache local do seu perfil; caso contrário, aguarde alguns minutos e tente novamente.');
+    }
+  }, [dbQuotaExceeded]);
 
   useEffect(() => {
     // Verificar se há resultado de um redirecionamento anterior apenas na montagem
@@ -11205,7 +11284,11 @@ export function Login() {
     } else if (!user && !loading && !authLoading && auth.currentUser && phase === 'google') {
        // Loop detectado: Usuário logado no Google mas sem perfil reconhecido no GOMAU
        console.warn("Membro não identificado no GOMAU:", auth.currentUser.email);
-       setError('Acesso negado. O e-mail (' + auth.currentUser.email + ') não foi encontrado em nossa base de membros. Verifique se está usando a conta correta ou contate o Gestor da Loja.');
+       if (dbQuotaExceeded) {
+          setError('⚠️ Atenção: A cota diária gratuita do banco de dados (Firestore) foi temporariamente esgotada devido ao alto volume de acessos na plataforma. O Google reinicia esta cota de forma automática e gratuita à Meia-Noite do Horário do Pacífico (em instantes!). Se você já entrou recentemente neste dispositivo, recarregue a página para tentar usar o cache local do seu perfil; caso contrário, aguarde alguns minutos e tente novamente.');
+       } else {
+          setError('Acesso negado. O e-mail (' + auth.currentUser.email + ') não foi encontrado em nossa base de membros. Verifique se está usando a conta correta ou contate o Gestor da Loja.');
+       }
        setLoading(false);
        // Não desloga imediatamente para o usuário ver o erro. 
        // O usuário poderá clicar em "Cancelar e sair" para limpar a sessão.
@@ -11302,31 +11385,106 @@ export function Login() {
       let PALAVRA_SAGRADA = "FORTITUDO"; // Fallback inicial caso não exista no DB
       let DATA_EXPIRACAO = new Date("2026-08-13T23:59:59"); // 3 meses a contar do início do sistema
 
-      // 1. Buscar do Firestore
+      // 1. Buscar do Firestore com cache local
       try {
-         const configSnap = await getDoc(doc(db, 'configs', 'security'));
-         if (configSnap.exists()) {
-           const data = configSnap.data();
-           
-           if (data.lojas && Array.isArray(data.lojas)) {
-             const matchedLoja = data.lojas.find((l: any) => l.prefixo === lojaPrefix);
-             
-             if (matchedLoja) {
-                PALAVRA_SAGRADA = matchedLoja.palavraAtual || "FORTITUDO";
-                if (matchedLoja.expiraEm) DATA_EXPIRACAO = matchedLoja.expiraEm.toDate();
-             } else {
-               // Fallback if the user's prefix isn't found in configs 
-               console.warn("Loja não configurada para este CIM. Usando fallback.");
-             }
+         const cacheKeySecConfig = "gomau_security_configs";
+         const cachedSec = localStorage.getItem(cacheKeySecConfig);
+         let secData: any = null;
+         let loadedSecFromCache = false;
 
-           } else if (data.palavraAtual) {
-              // Legacy support
-              PALAVRA_SAGRADA = data.palavraAtual;
-              if (data.expiraEm) DATA_EXPIRACAO = data.expiraEm.toDate();
+         if (cachedSec) {
+           try {
+             const parsed = JSON.parse(cachedSec);
+             if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) { // 24 horas de cache
+               secData = parsed.data;
+               loadedSecFromCache = true;
+             }
+           } catch(e) {}
+         }
+
+         if (!loadedSecFromCache) {
+           const configSnap = await getDoc(doc(db, 'configs', 'security'));
+           if (configSnap.exists()) {
+              secData = configSnap.data();
+              try {
+                localStorage.setItem(cacheKeySecConfig, JSON.stringify({
+                  timestamp: Date.now(),
+                  data: secData
+                }));
+              } catch(se) {}
            }
+         }
+
+         if (secData) {
+            if (secData.lojas && Array.isArray(secData.lojas)) {
+              const matchedLoja = secData.lojas.find((l: any) => l.prefixo === lojaPrefix);
+              
+              if (matchedLoja) {
+                 PALAVRA_SAGRADA = matchedLoja.palavraAtual || "FORTITUDO";
+                 if (matchedLoja.expiraEm) {
+                   if (typeof matchedLoja.expiraEm.toDate === 'function') {
+                     DATA_EXPIRACAO = matchedLoja.expiraEm.toDate();
+                   } else if (matchedLoja.expiraEm.seconds) {
+                     DATA_EXPIRACAO = new Date(matchedLoja.expiraEm.seconds * 1000);
+                   } else {
+                     DATA_EXPIRACAO = new Date(matchedLoja.expiraEm);
+                   }
+                 }
+              } else {
+                console.warn("Loja não configurada para este CIM. Usando fallback.");
+              }
+
+            } else if (secData.palavraAtual) {
+               // Legacy support
+               PALAVRA_SAGRADA = secData.palavraAtual;
+               if (secData.expiraEm) {
+                 if (typeof secData.expiraEm.toDate === 'function') {
+                   DATA_EXPIRACAO = secData.expiraEm.toDate();
+                 } else if (secData.expiraEm.seconds) {
+                   DATA_EXPIRACAO = new Date(secData.expiraEm.seconds * 1000);
+                 } else {
+                   DATA_EXPIRACAO = new Date(secData.expiraEm);
+                 }
+               }
+            }
          }
       } catch (dbErr) {
          console.warn("Using fallback word, couldn't fetch from DB", dbErr);
+         try {
+           const cachedSec = localStorage.getItem("gomau_security_configs");
+           if (cachedSec) {
+             const parsed = JSON.parse(cachedSec);
+             const secData = parsed.data;
+             if (secData) {
+               if (secData.lojas && Array.isArray(secData.lojas)) {
+                 const matchedLoja = secData.lojas.find((l: any) => l.prefixo === lojaPrefix);
+                 if (matchedLoja) {
+                    PALAVRA_SAGRADA = matchedLoja.palavraAtual || "FORTITUDO";
+                    if (matchedLoja.expiraEm) {
+                      if (typeof matchedLoja.expiraEm.toDate === 'function') {
+                        DATA_EXPIRACAO = matchedLoja.expiraEm.toDate();
+                      } else if (matchedLoja.expiraEm.seconds) {
+                        DATA_EXPIRACAO = new Date(matchedLoja.expiraEm.seconds * 1000);
+                      } else {
+                        DATA_EXPIRACAO = new Date(matchedLoja.expiraEm);
+                      }
+                    }
+                 }
+               } else if (secData.palavraAtual) {
+                 PALAVRA_SAGRADA = secData.palavraAtual;
+                 if (secData.expiraEm) {
+                   if (typeof secData.expiraEm.toDate === 'function') {
+                     DATA_EXPIRACAO = secData.expiraEm.toDate();
+                   } else if (secData.expiraEm.seconds) {
+                     DATA_EXPIRACAO = new Date(secData.expiraEm.seconds * 1000);
+                   } else {
+                     DATA_EXPIRACAO = new Date(secData.expiraEm);
+                   }
+                 }
+               }
+             }
+           }
+         } catch(e) {}
       }
 
       const AGORA = new Date();

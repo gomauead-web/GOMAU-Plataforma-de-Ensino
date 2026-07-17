@@ -1,13 +1,43 @@
 import { useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, increment } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, increment } from 'firebase/firestore';
 
 export function useSessionTelemetry() {
   const { user } = useAuth();
   const sessionStartTime = useRef<number>(Date.now());
   const accumulatedTime = useRef<number>(0);
-  const lastSyncTime = useRef<number>(Date.now());
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Popula o cache de datas ao carregar a página para garantir sincronia precisa de dispositivos diferentes
+    const initTelemetryCache = async () => {
+      try {
+        const metricsRef = doc(db, 'userMetrics', user.uid);
+        const snap = await getDoc(metricsRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.lastActiveDate) {
+            localStorage.setItem(`lastSyncDayKey_${user.uid}`, data.lastActiveDate);
+          }
+          if (data.lastActiveWeek) {
+            localStorage.setItem(`lastSyncWeekKey_${user.uid}`, data.lastActiveWeek);
+          }
+          if (data.lastActiveMonth) {
+            localStorage.setItem(`lastSyncMonthKey_${user.uid}`, data.lastActiveMonth);
+          }
+        }
+      } catch (err) {
+        console.error("Error initializing telemetry cache:", err);
+      }
+    };
+
+    const localDay = localStorage.getItem(`lastSyncDayKey_${user.uid}`);
+    if (!localDay) {
+      initTelemetryCache();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -22,18 +52,65 @@ export function useSessionTelemetry() {
         const yyyy = now.getFullYear();
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const monthKey = `${yyyy}-${mm}`;
+        
+        const dd = String(now.getDate()).padStart(2, '0');
+        const dayKey = `${yyyy}-${mm}-${dd}`;
+        
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay()); // Domingo como início
+        const wYyyy = startOfWeek.getFullYear();
+        const wMm = String(startOfWeek.getMonth() + 1).padStart(2, '0');
+        const wDd = String(startOfWeek.getDate()).padStart(2, '0');
+        const weekKey = `${wYyyy}-${wMm}-${wDd}`;
 
-        await setDoc(metricsRef, {
+        const lastDayKey = localStorage.getItem(`lastSyncDayKey_${user.uid}`);
+        const lastWeekKey = localStorage.getItem(`lastSyncWeekKey_${user.uid}`);
+        const lastMonthKey = localStorage.getItem(`lastSyncMonthKey_${user.uid}`);
+
+        const isNewDay = lastDayKey !== dayKey;
+        const isNewWeek = lastWeekKey !== weekKey;
+        const isNewMonth = lastMonthKey !== monthKey;
+
+        const updateData: any = {
           uid: user.uid,
           nome: user.nome || 'Desconhecido',
           cim: user.cim || '',
           email: user.email || '',
           totalStudyTime: increment(timeToSyncInSeconds),
-          monthlyStudyTime: {
-            [monthKey]: increment(timeToSyncInSeconds)
-          },
-          lastActive: serverTimestamp()
-        }, { merge: true });
+          lastActive: serverTimestamp(),
+          lastActiveDate: dayKey,
+          lastActiveWeek: weekKey,
+          lastActiveMonth: monthKey,
+        };
+
+        if (isNewDay) {
+          updateData.todayStudyTime = timeToSyncInSeconds;
+        } else {
+          updateData.todayStudyTime = increment(timeToSyncInSeconds);
+        }
+
+        if (isNewWeek) {
+          updateData.currentWeekStudyTime = timeToSyncInSeconds;
+        } else {
+          updateData.currentWeekStudyTime = increment(timeToSyncInSeconds);
+        }
+
+        if (isNewMonth) {
+          updateData.currentMonthStudyTime = timeToSyncInSeconds;
+        } else {
+          updateData.currentMonthStudyTime = increment(timeToSyncInSeconds);
+        }
+
+        // Mantém mapa mensal legado se útil
+        updateData[`monthlyStudyTime.${monthKey}`] = increment(timeToSyncInSeconds);
+
+        await setDoc(metricsRef, updateData, { merge: true });
+
+        // Salva estados atualizados no localStorage
+        localStorage.setItem(`lastSyncDayKey_${user.uid}`, dayKey);
+        localStorage.setItem(`lastSyncWeekKey_${user.uid}`, weekKey);
+        localStorage.setItem(`lastSyncMonthKey_${user.uid}`, monthKey);
+
       } catch (err) {
         console.error("Error syncing telemetry:", err);
       }
@@ -41,19 +118,16 @@ export function useSessionTelemetry() {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        // Calculate time since last active state
         const timeSpent = Math.floor((Date.now() - sessionStartTime.current) / 1000);
         if (timeSpent > 0) {
           accumulatedTime.current += timeSpent;
         }
         
-        // Sync to Firestore if there's enough accumulated time (e.g. > 10 seconds)
         if (accumulatedTime.current >= 10) {
           syncTelemetry(accumulatedTime.current);
           accumulatedTime.current = 0;
         }
       } else {
-        // Reset start time when coming back
         sessionStartTime.current = Date.now();
       }
     };
@@ -63,18 +137,18 @@ export function useSessionTelemetry() {
       if (timeSpent > 0) {
         accumulatedTime.current += timeSpent;
       }
-      if (accumulatedTime.current >= 5) { // Lower threshold for unload
+      if (accumulatedTime.current >= 5) {
         syncTelemetry(accumulatedTime.current);
       }
     };
 
-    // Periodic sync every 2 minutes while active
+    // Sincronização periódica a cada 2 minutos se ativo
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         const timeSpent = Math.floor((Date.now() - sessionStartTime.current) / 1000);
         if (timeSpent > 0) {
           accumulatedTime.current += timeSpent;
-          sessionStartTime.current = Date.now(); // Reset for next interval
+          sessionStartTime.current = Date.now();
         }
       }
 
@@ -92,7 +166,6 @@ export function useSessionTelemetry() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       clearInterval(interval);
       
-      // Perform final sync on unmount if needed
       if (document.visibilityState === 'visible') {
         const timeSpent = Math.floor((Date.now() - sessionStartTime.current) / 1000);
         if (timeSpent > 0) {

@@ -22,7 +22,8 @@ import {
   Fingerprint,
   Database,
   X,
-  Maximize2
+  Maximize2,
+  RefreshCw
 } from "lucide-react";
 import {
   BarChart,
@@ -45,115 +46,248 @@ export function TelemetryView() {
     week: 0,
     day: 0,
   });
-  const [topUsers, setTopUsers] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [rankings, setRankings] = useState<{
+    daily: any[];
+    weekly: any[];
+    monthly: any[];
+    total: any[];
+  }>({
+    daily: [],
+    weekly: [],
+    monthly: [],
+    total: []
+  });
+  const [rankingPeriod, setRankingPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'total'>('total');
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadTelemetry() {
-      if (!isExpanded) return;
-      try {
-        setLoading(true);
-        const logsRef = collection(db, "accessLogs");
-        const now = new Date();
-        
-        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        
-        const startOfWeek = new Date(startOfDay);
-        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Domingo
-        
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        
-        // 1. Buscas otimizadas com Aggregation (Custa apenas 1 leitura por query)
-        const totalCountReq = getCountFromServer(logsRef);
-        const monthCountReq = getCountFromServer(query(logsRef, where("timestamp", ">=", Timestamp.fromDate(startOfMonth))));
-        const weekCountReq = getCountFromServer(query(logsRef, where("timestamp", ">=", Timestamp.fromDate(startOfWeek))));
-        const dayCountReq = getCountFromServer(query(logsRef, where("timestamp", ">=", Timestamp.fromDate(startOfDay))));
-        
-        const [totalCount, monthCount, weekCount, dayCount] = await Promise.all([
-          totalCountReq, monthCountReq, weekCountReq, dayCountReq
-        ]);
-        
-        setStats({
-          total: totalCount.data().count,
-          month: monthCount.data().count,
-          week: weekCount.data().count,
-          day: dayCount.data().count,
-        });
+  const loadTelemetry = async (bypassCache = false) => {
+    if (!isExpanded) return;
+    try {
+      setLoading(true);
+      const cacheKey = "gomau_telemetry_data_v2";
 
-        // 2. Busca detalhada dos últimos 30 dias para Gráfico e Engajamento
-        const thirtyDaysAgo = new Date(startOfDay);
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
-        const recentLogsQuery = query(
-          logsRef, 
-          where("timestamp", ">=", Timestamp.fromDate(thirtyDaysAgo)),
-          orderBy("timestamp", "desc"),
-          limit(500) // Proteção de tokens (máximo de 500 leituras para o gráfico)
-        );
-        const recentLogsSnap = await getDocs(recentLogsQuery);
-        
-        // Agregar Top Users
-        const userCounts: Record<string, { nome: string, count: number, cim: string, lastAccess: Date }> = {};
-        
-        // Agregar Chart Data
-        const dailyCounts: Record<string, number> = {};
-        
-        // Inicializar array de 30 dias para o gráfico não ter buracos
-        for (let i = 29; i >= 0; i--) {
-          const d = new Date(startOfDay);
-          d.setDate(d.getDate() - i);
-          const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
-          dailyCounts[dateStr] = 0;
+      if (!bypassCache) {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            // Cache válido por 10 minutos
+            if (Date.now() - parsed.timestamp < 10 * 60 * 1000) {
+              setStats(parsed.stats);
+              setChartData(parsed.chartData);
+              setRankings(parsed.rankings);
+              if (parsed.lastUpdated) {
+                setLastUpdated(parsed.lastUpdated);
+              }
+              setLoading(false);
+              return;
+            }
+          } catch (e) {}
         }
+      }
 
-        recentLogsSnap.forEach(doc => {
-          const data = doc.data();
-          const timestamp = data.timestamp?.toDate ? data.timestamp.toDate() : new Date();
-          const key = data.uid || data.email;
-          
-          // Agrupamento por dia
-          const dateStr = `${String(timestamp.getDate()).padStart(2, '0')}/${String(timestamp.getMonth() + 1).padStart(2, '0')}`;
-          if (dailyCounts[dateStr] !== undefined) {
-            dailyCounts[dateStr]++;
-          }
-          
-                          });
+      const logsRef = collection(db, "accessLogs");
+      const now = new Date();
+      
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      const startOfWeek = new Date(startOfDay);
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Domingo
+      
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      
+      // 1. Buscas otimizadas com Aggregation (Custa apenas 1 leitura por query)
+      const totalCountReq = getCountFromServer(logsRef);
+      const monthCountReq = getCountFromServer(query(logsRef, where("timestamp", ">=", Timestamp.fromDate(startOfMonth))));
+      const weekCountReq = getCountFromServer(query(logsRef, where("timestamp", ">=", Timestamp.fromDate(startOfWeek))));
+      const dayCountReq = getCountFromServer(query(logsRef, where("timestamp", ">=", Timestamp.fromDate(startOfDay))));
+      
+      const [totalCount, monthCount, weekCount, dayCount] = await Promise.all([
+        totalCountReq, monthCountReq, weekCountReq, dayCountReq
+      ]);
+      
+      const newStats = {
+        total: totalCount.data().count,
+        month: monthCount.data().count,
+        week: weekCount.data().count,
+        day: dayCount.data().count,
+      };
+      
+      setStats(newStats);
 
-        // 3. Buscar Ranking de Engajamento por Tempo de Tela (userMetrics)
-        const metricsQuery = query(
-          collection(db, "userMetrics"),
-          orderBy("totalStudyTime", "desc"),
-          limit(10)
-        );
-        const metricsSnap = await getDocs(metricsQuery);
+      // 2. Busca detalhada dos últimos 30 dias para Gráfico e Engajamento
+      const thirtyDaysAgo = new Date(startOfDay);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const recentLogsQuery = query(
+        logsRef, 
+        where("timestamp", ">=", Timestamp.fromDate(thirtyDaysAgo)),
+        orderBy("timestamp", "desc"),
+        limit(500) // Proteção de tokens (máximo de 500 leituras para o gráfico)
+      );
+      const recentLogsSnap = await getDocs(recentLogsQuery);
+      
+      // Agregar Chart Data
+      const dailyCounts: Record<string, number> = {};
+      
+      // Inicializar array de 30 dias para o gráfico não ter buracos
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(startOfDay);
+        d.setDate(d.getDate() - i);
+        const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+        dailyCounts[dateStr] = 0;
+      }
+
+      recentLogsSnap.forEach(doc => {
+        const data = doc.data();
+        const timestamp = data.timestamp?.toDate ? data.timestamp.toDate() : new Date();
         
-        const sortedUsers = [];
-        metricsSnap.forEach(doc => {
-          const data = doc.data();
-          sortedUsers.push({
-            nome: data.nome,
-            cim: data.cim,
-            totalStudyTime: data.totalStudyTime,
-            monthlyStudyTime: data.monthlyStudyTime,
+        // Agrupamento por dia
+        const dateStr = `${String(timestamp.getDate()).padStart(2, '0')}/${String(timestamp.getMonth() + 1).padStart(2, '0')}`;
+        if (dailyCounts[dateStr] !== undefined) {
+          dailyCounts[dateStr]++;
+        }
+      });
+
+      // 3. Buscar Rankings de Engajamento por Tempo de Estudo (userMetrics)
+      // Buscas otimizadas com indexação única simples para evitar necessidade de índices compostos manuais
+      const totalQuery = query(
+        collection(db, "userMetrics"),
+        orderBy("totalStudyTime", "desc"),
+        limit(10)
+      );
+      const dailyQuery = query(
+        collection(db, "userMetrics"),
+        orderBy("todayStudyTime", "desc"),
+        limit(20)
+      );
+      const weeklyQuery = query(
+        collection(db, "userMetrics"),
+        orderBy("currentWeekStudyTime", "desc"),
+        limit(20)
+      );
+      const monthlyQuery = query(
+        collection(db, "userMetrics"),
+        orderBy("currentMonthStudyTime", "desc"),
+        limit(20)
+      );
+
+      const [totalSnap, dailySnap, weeklySnap, monthlySnap] = await Promise.all([
+        getDocs(totalQuery),
+        getDocs(dailyQuery),
+        getDocs(weeklyQuery),
+        getDocs(monthlyQuery)
+      ]);
+
+      const totalList: any[] = [];
+      totalSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        totalList.push({
+          nome: data.nome || 'Desconhecido',
+          cim: data.cim || '',
+          studyTime: data.totalStudyTime || 0,
+          lastAccess: data.lastActive?.toDate ? data.lastActive.toDate() : new Date()
+        });
+      });
+
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const monthString = `${yyyy}-${mm}`;
+      
+      const dd = String(now.getDate()).padStart(2, '0');
+      const todayString = `${yyyy}-${mm}-${dd}`;
+      
+      const wStart = new Date(startOfDay);
+      wStart.setDate(wStart.getDate() - wStart.getDay());
+      const wYyyy = wStart.getFullYear();
+      const wMm = String(wStart.getMonth() + 1).padStart(2, '0');
+      const wDd = String(wStart.getDate()).padStart(2, '0');
+      const weekString = `${wYyyy}-${wMm}-${wDd}`;
+
+      const dailyList: any[] = [];
+      dailySnap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.lastActiveDate === todayString && (data.todayStudyTime || 0) > 0) {
+          dailyList.push({
+            nome: data.nome || 'Desconhecido',
+            cim: data.cim || '',
+            studyTime: data.todayStudyTime || 0,
             lastAccess: data.lastActive?.toDate ? data.lastActive.toDate() : new Date()
           });
-        });
+        }
+      });
+      dailyList.sort((a, b) => b.studyTime - a.studyTime);
+      const topDaily = dailyList.slice(0, 10);
+
+      const weeklyList: any[] = [];
+      weeklySnap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.lastActiveWeek === weekString && (data.currentWeekStudyTime || 0) > 0) {
+          weeklyList.push({
+            nome: data.nome || 'Desconhecido',
+            cim: data.cim || '',
+            studyTime: data.currentWeekStudyTime || 0,
+            lastAccess: data.lastActive?.toDate ? data.lastActive.toDate() : new Date()
+          });
+        }
+      });
+      weeklyList.sort((a, b) => b.studyTime - a.studyTime);
+      const topWeekly = weeklyList.slice(0, 10);
+
+      const monthlyList: any[] = [];
+      monthlySnap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.lastActiveMonth === monthString && (data.currentMonthStudyTime || 0) > 0) {
+          monthlyList.push({
+            nome: data.nome || 'Desconhecido',
+            cim: data.cim || '',
+            studyTime: data.currentMonthStudyTime || 0,
+            lastAccess: data.lastActive?.toDate ? data.lastActive.toDate() : new Date()
+          });
+        }
+      });
+      monthlyList.sort((a, b) => b.studyTime - a.studyTime);
+      const topMonthly = monthlyList.slice(0, 10);
+
+      const loadedRankings = {
+        daily: topDaily,
+        weekly: topWeekly,
+        monthly: topMonthly,
+        total: totalList
+      };
+
+      setRankings(loadedRankings);
+
+      const formattedChartData = Object.entries(dailyCounts).map(([date, count]) => ({
+        date,
+        acessos: count
+      }));
         
-        const formattedChartData = Object.entries(dailyCounts).map(([date, count]) => ({
-          date,
-          acessos: count
+      setChartData(formattedChartData);
+      
+      const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      setLastUpdated(timeStr);
+
+      // Salva no Cache para economizar quota
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify({
+          timestamp: Date.now(),
+          stats: newStats,
+          chartData: formattedChartData,
+          rankings: loadedRankings,
+          lastUpdated: timeStr
         }));
-          
-        setTopUsers(sortedUsers);
-        setChartData(formattedChartData);
-        
-      } catch (err) {
-        console.error("Erro ao carregar telemetria:", err);
-      } finally {
-        setLoading(false);
-      }
+      } catch (se) {}
+
+    } catch (err) {
+      console.error("Erro ao carregar telemetria:", err);
+    } finally {
+      setLoading(false);
     }
-    
+  };
+
+  useEffect(() => {
     loadTelemetry();
   }, [isExpanded]);
 
@@ -192,11 +326,20 @@ export function TelemetryView() {
               Análise comportamental, tráfego da plataforma e rank de engajamento da egrégora.
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
              <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-4 py-3 rounded-lg flex items-center gap-2">
                 <ShieldAlert className="text-[#D4AF37]" size={20} />
                 <span className="text-[#D4AF37] font-bold text-xs uppercase tracking-widest">Monitoramento Ativo</span>
              </div>
+             <button
+               onClick={() => loadTelemetry(true)}
+               disabled={loading}
+               className="bg-[#1e293b] hover:bg-[#2d3d5a] text-gray-300 hover:text-white px-4 py-3 rounded-lg border border-[#334155] flex items-center gap-2 transition-all text-xs font-bold uppercase tracking-wider disabled:opacity-50"
+               title="Atualizar dados do Firestore (Ignorar cache temporário)"
+             >
+               <RefreshCw size={16} className={loading ? "animate-spin text-[#D4AF37]" : "text-[#D4AF37]"} />
+               <span>Sincronizar {lastUpdated && `(${lastUpdated})`}</span>
+             </button>
              <button
                onClick={() => setIsExpanded(false)}
                className="p-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors border border-red-500/20 flex items-center justify-center"
@@ -321,23 +464,47 @@ export function TelemetryView() {
 
               {/* Top Usuários */}
               <div className="bg-[#0f172a] rounded-2xl border border-[#1e293b] shadow-xl overflow-hidden flex flex-col">
-                <div className="p-8 border-b border-[#1e293b] flex items-center gap-4">
-                  <div className="p-3 bg-[#D4AF37]/10 rounded-xl">
-                    <Award className="text-[#D4AF37]" size={28} />
+                <div className="p-8 border-b border-[#1e293b]">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="p-3 bg-[#D4AF37]/10 rounded-xl">
+                      <Award className="text-[#D4AF37]" size={28} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-100">Líderes de Engajamento</h3>
+                      <p className="text-sm text-gray-400 mt-1">Os 10 Irmãos com mais tempo de estudo na plataforma</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-100">Líderes de Engajamento</h3>
-                    <p className="text-sm text-gray-400 mt-1">Os 10 Irmãos com mais tempo de estudo na plataforma</p>
+
+                  {/* Seletor de Período (Tabs) */}
+                  <div className="grid grid-cols-4 gap-2 bg-[#050810] p-1.5 rounded-xl border border-[#1e293b]">
+                    {(['daily', 'weekly', 'monthly', 'total'] as const).map((period) => (
+                      <button
+                        key={period}
+                        onClick={() => setRankingPeriod(period)}
+                        className={`py-2 px-1 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-center ${
+                          rankingPeriod === period
+                            ? 'bg-[#D4AF37] text-black shadow-md shadow-[#D4AF37]/10 scale-[1.02]'
+                            : 'text-gray-400 hover:text-gray-200 hover:bg-[#1e293b]/50'
+                        }`}
+                      >
+                        {period === 'daily' ? 'Diário' :
+                         period === 'weekly' ? 'Semanal' :
+                         period === 'monthly' ? 'Mensal' : 'Histórico'}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                <div className="p-6 flex-1 overflow-y-auto">
-                  {topUsers.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-gray-500 text-sm py-10">
-                      Nenhum dado recente encontrado.
+
+                <div className="p-6 flex-1 overflow-y-auto max-h-[500px]">
+                  {(!rankings[rankingPeriod] || rankings[rankingPeriod].length === 0) ? (
+                    <div className="h-full flex flex-col items-center justify-center text-gray-500 text-sm py-20 text-center">
+                      <Clock className="text-gray-600 mb-3 animate-pulse" size={40} />
+                      <p>Nenhum dado recente encontrado para este período.</p>
+                      <p className="text-xs text-gray-600 mt-1">Os tempos de tela começam a contar à medida que os Irmãos estudam na plataforma.</p>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-4">
-                      {topUsers.map((user, idx) => (
+                      {rankings[rankingPeriod].map((user, idx) => (
                         <div key={idx} className="bg-[#1e293b]/40 p-4 rounded-xl border border-[#1e293b] hover:border-[#D4AF37]/40 hover:bg-[#1e293b] transition-all flex items-center gap-4">
                           <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg shrink-0
                             ${idx === 0 ? 'bg-yellow-500/20 text-yellow-500 border-2 border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.3)]' : 
@@ -350,18 +517,22 @@ export function TelemetryView() {
                             <h4 className="text-gray-100 text-base font-bold truncate">{user.nome}</h4>
                             <div className="flex items-center gap-3 mt-1">
                               <span className="text-xs text-gray-400 bg-black/40 px-2 py-1 rounded border border-[#1e293b] font-mono">CIM {user.cim}</span>
-                              <span className="text-xs text-gray-500 truncate">Visto: {user.lastAccess.toLocaleDateString('pt-BR')}</span>
+                              <span className="text-xs text-gray-500 truncate">Ativo: {user.lastAccess instanceof Date ? user.lastAccess.toLocaleDateString('pt-BR') : new Date(user.lastAccess).toLocaleDateString('pt-BR')}</span>
                             </div>
                           </div>
                           <div className="shrink-0 text-right pr-2">
                             <div className="text-2xl font-black text-[#D4AF37]">
-                              {user.totalStudyTime ? (
-                                user.totalStudyTime > 3600 ? 
-                                  `${Math.floor(user.totalStudyTime / 3600)}h ${Math.floor((user.totalStudyTime % 3600) / 60)}m` : 
-                                  `${Math.floor((user.totalStudyTime % 3600) / 60)}m`
+                              {user.studyTime ? (
+                                user.studyTime > 3600 ? 
+                                  `${Math.floor(user.studyTime / 3600)}h ${Math.floor((user.studyTime % 3600) / 60)}m` : 
+                                  `${Math.floor(user.studyTime / 60)}m`
                               ) : '0m'}
                             </div>
-                            <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">tempo total</div>
+                            <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
+                              {rankingPeriod === 'daily' ? 'hoje' :
+                               rankingPeriod === 'weekly' ? 'semana' :
+                               rankingPeriod === 'monthly' ? 'mês' : 'total'}
+                            </div>
                           </div>
                         </div>
                       ))}

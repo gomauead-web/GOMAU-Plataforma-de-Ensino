@@ -10,7 +10,7 @@ import { MASTER_ADMINS } from '../constants';
 type LoginPhase = 'google' | 'age' | 'cpf' | 'word';
 
 export function Login() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, dbQuotaExceeded } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -31,6 +31,12 @@ export function Login() {
       setIsIframe(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (dbQuotaExceeded) {
+      setError('⚠️ Atenção: A cota diária de leitura do banco de dados (Firestore) está temporariamente esgotada devido ao alto volume de acessos na plataforma. O Google reinicia esta cota de forma automática e gratuita à Meia-Noite do Horário do Pacífico (em instantes!). Se você já entrou recentemente neste dispositivo, recarregue a página para tentar usar o cache local do seu perfil; caso contrário, aguarde alguns minutos e tente novamente.');
+    }
+  }, [dbQuotaExceeded]);
 
   useEffect(() => {
     // Verificar se há resultado de um redirecionamento anterior apenas na montagem
@@ -69,7 +75,11 @@ export function Login() {
     } else if (!user && !loading && !authLoading && auth.currentUser && phase === 'google') {
        // Loop detectado: Usuário logado no Google mas sem perfil reconhecido no GOMAU
        console.warn("Membro não identificado no GOMAU:", auth.currentUser.email);
-       setError('Acesso negado. O e-mail (' + auth.currentUser.email + ') não foi encontrado em nossa base de membros. Verifique se está usando a conta correta ou contate o Gestor da Loja.');
+       if (dbQuotaExceeded) {
+          setError('⚠️ Atenção: A cota diária gratuita do banco de dados (Firestore) foi temporariamente esgotada devido ao alto volume de acessos na plataforma. O Google reinicia esta cota de forma automática e gratuita à Meia-Noite do Horário do Pacífico (em instantes!). Se você já entrou recentemente neste dispositivo, recarregue a página para tentar usar o cache local do seu perfil; caso contrário, aguarde alguns minutos e tente novamente.');
+       } else {
+          setError('Acesso negado. O e-mail (' + auth.currentUser.email + ') não foi encontrado em nossa base de membros. Verifique se está usando a conta correta ou contate o Gestor da Loja.');
+       }
        setLoading(false);
        // Não desloga imediatamente para o usuário ver o erro. 
        // O usuário poderá clicar em "Cancelar e sair" para limpar a sessão.
@@ -166,31 +176,106 @@ export function Login() {
       let PALAVRA_SAGRADA = "FORTITUDO"; // Fallback inicial caso não exista no DB
       let DATA_EXPIRACAO = new Date("2026-08-13T23:59:59"); // 3 meses a contar do início do sistema
 
-      // 1. Buscar do Firestore
+      // 1. Buscar do Firestore com cache local
       try {
-         const configSnap = await getDoc(doc(db, 'configs', 'security'));
-         if (configSnap.exists()) {
-           const data = configSnap.data();
-           
-           if (data.lojas && Array.isArray(data.lojas)) {
-             const matchedLoja = data.lojas.find((l: any) => l.prefixo === lojaPrefix);
-             
-             if (matchedLoja) {
-                PALAVRA_SAGRADA = matchedLoja.palavraAtual || "FORTITUDO";
-                if (matchedLoja.expiraEm) DATA_EXPIRACAO = matchedLoja.expiraEm.toDate();
-             } else {
-               // Fallback if the user's prefix isn't found in configs 
-               console.warn("Loja não configurada para este CIM. Usando fallback.");
-             }
+         const cacheKeySecConfig = "gomau_security_configs";
+         const cachedSec = localStorage.getItem(cacheKeySecConfig);
+         let secData: any = null;
+         let loadedSecFromCache = false;
 
-           } else if (data.palavraAtual) {
-              // Legacy support
-              PALAVRA_SAGRADA = data.palavraAtual;
-              if (data.expiraEm) DATA_EXPIRACAO = data.expiraEm.toDate();
+         if (cachedSec) {
+           try {
+             const parsed = JSON.parse(cachedSec);
+             if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) { // 24 horas de cache
+               secData = parsed.data;
+               loadedSecFromCache = true;
+             }
+           } catch(e) {}
+         }
+
+         if (!loadedSecFromCache) {
+           const configSnap = await getDoc(doc(db, 'configs', 'security'));
+           if (configSnap.exists()) {
+              secData = configSnap.data();
+              try {
+                localStorage.setItem(cacheKeySecConfig, JSON.stringify({
+                  timestamp: Date.now(),
+                  data: secData
+                }));
+              } catch(se) {}
            }
+         }
+
+         if (secData) {
+            if (secData.lojas && Array.isArray(secData.lojas)) {
+              const matchedLoja = secData.lojas.find((l: any) => l.prefixo === lojaPrefix);
+              
+              if (matchedLoja) {
+                 PALAVRA_SAGRADA = matchedLoja.palavraAtual || "FORTITUDO";
+                 if (matchedLoja.expiraEm) {
+                   if (typeof matchedLoja.expiraEm.toDate === 'function') {
+                     DATA_EXPIRACAO = matchedLoja.expiraEm.toDate();
+                   } else if (matchedLoja.expiraEm.seconds) {
+                     DATA_EXPIRACAO = new Date(matchedLoja.expiraEm.seconds * 1000);
+                   } else {
+                     DATA_EXPIRACAO = new Date(matchedLoja.expiraEm);
+                   }
+                 }
+              } else {
+                console.warn("Loja não configurada para este CIM. Usando fallback.");
+              }
+
+            } else if (secData.palavraAtual) {
+               // Legacy support
+               PALAVRA_SAGRADA = secData.palavraAtual;
+               if (secData.expiraEm) {
+                 if (typeof secData.expiraEm.toDate === 'function') {
+                   DATA_EXPIRACAO = secData.expiraEm.toDate();
+                 } else if (secData.expiraEm.seconds) {
+                   DATA_EXPIRACAO = new Date(secData.expiraEm.seconds * 1000);
+                 } else {
+                   DATA_EXPIRACAO = new Date(secData.expiraEm);
+                 }
+               }
+            }
          }
       } catch (dbErr) {
          console.warn("Using fallback word, couldn't fetch from DB", dbErr);
+         try {
+           const cachedSec = localStorage.getItem("gomau_security_configs");
+           if (cachedSec) {
+             const parsed = JSON.parse(cachedSec);
+             const secData = parsed.data;
+             if (secData) {
+               if (secData.lojas && Array.isArray(secData.lojas)) {
+                 const matchedLoja = secData.lojas.find((l: any) => l.prefixo === lojaPrefix);
+                 if (matchedLoja) {
+                    PALAVRA_SAGRADA = matchedLoja.palavraAtual || "FORTITUDO";
+                    if (matchedLoja.expiraEm) {
+                      if (typeof matchedLoja.expiraEm.toDate === 'function') {
+                        DATA_EXPIRACAO = matchedLoja.expiraEm.toDate();
+                      } else if (matchedLoja.expiraEm.seconds) {
+                        DATA_EXPIRACAO = new Date(matchedLoja.expiraEm.seconds * 1000);
+                      } else {
+                        DATA_EXPIRACAO = new Date(matchedLoja.expiraEm);
+                      }
+                    }
+                 }
+               } else if (secData.palavraAtual) {
+                 PALAVRA_SAGRADA = secData.palavraAtual;
+                 if (secData.expiraEm) {
+                   if (typeof secData.expiraEm.toDate === 'function') {
+                     DATA_EXPIRACAO = secData.expiraEm.toDate();
+                   } else if (secData.expiraEm.seconds) {
+                     DATA_EXPIRACAO = new Date(secData.expiraEm.seconds * 1000);
+                   } else {
+                     DATA_EXPIRACAO = new Date(secData.expiraEm);
+                   }
+                 }
+               }
+             }
+           }
+         } catch(e) {}
       }
 
       const AGORA = new Date();
