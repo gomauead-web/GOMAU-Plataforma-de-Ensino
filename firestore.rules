@@ -375,5 +375,15 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow write: if isSignedIn();
     }
+
+    match /developerFeedback/{feedbackId} {
+      allow read, update, delete: if isGestor();
+      allow create: if isSignedIn() && 
+                    request.resource.data.senderUid == request.auth.uid &&
+                    request.resource.data.message is string &&
+                    request.resource.data.message.size() > 0 &&
+                    request.resource.data.message.size() <= 1000 &&
+                    request.resource.data.read == false;
+    }
   }
 }
