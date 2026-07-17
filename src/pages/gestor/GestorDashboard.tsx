@@ -490,9 +490,10 @@ export function GestorDashboard() {
     { id: "segundo_vigilante", label: "2° Vigilante", icon: Shield },
     { id: "telemetria", label: "Telemetria", icon: Activity },
     { id: "forum", label: "Fórum / Instrutores", icon: MessageSquare },
-    { id: "configuracoes", label: "Configurações", icon: Settings },
     ...(isOwner || isMaster || user?.role === "gestor"
       ? [
+          { id: "permissoes", label: "Permissões & Cargos", icon: Key },
+          { id: "configuracoes", label: "Configurações", icon: Settings },
           { id: "developer_feedback", label: "Fale com o Dev", icon: MessageSquare },
           { id: "avaliacao", label: "Valuation do Sistema", icon: BarChart3 }
         ]
@@ -504,7 +505,23 @@ export function GestorDashboard() {
     : isDelegatedUser
     ? baseTabs.filter((t) => {
         return (user?.delegatedPastas || []).some((pasta: string) => {
-          const mappedId = pasta.toLowerCase().includes("2") ? "segundo_vigilante" : pasta.toLowerCase().replace(/\s+/g, "_");
+          const lowerPasta = pasta.toLowerCase().trim();
+          
+          // Alias matching for flexible mapping
+          if (lowerPasta === "dashboard") return t.id === "dashboard";
+          if (lowerPasta === "arquivos" || lowerPasta === "conteudos" || lowerPasta === "arquivos (biblioteca geral)") return t.id === "conteudos";
+          if (lowerPasta === "cursos" || lowerPasta === "cursos (lms)") return t.id === "cursos";
+          if (lowerPasta === "biblioteca" || lowerPasta === "biblioteca digital") return t.id === "biblioteca";
+          if (lowerPasta === "aprovações" || lowerPasta === "aprovacoes" || lowerPasta === "solicitacoes" || lowerPasta.includes("aprova")) return t.id === "solicitacoes";
+          if (lowerPasta === "eventos" || lowerPasta === "calendário de eventos") return t.id === "eventos";
+          if (lowerPasta === "membros" || lowerPasta === "membros (cadastro geral)") return t.id === "membros";
+          if (lowerPasta.includes("2") || lowerPasta.includes("vigilante") || lowerPasta === "segundo_vigilante") return t.id === "segundo_vigilante";
+          if (lowerPasta === "telemetria" || lowerPasta === "telemetria de estudo") return t.id === "telemetria";
+          if (lowerPasta.includes("forum") || lowerPasta.includes("fórum")) return t.id === "forum";
+          if (lowerPasta.includes("dev") || lowerPasta.includes("fale") || lowerPasta === "developer_feedback") return t.id === "developer_feedback";
+          if (lowerPasta.includes("valuation") || lowerPasta.includes("avaliacao") || lowerPasta === "avaliacao") return t.id === "avaliacao";
+          
+          const mappedId = lowerPasta.replace(/\s+/g, "_");
           return t.id === mappedId;
         });
       })
@@ -7122,10 +7139,12 @@ export function GestorDashboard() {
             <SegundoVigilanteView members={members} currentUser={user} />
           )}
 
+          {activeTab === "permissoes" && (
+            <AdminPermissionsManager members={members} />
+          )}
+
           {activeTab === "configuracoes" && (
             <div className="flex flex-col gap-8">
-              <AdminPermissionsManager members={members} />
-
               <DataManagement />
 
               <div className="flex justify-between items-center mb-6">

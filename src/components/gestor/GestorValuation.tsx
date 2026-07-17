@@ -303,13 +303,13 @@ export function GestorValuation() {
              <div className="p-3 rounded-lg bg-[#1e293b] text-[#D4AF37]">
                 <ShieldCheck size={24} />
              </div>
-             <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm">Delegação Dinâmica por CIM</h3>
+             <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm font-sans">Matriz de Permissões & Delegações Granulares</h3>
           </div>
-          <p className="text-xs text-gray-500 leading-relaxed">
-             Gerenciador granular de permissões com lookup de obreiros em tempo real, permitindo outorgar controle de pastas específicas do Gestor a membros delegados sem elevar sua role global.
+          <p className="text-xs text-gray-500 leading-relaxed font-sans">
+             Matriz bidirecional de outorga de controle ("Por Membro" e "Por Pasta") com lookup síncrono de obreiros. Permite delegar o gerenciamento de qualquer pasta ou sub-opção a múltiplos CIMs individuais ou em lote (separados por vírgula), blindando configurações de acesso exclusivo do Owner.
           </p>
           <div className="mt-auto">
-             <div className="text-[#D4AF37] font-bold text-lg">R$ 9.000,00</div>
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 14.500,00</div>
              <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Adicional Ativo</div>
           </div>
         </div>
@@ -484,7 +484,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight">R$ 250.500,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight font-sans">R$ 256.000,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>

@@ -182,6 +182,15 @@ Devido ao alto tráfego na plataforma, o plano de cotas gratuitas do Google Fire
   - Ex: Para passar de Aprendiz para Companheiro, exija 6 meses de interstício e 3 pranchas aprovadas.
   - O sistema usa essas regras para alimentar o Checklist automático do obreiro.
 
+### 3.4.1 Aba Permissões & Cargos (Matriz de Delegação)
+
+- **O que é:** Área onde o Gestor Máster ou Owner pode descentralizar a gestão da plataforma sem dar privilégios globais de administrador supremo.
+- **Funcionamento:** Permite outorgar controle de pastas específicas (ex: apenas a aba "Cursos" para o Diretor de Instrução, ou "Eventos" para o Chanceler) a múltiplos CIMs individuais ou por lote.
+- **Modos de Exibição:**
+  - **Por Membro:** Agrupa as outorgas ativas por Irmão. Mostra o perfil completo do obreiro e as pastas que ele possui acesso. Inclui a opção de revogar permissões individuais clicando no ícone de fechar `(x)`.
+  - **Por Pasta / Função:** Agrupa as outorgas ativas por pasta ou opção administrativa. Mostra a descrição, o ícone e os obreiros vinculados. Inclui formulário de vinculação em lote (colando múltiplos CIMs separados por vírgula).
+- **Owner-Only Exclusivity:** As abas "Configurações" (Regras de Evolução, Limpeza de Dados) e "Permissões & Cargos" (Matriz de Delegação) são de acesso estrito e exclusivo do Owner (`gomau.ead@gmail.com`, `calepi@gmail.com`, `calepe@gmail.com`) e de usuários com a role mestre `role === "gestor"` no banco de dados. Elas **nunca** podem ser delegadas a outros membros, garantindo a soberania do Grão-Mestrado.
+
 ### 3.5 Sala de Estudos (Fórum de Graus)
 
 - **Ação:** Espaço para discussão de temas maçônicos e dúvidas.

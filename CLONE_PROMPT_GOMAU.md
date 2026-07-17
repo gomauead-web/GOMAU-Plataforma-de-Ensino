@@ -106,7 +106,7 @@ Todas as coleções devem ser criadas com os seguintes esquemas precisos:
 
 - **`evolutionRules`:** `id` (grau Origem), `grauDestino`, `intersticioMeses`, `quantidadeTrabalhos`, `updatedAt`.
 - **`settings`:** Documento de configuração global, contém o objeto `security` com `palavraCorrente`.
-- **`adminPermissions`:** `id`, `cim` (CIM do irmão delegado), `allowedPastas` (array, ex: `["segundo_vigilante"]`), `grantedBy`, `grantedAt`.
+- **`adminPermissions`:** `id` (formato `${cim}_${pasta}`), `cim` (CIM do irmão delegado), `pasta` (nome da pasta ou aba delegada, ex: `"cursos"`), `createdAt` (timestamp de criação).
 
 ### 3.12. Fale com o Desenvolvedor (`developerFeedback`)
 
@@ -221,7 +221,7 @@ O `GestorDashboard.tsx` possui um sistema de abas laterais internas:
 
 - Aba **Segurança**: Permite trocar a Palavra Sagrada do mês.
 - Aba **Data Management (Merge)**: Motor que permite transferir TODO o progresso (Pranchas, Histórico, Fóruns, Cursos) de um e-mail Antigo para um e-mail Novo (corrige usuários que mudaram a conta do Google), vasculhando dezenas de coleções no Firestore por e-mail e atualizando os campos.
-- Aba **RBAC (AdminPermissionsManager.tsx)**: O Gestor digita o CIM de um irmão comum e marca as opções "2º Vigilante", "Tesouraria", "Fórum". O irmão comum, na próxima vez que logar, verá o menu "Área do Gestor", mas ao clicar, só verá as abas que lhe foram outorgadas, sem ter privilégios de Master ou de visualização dos membros (Acesso granular).
+- Aba **Permissões & Cargos (AdminPermissionsManager.tsx)**: O Gestor Máster ou Owner acessa uma aba exclusiva integrada no dashboard. Ele pode delegar de forma granular o acesso a qualquer pasta ou opção do sistema de forma ágil através de duas visões integradas: **Por Membro** (onde insere o CIM do obreiro, visualiza seu perfil com autocomplete em tempo real e adiciona pastas de controle, podendo revogá-las clicando no `x`) e **Por Pasta / Função** (onde visualiza todas as 12 seções administrativas delegáveis e associa múltiplos CIMs em lote digitando-os separados por vírgula). O acesso às abas de "Configurações" e "Permissões de Acesso" permanece blindado exclusivamente para o Owner e contas mestre com `role === "gestor"`.
 
 ### 5.9. Valuation do Sistema (GestorValuation.tsx)
 
