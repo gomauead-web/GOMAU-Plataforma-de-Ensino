@@ -5,8 +5,9 @@ import { useSessionTelemetry } from '../hooks/useSessionTelemetry';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, BookOpen, FileText, Calendar, Target, User, History, Settings, HelpCircle, LogOut, Shield, GraduationCap, Clock, Video, MessageSquare, DollarSign, Library, Sparkles, Menu, X, Heart } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { auth } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { MASTER_ADMINS } from '../constants';
 
 const HexagramIcon = () => (
@@ -108,13 +109,46 @@ export function Layout({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      const dismissed = localStorage.getItem('gomau_onboarding_v4_dismissed');
-      if (!dismissed) {
-        setShowOnboarding(true);
-      }
+  // Fale com o Dev state
+  const [isDevModalOpen, setIsDevModalOpen] = useState(false);
+  const [devFeedbackCategory, setDevFeedbackCategory] = useState('sugestao');
+  const [devFeedbackMessage, setDevFeedbackMessage] = useState('');
+  const [isSendingDevFeedback, setIsSendingDevFeedback] = useState(false);
+
+  const handleSubmitDevFeedback = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!devFeedbackMessage.trim()) {
+      alert("Por favor, digite sua reflexão ou mensagem.");
+      return;
     }
+    setIsSendingDevFeedback(true);
+    try {
+      await addDoc(collection(db, 'developerFeedback'), {
+        senderName: user?.nome || 'Nobre Irmão',
+        senderEmail: (user?.email || '').toLowerCase().trim(),
+        senderUid: user?.uid || '',
+        senderCim: user?.cim || '',
+        senderLoja: user?.loja || '',
+        category: devFeedbackCategory,
+        message: devFeedbackMessage.trim(),
+        createdAt: serverTimestamp(),
+        read: false
+      });
+      alert("Mensagem enviada com sucesso ao desenvolvedor! Obrigado por colaborar com o G∴O∴M∴A∴U∴.");
+      setDevFeedbackMessage('');
+      setDevFeedbackCategory('sugestao');
+      setIsDevModalOpen(false);
+    } catch (err) {
+      console.error("Erro ao enviar feedback ao desenvolvedor:", err);
+      alert("Erro ao enviar sua mensagem. Tente novamente.");
+    } finally {
+      setIsSendingDevFeedback(false);
+    }
+  };
+
+  useEffect(() => {
+    // Onboarding popup disabled per user request
+    setShowOnboarding(false);
   }, [user]);
 
   const isMaster = MASTER_ADMINS.includes(user?.email || '');
@@ -228,6 +262,15 @@ export function Layout({ children }: { children: ReactNode }) {
           )}
 
           <div className="mt-auto pt-4 border-t border-[#D4AF37]/15 flex flex-col gap-1">
+            {/* Fale com o Desenvolvedor */}
+            <button
+              onClick={() => setIsDevModalOpen(true)}
+              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-300 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-lg transition-colors cursor-pointer"
+            >
+              <MessageSquare size={18} className="text-[#D4AF37] shrink-0" />
+              <span>Fale com o Dev</span>
+            </button>
+
             <button 
               onClick={handleLogout}
               className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-lg transition-colors cursor-pointer"
@@ -399,6 +442,18 @@ export function Layout({ children }: { children: ReactNode }) {
 
               {/* Logout & Footer */}
               <div className="border-t border-[#1e293b] pt-4 mt-auto flex flex-col gap-3">
+                {/* Fale com o Desenvolvedor */}
+                <button
+                  onClick={() => {
+                    setIsDevModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 hover:bg-[#D4AF37]/20 py-3 rounded-xl flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  <MessageSquare size={16} />
+                  Fale com o Dev
+                </button>
+
                 <button
                   onClick={() => {
                     handleLogout();
@@ -525,6 +580,115 @@ export function Layout({ children }: { children: ReactNode }) {
               >
                 Compreendo os Módulos e Desejo Prosseguir
               </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Fale com o Desenvolvedor Modal */}
+      <AnimatePresence>
+        {isDevModalOpen && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 30 }}
+              className="relative w-full max-w-lg bg-[#0A0E1A] border-2 border-[#D4AF37] rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(212,175,55,0.25)] overflow-y-auto max-h-[90vh] font-sans"
+            >
+              {/* Corner gold highlights */}
+              <div className="absolute top-4 left-4 w-3 h-3 border-t-2 border-l-2 border-[#D4AF37]"></div>
+              <div className="absolute top-4 right-4 w-3 h-3 border-t-2 border-r-2 border-[#D4AF37]"></div>
+              <div className="absolute bottom-4 left-4 w-3 h-3 border-b-2 border-l-2 border-[#D4AF37]"></div>
+              <div className="absolute bottom-4 right-4 w-3 h-3 border-b-2 border-r-2 border-[#D4AF37]"></div>
+
+              <button
+                onClick={() => setIsDevModalOpen(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="w-12 h-12 bg-[#D4AF37]/10 rounded-full flex items-center justify-center text-[#D4AF37] mx-auto mb-3 border border-[#D4AF37]/25 shadow-[0_0_15px_rgba(212,175,55,0.15)] animate-pulse">
+                  <MessageSquare size={22} />
+                </div>
+                <h3 className="text-xl font-bold text-[#D4AF37] uppercase tracking-wider" style={{ fontFamily: 'Cinzel' }}>Fale com o Desenvolvedor</h3>
+                <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Críticas, Sugestões, Dicas ou Relatos de Bugs</p>
+                <div className="w-20 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent mx-auto mt-2"></div>
+              </div>
+
+              <form onSubmit={handleSubmitDevFeedback} className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-[#D4AF37]/80 tracking-widest block">Tipo de Mensagem</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      { id: 'critica', label: 'Crítica', color: 'border-rose-500/30 text-rose-400 hover:bg-rose-500/5' },
+                      { id: 'sugestao', label: 'Sugestão', color: 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/5' },
+                      { id: 'dica', label: 'Dica', color: 'border-amber-500/30 text-amber-400 hover:bg-amber-500/5' },
+                      { id: 'bug', label: 'Erro / Bug', color: 'border-red-500/30 text-red-400 hover:bg-red-500/5' },
+                      { id: 'acesso', label: 'Acesso', color: 'border-violet-500/30 text-violet-400 hover:bg-violet-500/5' }
+                    ].map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setDevFeedbackCategory(cat.id)}
+                        className={cn(
+                          "py-2 px-3 text-[11px] font-bold uppercase tracking-wider rounded-xl border transition-all cursor-pointer",
+                          devFeedbackCategory === cat.id
+                            ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-lg shadow-[#D4AF37]/10"
+                            : cat.color + " bg-[#0F172A]"
+                        )}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-[#D4AF37]/80 tracking-widest block">Mensagem ou Relato</label>
+                  <textarea
+                    value={devFeedbackMessage}
+                    onChange={(e) => setDevFeedbackMessage(e.target.value)}
+                    rows={4}
+                    placeholder="Descreva detalhadamente sua sugestão, crítica ou relato de problema para o desenvolvedor..."
+                    className="w-full bg-[#0F172A] border border-[#1e293b] rounded-xl p-4 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#D4AF37] transition-colors resize-none"
+                    maxLength={1000}
+                  />
+                  <div className="flex justify-between text-[10px] text-gray-500">
+                    <span>O desenvolvedor analisará sua mensagem diretamente.</span>
+                    <span>{devFeedbackMessage.length}/1000</span>
+                  </div>
+                </div>
+
+                <div className="bg-[#0F172A] border border-[#1e293b] p-3 rounded-2xl flex flex-col gap-1 text-center text-xs text-gray-400">
+                  <p>Enviando identificado como:</p>
+                  <p className="font-bold text-white text-sm">
+                    {user?.nome || 'Nobre Irmão'} 
+                    {user?.cim ? ` (CIM ${user.cim})` : ''}
+                  </p>
+                  <p className="text-[10px] text-[#D4AF37] font-medium">
+                    Loja: {user?.loja || 'Oficina Geral'}
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsDevModalOpen(false)}
+                    className="flex-1 py-3 bg-[#1e293b] hover:bg-slate-800 text-gray-300 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSendingDevFeedback}
+                    className="flex-1 py-3 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-[#D4AF37]/20 disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSendingDevFeedback ? 'Transmitindo...' : 'Enviar Mensagem'}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}

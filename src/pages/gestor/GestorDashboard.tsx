@@ -104,6 +104,25 @@ export function GestorDashboard() {
     : "dashboard";
 
   const [activeTab, setActiveTab] = useState(initialActiveTab);
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [selectedFeedbackFilter, setSelectedFeedbackFilter] = useState<string>("all");
+
+  const handleMarkFeedbackRead = async (id: string, currentRead: boolean) => {
+    try {
+      await updateDoc(doc(db, "developerFeedback", id), { read: !currentRead });
+    } catch (err) {
+      console.error("Erro ao alternar leitura do feedback:", err);
+    }
+  };
+
+  const handleDeleteFeedback = async (id: string) => {
+    if (!window.confirm("Deseja realmente remover esta mensagem permanentemente?")) return;
+    try {
+      await deleteDoc(doc(db, "developerFeedback", id));
+    } catch (err) {
+      console.error("Erro ao deletar feedback:", err);
+    }
+  };
 
   // Filtros de Data para Relatório de Faltas
   const [dataInicioRelatorio, setDataInicioRelatorio] = useState("");
@@ -473,7 +492,10 @@ export function GestorDashboard() {
     { id: "forum", label: "Fórum / Instrutores", icon: MessageSquare },
     { id: "configuracoes", label: "Configurações", icon: Settings },
     ...(isOwner || isMaster || user?.role === "gestor"
-      ? [{ id: "avaliacao", label: "Valuation do Sistema", icon: BarChart3 }]
+      ? [
+          { id: "developer_feedback", label: "Fale com o Dev", icon: MessageSquare },
+          { id: "avaliacao", label: "Valuation do Sistema", icon: BarChart3 }
+        ]
       : []),
   ];
 
@@ -580,9 +602,18 @@ export function GestorDashboard() {
       },
     );
 
+    const unsubFeedbacks = onSnapshot(
+      query(collection(db, "developerFeedback"), orderBy("createdAt", "desc")),
+      (snap) => {
+        setFeedbacks(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+      },
+      (err) => console.error("Erro real-time feedbacks:", err)
+    );
+
     return () => {
       unsubscribeMembers();
       unsubscribeLogs();
+      unsubFeedbacks();
     };
   }, []);
 
@@ -2647,6 +2678,26 @@ export function GestorDashboard() {
         <div className="flex-1 min-w-0 bg-[#0F172A] border border-[#1e293b] rounded-xl p-4 sm:p-8 min-h-[500px] shadow-xl">
           {activeTab === "dashboard" && (
             <div className="space-y-8">
+              {/* Notificação Fale com o Dev */}
+              {feedbacks.filter((f) => !f.read).length > 0 && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-[0_0_20px_rgba(239,68,68,0.1)]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center animate-bounce">
+                      <MessageSquare size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white uppercase tracking-wider" style={{ fontFamily: 'Cinzel' }}>Mensagem ao Desenvolvedor</h4>
+                      <p className="text-xs text-gray-300">Você possui <strong>{feedbacks.filter((f) => !f.read).length}</strong> nova(s) mensagem(ns) não lida(s) de crítica, sugestão ou bug.</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("developer_feedback")}
+                    className="px-4 py-2 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-[#D4AF37]/10 cursor-pointer shrink-0"
+                  >
+                    Abrir Canal Dev
+                  </button>
+                </div>
+              )}
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                 <div className="flex flex-col gap-1">
                   <h2 className="text-xl font-medium text-gray-200">
@@ -6884,6 +6935,145 @@ export function GestorDashboard() {
           {activeTab === "avaliacao" && <GestorValuation />}
 
           {activeTab === "telemetria" && <TelemetryView />}
+
+          {activeTab === "developer_feedback" && (
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#1e293b]">
+                <div>
+                  <h2 className="text-xl font-bold text-[#D4AF37] font-serif" style={{ fontFamily: 'Cinzel' }}>Mensagens ao Desenvolvedor</h2>
+                  <p className="text-xs text-gray-400 mt-1">Críticas, sugestões, bugs e acessos enviados pelos obreiros da oficina</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">Filtrar Categoria:</span>
+                  <select
+                    value={selectedFeedbackFilter}
+                    onChange={(e) => setSelectedFeedbackFilter(e.target.value)}
+                    className="bg-[#0A0E1A] text-xs text-gray-300 border border-[#1e293b] rounded-lg p-2 focus:outline-none focus:border-[#D4AF37]"
+                  >
+                    <option value="all">Todas as Mensagens</option>
+                    <option value="critica">Críticas</option>
+                    <option value="sugestao">Sugestões</option>
+                    <option value="dica">Dicas</option>
+                    <option value="bug">Erros / Bugs</option>
+                    <option value="acesso">Dificuldade de Acesso</option>
+                    <option value="unread">Não Lidas</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Feedbacks Stats Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-[#0A0E1A] border border-[#1e293b] p-4 rounded-xl">
+                  <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Total de Mensagens</p>
+                  <p className="text-xl font-bold text-[#D4AF37] mt-1">{feedbacks.length}</p>
+                </div>
+                <div className="bg-[#0A0E1A] border border-red-500/20 p-4 rounded-xl shadow-[inset_0_0_10px_rgba(239,68,68,0.05)]">
+                  <p className="text-[10px] uppercase font-bold text-red-400 tracking-wider">Não Lidas / Novas</p>
+                  <p className="text-xl font-bold text-red-400 mt-1">{feedbacks.filter(f => !f.read).length}</p>
+                </div>
+                <div className="bg-[#0A0E1A] border border-orange-500/20 p-4 rounded-xl">
+                  <p className="text-[10px] uppercase font-bold text-orange-400 tracking-wider">Bugs & Erros</p>
+                  <p className="text-xl font-bold text-orange-400 mt-1">{feedbacks.filter(f => f.category === 'bug').length}</p>
+                </div>
+                <div className="bg-[#0A0E1A] border border-emerald-500/20 p-4 rounded-xl">
+                  <p className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Sugestões & Dicas</p>
+                  <p className="text-xl font-bold text-emerald-400 mt-1">
+                    {feedbacks.filter(f => f.category === 'sugestao' || f.category === 'dica').length}
+                  </p>
+                </div>
+              </div>
+
+              {/* Feedback list */}
+              <div className="space-y-4">
+                {feedbacks.filter(f => {
+                  if (selectedFeedbackFilter === 'all') return true;
+                  if (selectedFeedbackFilter === 'unread') return !f.read;
+                  return f.category === selectedFeedbackFilter;
+                }).length === 0 ? (
+                  <div className="text-center py-12 bg-[#0A0E1A] border border-[#1e293b] rounded-2xl">
+                    <p className="text-sm text-gray-500">Nenhuma mensagem encontrada para este filtro.</p>
+                  </div>
+                ) : (
+                  feedbacks
+                    .filter(f => {
+                      if (selectedFeedbackFilter === 'all') return true;
+                      if (selectedFeedbackFilter === 'unread') return !f.read;
+                      return f.category === selectedFeedbackFilter;
+                    })
+                    .map((fb) => {
+                      const categoryLabels: { [key: string]: { label: string, color: string } } = {
+                        critica: { label: 'Crítica', color: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
+                        sugestao: { label: 'Sugestão', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+                        dica: { label: 'Dica', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+                        bug: { label: 'Erro / Bug', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
+                        acesso: { label: 'Acesso', color: 'bg-violet-500/10 text-violet-400 border-violet-500/20' }
+                      };
+                      const catInfo = categoryLabels[fb.category] || { label: fb.category, color: 'bg-gray-500/10 text-gray-400 border-gray-500/20' };
+
+                      return (
+                        <div
+                          key={fb.id}
+                          className={cn(
+                            "bg-[#0A0E1A] border rounded-2xl p-6 transition-all space-y-4",
+                            fb.read 
+                              ? "border-[#1e293b]" 
+                              : "border-[#D4AF37]/40 shadow-[0_0_15px_rgba(212,175,55,0.05)] bg-[#0A0E1A]/95"
+                          )}
+                        >
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className={cn("px-2.5 py-1 text-[9px] font-black uppercase tracking-widest border rounded-full", catInfo.color)}>
+                                {catInfo.label}
+                              </span>
+                              {!fb.read && (
+                                <span className="bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full animate-pulse uppercase tracking-wider">
+                                  Nova
+                                </span>
+                              )}
+                              <span className="text-[10px] text-gray-500 font-mono">
+                                {fb.createdAt?.toDate ? fb.createdAt.toDate().toLocaleString('pt-BR') : 'Agora mesmo'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 w-full sm:w-auto">
+                              <button
+                                onClick={() => handleMarkFeedbackRead(fb.id, fb.read)}
+                                className={cn(
+                                  "flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all cursor-pointer",
+                                  fb.read
+                                    ? "bg-slate-900 border-[#1e293b] text-gray-400 hover:text-white"
+                                    : "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
+                                )}
+                              >
+                                {fb.read ? "Marcar não Lida" : "Marcar como Lida"}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteFeedback(fb.id)}
+                                className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
+                                title="Excluir mensagem permanentemente"
+                              >
+                                Excluir
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="bg-[#0F172A] border border-[#1e293b]/75 rounded-xl p-4 text-sm text-gray-200 leading-relaxed break-words whitespace-pre-wrap font-sans">
+                            {fb.message}
+                          </div>
+
+                          <div className="text-xs text-gray-500 flex flex-wrap gap-x-4 gap-y-1 font-sans">
+                            <span>Autor: <strong className="text-gray-300 font-medium">{fb.senderName}</strong></span>
+                            {fb.senderCim && <span>CIM: <strong className="text-gray-300 font-medium">{fb.senderCim}</strong></span>}
+                            <span>E-mail: <strong className="text-gray-300 font-medium">{fb.senderEmail}</strong></span>
+                            {fb.senderLoja && <span>Loja: <strong className="text-gray-300 font-medium">{fb.senderLoja}</strong></span>}
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
+              </div>
+            </div>
+          )}
 
           {activeTab === "segundo_vigilante" && (
             <SegundoVigilanteView members={members} currentUser={user} />

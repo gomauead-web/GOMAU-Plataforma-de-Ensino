@@ -9,6 +9,8 @@ export function CadeiaUniaoPage() {
   const { user } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userMap, setUserMap] = useState<{ [uid: string]: string }>({});
+  const [selectedRequestForVibrators, setSelectedRequestForVibrators] = useState<any | null>(null);
   
   // Form state
   const [newTitle, setNewTitle] = useState('');
@@ -48,8 +50,27 @@ export function CadeiaUniaoPage() {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const snap = await getDocs(collection(db, 'users'));
+      const mapping: { [uid: string]: string } = {};
+      snap.docs.forEach(docSnap => {
+        const data = docSnap.data();
+        const name = data.nome || 'Nobre Irmão';
+        const uid = data.uid || docSnap.id;
+        if (uid) {
+          mapping[uid] = name;
+        }
+      });
+      setUserMap(mapping);
+    } catch (err) {
+      console.error('Erro ao buscar usuários para Cadeia de União:', err);
+    }
+  };
+
   useEffect(() => {
     fetchRequests();
+    fetchUsers();
   }, []);
 
   const handleCreateRequest = async (e: React.FormEvent) => {
@@ -459,10 +480,14 @@ export function CadeiaUniaoPage() {
                       </div>
                       
                       {/* Vibration indicators count */}
-                      <div className="text-right">
+                      <div 
+                        onClick={() => r.vibrators && r.vibrators.length > 0 && setSelectedRequestForVibrators(r)}
+                        className={`text-right ${r.vibrators && r.vibrators.length > 0 ? 'cursor-pointer hover:opacity-80 transition-all' : ''}`}
+                        title={r.vibrators && r.vibrators.length > 0 ? "Clique para ver quem elevou preces" : "Nenhuma vibração ainda"}
+                      >
                         <div className="flex items-center gap-1.5 justify-end">
                           <Heart className={`w-4 h-4 ${alreadyVibrated ? 'fill-red-500 text-red-500' : 'text-[#D4AF37]/65 animate-pulse'}`} />
-                          <span className="font-mono text-sm text-gray-200">
+                          <span className="font-mono text-sm text-gray-200 group-hover:text-[#D4AF37] transition-colors">
                             {r.vibrantesCount || 0}
                           </span>
                         </div>
@@ -501,6 +526,64 @@ export function CadeiaUniaoPage() {
           )}
         </div>
       </div>
+
+      {/* Vibrators Modal */}
+      <AnimatePresence>
+        {selectedRequestForVibrators && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-[#0A0E1A] border-2 border-[#D4AF37]/50 rounded-3xl p-6 max-w-md w-full relative shadow-[0_0_50px_rgba(212,175,55,0.15)]"
+            >
+              <button
+                onClick={() => setSelectedRequestForVibrators(null)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-3 border-b border-[#1e293b] pb-3">
+                  <div className="w-10 h-10 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center border border-red-500/20">
+                    <Heart size={20} className="fill-current animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white font-serif" style={{ fontFamily: 'Cinzel' }}>Irmãos em Oração</h3>
+                    <p className="text-[10px] text-[#D4AF37] uppercase tracking-widest">Cadeia de União da Egrégora</p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-[#D4AF37]/80 italic font-serif">
+                  "{selectedRequestForVibrators.title}"
+                </p>
+
+                <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                  {(selectedRequestForVibrators.vibrators || []).map((uid: string, idx: number) => {
+                    const name = userMap[uid] || 'Nobre Irmão';
+                    return (
+                      <div key={uid || idx} className="flex items-center gap-2.5 p-2 bg-[#0F172A] border border-[#1e293b] rounded-xl">
+                        <div className="w-7 h-7 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center text-[10px] font-bold text-[#D4AF37]">
+                          {name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <span className="text-sm text-gray-200 font-medium">{name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => setSelectedRequestForVibrators(null)}
+                  className="w-full bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#D4AF37] hover:text-black transition-all cursor-pointer"
+                >
+                  Fechar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

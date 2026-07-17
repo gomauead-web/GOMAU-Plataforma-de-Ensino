@@ -108,6 +108,10 @@ Todas as coleções devem ser criadas com os seguintes esquemas precisos:
 - **`settings`:** Documento de configuração global, contém o objeto `security` com `palavraCorrente`.
 - **`adminPermissions`:** `id`, `cim` (CIM do irmão delegado), `allowedPastas` (array, ex: `["segundo_vigilante"]`), `grantedBy`, `grantedAt`.
 
+### 3.12. Fale com o Desenvolvedor (`developerFeedback`)
+
+- **Campos:** `id`, `senderName` (string), `senderEmail` (string), `senderUid` (string), `senderCim` (string), `senderLoja` (string), `category` ("critica" | "sugestao" | "dica" | "bug" | "acesso"), `message` (string, max 1000 caracteres), `createdAt` (ServerTimestamp), `read` (boolean, padrão `false`).
+
 ---
 
 ## 4. 🧩 PÁGINAS, COMPONENTES E LÓGICA DE NEGÓCIO DA APLICAÇÃO (Frontend)
