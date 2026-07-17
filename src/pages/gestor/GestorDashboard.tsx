@@ -325,8 +325,32 @@ export function GestorDashboard() {
   // Helper for Loja by CIM
   const getLojaNameByCIM = (cim: string) => {
     if (!cim) return "---";
-    const prefix = String(cim).substring(0, 2);
-    const matched = securityWords.find(l => String(l.prefixo).padStart(2, "0") === prefix);
+    const cimStr = String(cim).trim();
+    
+    // Sort securityWords by prefix length descending to match longest first (e.g. "77" before "7")
+    const sortedLojas = [...securityWords].sort((a, b) => {
+      const lenA = String(a.prefixo || "").trim().length;
+      const lenB = String(b.prefixo || "").trim().length;
+      return lenB - lenA;
+    });
+
+    const matched = sortedLojas.find(l => {
+      const pref = String(l.prefixo || "").trim();
+      if (!pref) return false;
+      if (cimStr.startsWith(pref)) return true;
+      
+      // Check pad with "0"
+      const prefPad = pref.padStart(2, '0');
+      if (cimStr.startsWith(prefPad)) return true;
+      
+      // Check single digit
+      if (pref.startsWith('0') && pref.length === 2) {
+        const prefSingle = pref.substring(1);
+        if (cimStr.startsWith(prefSingle)) return true;
+      }
+      return false;
+    });
+
     return matched ? matched.nome : "Loja Não Identificada";
   };
 

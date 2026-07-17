@@ -180,9 +180,14 @@ export function TelemetryView() {
         getDocs(monthlyQuery)
       ]);
 
+      const excludedEmails = ['gomau.ead@gmail.com', 'calepi@gmail.com', 'calepe@gmail.com'];
+
       const totalList: any[] = [];
       totalSnap.forEach(docSnap => {
         const data = docSnap.data();
+        if (data.email && excludedEmails.includes(data.email.toLowerCase().trim())) {
+          return;
+        }
         totalList.push({
           nome: data.nome || 'Desconhecido',
           cim: data.cim || '',
@@ -208,6 +213,9 @@ export function TelemetryView() {
       const dailyList: any[] = [];
       dailySnap.forEach(docSnap => {
         const data = docSnap.data();
+        if (data.email && excludedEmails.includes(data.email.toLowerCase().trim())) {
+          return;
+        }
         if (data.lastActiveDate === todayString && (data.todayStudyTime || 0) > 0) {
           dailyList.push({
             nome: data.nome || 'Desconhecido',
@@ -223,6 +231,9 @@ export function TelemetryView() {
       const weeklyList: any[] = [];
       weeklySnap.forEach(docSnap => {
         const data = docSnap.data();
+        if (data.email && excludedEmails.includes(data.email.toLowerCase().trim())) {
+          return;
+        }
         if (data.lastActiveWeek === weekString && (data.currentWeekStudyTime || 0) > 0) {
           weeklyList.push({
             nome: data.nome || 'Desconhecido',
@@ -238,6 +249,9 @@ export function TelemetryView() {
       const monthlyList: any[] = [];
       monthlySnap.forEach(docSnap => {
         const data = docSnap.data();
+        if (data.email && excludedEmails.includes(data.email.toLowerCase().trim())) {
+          return;
+        }
         if (data.lastActiveMonth === monthString && (data.currentMonthStudyTime || 0) > 0) {
           monthlyList.push({
             nome: data.nome || 'Desconhecido',

@@ -9,6 +9,35 @@ import { MASTER_ADMINS } from '../constants';
 
 type LoginPhase = 'google' | 'age' | 'cpf' | 'word';
 
+export function findMatchedLojaByCim(cim: string, lojas: any[]) {
+  if (!cim || !lojas || !Array.isArray(lojas)) return null;
+  const cimStr = String(cim).trim();
+  
+  // Sort by prefix length descending to match longest first (e.g. "77" before "7")
+  const sortedLojas = [...lojas].sort((a, b) => {
+    const lenA = String(a.prefixo || "").trim().length;
+    const lenB = String(b.prefixo || "").trim().length;
+    return lenB - lenA;
+  });
+
+  return sortedLojas.find(l => {
+    const pref = String(l.prefixo || "").trim();
+    if (!pref) return false;
+    if (cimStr.startsWith(pref)) return true;
+    
+    // Check pad with "0"
+    const prefPad = pref.padStart(2, '0');
+    if (cimStr.startsWith(prefPad)) return true;
+    
+    // Check single digit
+    if (pref.startsWith('0') && pref.length === 2) {
+      const prefSingle = pref.substring(1);
+      if (cimStr.startsWith(prefSingle)) return true;
+    }
+    return false;
+  }) || null;
+}
+
 export function Login() {
   const { user, loading: authLoading, dbQuotaExceeded } = useAuth();
   const navigate = useNavigate();
@@ -171,7 +200,6 @@ export function Login() {
     setLoading(true);
     try {
       const userCim = String(tempUser.cim || user?.cim || '');
-      const lojaPrefix = userCim.substring(0, 2);
 
       let PALAVRA_SAGRADA = "FORTITUDO"; // Fallback inicial caso não exista no DB
       let DATA_EXPIRACAO = new Date("2026-08-13T23:59:59"); // 3 meses a contar do início do sistema
@@ -208,7 +236,7 @@ export function Login() {
 
          if (secData) {
             if (secData.lojas && Array.isArray(secData.lojas)) {
-              const matchedLoja = secData.lojas.find((l: any) => l.prefixo === lojaPrefix);
+              const matchedLoja = findMatchedLojaByCim(userCim, secData.lojas);
               
               if (matchedLoja) {
                  PALAVRA_SAGRADA = matchedLoja.palavraAtual || "FORTITUDO";
@@ -248,7 +276,7 @@ export function Login() {
              const secData = parsed.data;
              if (secData) {
                if (secData.lojas && Array.isArray(secData.lojas)) {
-                 const matchedLoja = secData.lojas.find((l: any) => l.prefixo === lojaPrefix);
+                 const matchedLoja = findMatchedLojaByCim(userCim, secData.lojas);
                  if (matchedLoja) {
                     PALAVRA_SAGRADA = matchedLoja.palavraAtual || "FORTITUDO";
                     if (matchedLoja.expiraEm) {

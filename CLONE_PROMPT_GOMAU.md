@@ -11218,6 +11218,35 @@ import { MASTER_ADMINS } from '../constants';
 
 type LoginPhase = 'google' | 'age' | 'cpf' | 'word';
 
+export function findMatchedLojaByCim(cim: string, lojas: any[]) {
+  if (!cim || !lojas || !Array.isArray(lojas)) return null;
+  const cimStr = String(cim).trim();
+  
+  // Sort by prefix length descending to match longest first (e.g. "77" before "7")
+  const sortedLojas = [...lojas].sort((a, b) => {
+    const lenA = String(a.prefixo || "").trim().length;
+    const lenB = String(b.prefixo || "").trim().length;
+    return lenB - lenA;
+  });
+
+  return sortedLojas.find(l => {
+    const pref = String(l.prefixo || "").trim();
+    if (!pref) return false;
+    if (cimStr.startsWith(pref)) return true;
+    
+    // Check pad with "0"
+    const prefPad = pref.padStart(2, '0');
+    if (cimStr.startsWith(prefPad)) return true;
+    
+    // Check single digit
+    if (pref.startsWith('0') && pref.length === 2) {
+      const prefSingle = pref.substring(1);
+      if (cimStr.startsWith(prefSingle)) return true;
+    }
+    return false;
+  }) || null;
+}
+
 export function Login() {
   const { user, loading: authLoading, dbQuotaExceeded } = useAuth();
   const navigate = useNavigate();
@@ -11862,12 +11891,24 @@ export function ProfilePage() {
           if (securitySnap.exists()) {
             const data = securitySnap.data();
             if (data.lojas && Array.isArray(data.lojas)) {
-              const matchedLoja = data.lojas.find((l: any) => {
+              const sortedLojas = [...data.lojas].sort((a: any, b: any) => {
+                const lenA = String(a.prefixo || "").trim().length;
+                const lenB = String(b.prefixo || "").trim().length;
+                return lenB - lenA;
+              });
+
+              const matchedLoja = sortedLojas.find((l: any) => {
                 if (user.loja && l.nome && l.nome.toLowerCase().trim() === user.loja.toLowerCase().trim()) {
                   return true;
                 }
-                if (user.cim && l.prefixo === String(user.cim).substring(0, 2)) {
-                  return true;
+                if (user.cim) {
+                  const cimStr = String(user.cim).trim();
+                  const pref = String(l.prefixo || "").trim();
+                  if (pref) {
+                    if (cimStr.startsWith(pref)) return true;
+                    if (cimStr.startsWith(pref.padStart(2, '0'))) return true;
+                    if (pref.startsWith('0') && pref.length === 2 && cimStr.startsWith(pref.substring(1))) return true;
+                  }
                 }
                 return false;
               });
@@ -13896,12 +13937,24 @@ export function TreasuryPage() {
           if (securitySnap.exists()) {
             const data = securitySnap.data();
             if (data.lojas && Array.isArray(data.lojas)) {
-              const matchedLoja = data.lojas.find((l: any) => {
+              const sortedLojas = [...data.lojas].sort((a: any, b: any) => {
+                const lenA = String(a.prefixo || "").trim().length;
+                const lenB = String(b.prefixo || "").trim().length;
+                return lenB - lenA;
+              });
+
+              const matchedLoja = sortedLojas.find((l: any) => {
                 if (user.loja && l.nome && l.nome.toLowerCase().trim() === user.loja.toLowerCase().trim()) {
                   return true;
                 }
-                if (user.cim && l.prefixo === String(user.cim).substring(0, 2)) {
-                  return true;
+                if (user.cim) {
+                  const cimStr = String(user.cim).trim();
+                  const pref = String(l.prefixo || "").trim();
+                  if (pref) {
+                    if (cimStr.startsWith(pref)) return true;
+                    if (cimStr.startsWith(pref.padStart(2, '0'))) return true;
+                    if (pref.startsWith('0') && pref.length === 2 && cimStr.startsWith(pref.substring(1))) return true;
+                  }
                 }
                 return false;
               });
@@ -15294,8 +15347,32 @@ export function GestorDashboard() {
   // Helper for Loja by CIM
   const getLojaNameByCIM = (cim: string) => {
     if (!cim) return "---";
-    const prefix = String(cim).substring(0, 2);
-    const matched = securityWords.find(l => String(l.prefixo).padStart(2, "0") === prefix);
+    const cimStr = String(cim).trim();
+    
+    // Sort securityWords by prefix length descending to match longest first (e.g. "77" before "7")
+    const sortedLojas = [...securityWords].sort((a, b) => {
+      const lenA = String(a.prefixo || "").trim().length;
+      const lenB = String(b.prefixo || "").trim().length;
+      return lenB - lenA;
+    });
+
+    const matched = sortedLojas.find(l => {
+      const pref = String(l.prefixo || "").trim();
+      if (!pref) return false;
+      if (cimStr.startsWith(pref)) return true;
+      
+      // Check pad with "0"
+      const prefPad = pref.padStart(2, '0');
+      if (cimStr.startsWith(prefPad)) return true;
+      
+      // Check single digit
+      if (pref.startsWith('0') && pref.length === 2) {
+        const prefSingle = pref.substring(1);
+        if (cimStr.startsWith(prefSingle)) return true;
+      }
+      return false;
+    });
+
     return matched ? matched.nome : "Loja Não Identificada";
   };
 
