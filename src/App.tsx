@@ -24,6 +24,7 @@ import { CadeiaUniaoPage } from './pages/CadeiaUniaoPage';
 import { Forum } from './pages/Forum';
 import { MASTER_ADMINS } from './constants';
 import { NotificationManager } from './components/NotificationManager';
+import { FirebaseSetup } from './pages/FirebaseSetup';
 
 function ProtectedRoute({ children, requireGestor = false }: { children: React.ReactNode, requireGestor?: boolean }) {
 
@@ -97,6 +98,7 @@ export default function App() {
         <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/setup" element={<FirebaseSetup />} />
             
             <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
             <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />

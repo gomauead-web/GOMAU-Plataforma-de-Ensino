@@ -2,7 +2,22 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import firebaseConfig from '../../firebase-applet-config.json';
+import defaultFirebaseConfig from '../../firebase-applet-config.json';
+
+// Tenta ler configuração customizada do localStorage para suporte a cópias de terceiros
+let firebaseConfig: any = defaultFirebaseConfig;
+const storedConfig = localStorage.getItem('gomau_custom_firebase_config');
+if (storedConfig) {
+  try {
+    const parsed = JSON.parse(storedConfig);
+    if (parsed && parsed.apiKey && parsed.projectId) {
+      firebaseConfig = parsed;
+      console.log("Firebase carregado com configuração CUSTOMIZADA do localStorage.");
+    }
+  } catch (e) {
+    console.error("Erro ao ler configuração customizada do Firebase:", e);
+  }
+}
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
@@ -17,10 +32,10 @@ try {
     localCache: persistentLocalCache({
       tabManager: persistentMultipleTabManager()
     })
-  }, firebaseConfig.firestoreDatabaseId);
+  }, firebaseConfig.firestoreDatabaseId || '(default)');
 } catch (e) {
   console.warn("Navegador não suporta indexDB multi-tab, instanciando Firestore padrão:", e);
-  firestoreDb = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+  firestoreDb = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
 }
 
 export const db = firestoreDb;

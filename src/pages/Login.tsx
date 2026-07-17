@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
-import { LogIn, Shield, Key, UserCheck, HelpCircle, Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { LogIn, Shield, Key, UserCheck, HelpCircle, Eye, EyeOff, ExternalLink, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { MASTER_ADMINS } from '../constants';
@@ -519,6 +519,15 @@ export function Login() {
               className="text-[#D4AF37]/80 hover:text-[#D4AF37] text-[10px] uppercase tracking-widest font-black transition-colors mt-2"
             >
               ← Cancelar e sair
+            </button>
+          )}
+          {phase === 'google' && (
+            <button 
+              onClick={() => navigate('/setup')}
+              className="text-[#D4AF37]/40 hover:text-[#D4AF37]/80 text-[9px] uppercase tracking-[0.15em] font-bold transition-all mt-4 flex items-center gap-1 bg-black/40 border border-[#D4AF37]/10 px-2.5 py-1.5 rounded-lg hover:scale-105 cursor-pointer"
+            >
+              <Settings size={10} className="animate-spin" style={{ animationDuration: '6s' }} />
+              Configurar Servidor Independente
             </button>
           )}
         </div>

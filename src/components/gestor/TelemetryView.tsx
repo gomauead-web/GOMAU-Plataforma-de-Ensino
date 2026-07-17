@@ -180,7 +180,7 @@ export function TelemetryView() {
         getDocs(monthlyQuery)
       ]);
 
-      const excludedEmails = ['gomau.ead@gmail.com', 'calepi@gmail.com', 'calepe@gmail.com'];
+      const excludedEmails = ['gomau.ead@gmail.com', 'calepi@gmail.com', 'calepe@gmail.com', 'tazmaniacrvg@gmail.com', 'taizmaniacrvg@gmail.com'];
 
       const totalList: any[] = [];
       totalSnap.forEach(docSnap => {

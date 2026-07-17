@@ -603,9 +603,15 @@ export function GestorDashboard() {
     );
 
     const unsubFeedbacks = onSnapshot(
-      query(collection(db, "developerFeedback"), orderBy("createdAt", "desc")),
+      collection(db, "developerFeedback"),
       (snap) => {
-        setFeedbacks(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+        const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+        list.sort((a, b) => {
+          const tA = a.createdAt?.seconds || 0;
+          const tB = b.createdAt?.seconds || 0;
+          return tB - tA;
+        });
+        setFeedbacks(list);
       },
       (err) => console.error("Erro real-time feedbacks:", err)
     );
@@ -2644,34 +2650,71 @@ export function GestorDashboard() {
         </div>
       </header>
 
+      {/* Global Developer Feedback Notification */}
+      {activeTab !== "developer_feedback" && feedbacks.filter((f) => !f.read).length > 0 && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center justify-between gap-4 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center shrink-0 animate-pulse">
+              <MessageSquare size={16} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white uppercase tracking-wider">Mensagens de Obreiros pendentes no Canal Dev</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">Há <strong>{feedbacks.filter((f) => !f.read).length}</strong> nova(s) mensagem(ns) (sugestões, erros ou críticas) enviadas pelo aplicativo.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setActiveTab("developer_feedback")}
+            className="px-3 py-1.5 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-extrabold text-[10px] uppercase tracking-wider rounded-lg transition-all cursor-pointer"
+          >
+            Acessar
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar Nav */}
         <div className="lg:w-64 shrink-0 flex flex-col gap-1.5 p-3 rounded-xl bg-[#0A0E1A]/50 border border-[#1e293b] h-fit">
           <h3 className="text-[10px] uppercase font-bold text-gray-500 mb-2 px-3 tracking-widest">
             Navegação
           </h3>
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "px-3 py-3 flex items-center gap-3 font-semibold text-xs uppercase tracking-wider rounded-lg transition-all w-full text-left font-sans outline-none",
-                activeTab === tab.id
-                  ? "bg-[#D4AF37] text-black shadow-md border border-[#D4AF37]"
-                  : "text-gray-400 hover:bg-[#1e293b] border border-transparent hover:border-[#334155]",
-              )}
-            >
-              <tab.icon
-                size={16}
-                className={
+          {tabs.map((tab) => {
+            const isDevFeedbackTab = tab.id === "developer_feedback";
+            const unreadCount = isDevFeedbackTab ? feedbacks.filter((f) => !f.read).length : 0;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "px-3 py-3 flex items-center justify-between font-semibold text-xs uppercase tracking-wider rounded-lg transition-all w-full text-left font-sans outline-none cursor-pointer",
                   activeTab === tab.id
-                    ? "text-black"
-                    : "text-[#D4AF37]/70 shrink-0"
-                }
-              />
-              <span className="truncate">{tab.label}</span>
-            </button>
-          ))}
+                    ? "bg-[#D4AF37] text-black shadow-md border border-[#D4AF37]"
+                    : "text-gray-400 hover:bg-[#1e293b] border border-transparent hover:border-[#334155]",
+                )}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <tab.icon
+                    size={16}
+                    className={
+                      activeTab === tab.id
+                        ? "text-black"
+                        : "text-[#D4AF37]/70 shrink-0"
+                    }
+                  />
+                  <span className="truncate">{tab.label}</span>
+                </div>
+                {unreadCount > 0 && (
+                  <span className={cn(
+                    "flex items-center justify-center h-5 min-w-[20px] px-1.5 text-[10px] font-black rounded-full animate-pulse shrink-0",
+                    activeTab === tab.id
+                      ? "bg-black text-[#D4AF37]"
+                      : "bg-red-500 text-white"
+                  )}>
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Tab Content */}

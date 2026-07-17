@@ -9,7 +9,7 @@ export function useSessionTelemetry() {
   const accumulatedTime = useRef<number>(0);
 
   useEffect(() => {
-    if (!user || user.email === 'gomau.ead@gmail.com') return;
+    if (!user || user.email === 'gomau.ead@gmail.com' || user.email?.toLowerCase() === 'tazmaniacrvg@gmail.com' || user.email?.toLowerCase() === 'taizmaniacrvg@gmail.com') return;
 
     // Popula o cache de datas ao carregar a página para garantir sincronia precisa de dispositivos diferentes
     const initTelemetryCache = async () => {
@@ -40,7 +40,7 @@ export function useSessionTelemetry() {
   }, [user]);
 
   useEffect(() => {
-    if (!user || user.email === 'gomau.ead@gmail.com') return;
+    if (!user || user.email === 'gomau.ead@gmail.com' || user.email?.toLowerCase() === 'tazmaniacrvg@gmail.com' || user.email?.toLowerCase() === 'taizmaniacrvg@gmail.com') return;
 
     const syncTelemetry = async (timeToSyncInSeconds: number) => {
       if (timeToSyncInSeconds <= 0) return;
