@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, deleteDoc, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, query, orderBy, serverTimestamp, doc, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
-import { Plus, Trash2, GraduationCap, X } from 'lucide-react';
+import { Plus, Trash2, GraduationCap, X, Loader2 } from 'lucide-react';
 
 interface ForumInstructor {
   id: string;
@@ -22,9 +22,69 @@ export function ForumConfigTab() {
   const [newNome, setNewNome] = useState('');
   const [degrees, setDegrees] = useState<string[]>(['Aprendiz']);
 
+  const [searchingUser, setSearchingUser] = useState(false);
+  const [searchMessage, setSearchMessage] = useState('');
+
   useEffect(() => {
     loadInstructors();
   }, []);
+
+  const lookupUserByCim = async (cimValue: string) => {
+    const trimmed = cimValue.trim();
+    if (!trimmed) {
+      setNewNome('');
+      setSearchMessage('');
+      return;
+    }
+    setSearchingUser(true);
+    setSearchMessage('Buscando Ir∴...');
+    try {
+      // Query by string first
+      const q1 = query(collection(db, 'users'), where('cim', '==', trimmed));
+      const snap1 = await getDocs(q1);
+      if (!snap1.empty) {
+        const userData = snap1.docs[0].data();
+        setNewNome(userData.nome || '');
+        setSearchMessage('Ir∴ encontrado!');
+        setSearchingUser(false);
+        return;
+      }
+
+      // If not found, try query by number if it's numeric
+      if (/^\d+$/.test(trimmed)) {
+        const numValue = parseInt(trimmed, 10);
+        const q2 = query(collection(db, 'users'), where('cim', '==', numValue));
+        const snap2 = await getDocs(q2);
+        if (!snap2.empty) {
+          const userData = snap2.docs[0].data();
+          setNewNome(userData.nome || '');
+          setSearchMessage('Ir∴ encontrado!');
+          setSearchingUser(false);
+          return;
+        }
+      }
+
+      setSearchMessage('Ir∴ não cadastrado. Digite o nome manualmente.');
+    } catch (err) {
+      console.error('Erro ao buscar Ir∴ por CIM:', err);
+      setSearchMessage('Erro ao buscar. Digite manualmente.');
+    } finally {
+      setSearchingUser(false);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (newCim) {
+        lookupUserByCim(newCim);
+      } else {
+        setNewNome('');
+        setSearchMessage('');
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [newCim]);
 
   const loadInstructors = async () => {
     try {
@@ -100,13 +160,31 @@ export function ForumConfigTab() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">CIM do Instrutor</label>
-              <input
-                type="text"
-                value={newCim}
-                onChange={e => setNewCim(e.target.value)}
-                className="w-full bg-black/40 border-white/10 rounded-xl focus:border-[#D4AF37] focus:ring-[#D4AF37] text-white p-3"
-                placeholder="Ex: 12345"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={newCim}
+                  onChange={e => setNewCim(e.target.value)}
+                  className="w-full bg-black/40 border-white/10 rounded-xl focus:border-[#D4AF37] focus:ring-[#D4AF37] text-white p-3 pr-10"
+                  placeholder="Ex: 12345"
+                />
+                {searchingUser && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Loader2 className="w-5 h-5 text-[#D4AF37] animate-spin" />
+                  </div>
+                )}
+              </div>
+              {searchMessage && (
+                <p className={`text-xs mt-1.5 font-sans font-medium flex items-center gap-1 ${
+                  searchMessage.includes('encontrado') 
+                    ? 'text-green-400' 
+                    : searchMessage.includes('não') || searchMessage.includes('Erro')
+                    ? 'text-yellow-500' 
+                    : 'text-gray-400'
+                }`}>
+                  ● {searchMessage}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">Nome Completo</label>
@@ -115,7 +193,7 @@ export function ForumConfigTab() {
                 value={newNome}
                 onChange={e => setNewNome(e.target.value)}
                 className="w-full bg-black/40 border-white/10 rounded-xl focus:border-[#D4AF37] focus:ring-[#D4AF37] text-white p-3"
-                placeholder="Ir∴ João da Silva"
+                placeholder="Preenchido automaticamente ou digite"
               />
             </div>
           </div>

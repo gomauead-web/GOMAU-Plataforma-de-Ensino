@@ -242,10 +242,10 @@ export function GestorValuation() {
              <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm">Fórum Místico P2P</h3>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-             Fórum de discussões sigiloso, organizado por categorias maçônicas, suporte a tópicos de dúvidas, curadoria de postagens e moderação ativa.
+             Fórum de discussões sigiloso por categorias maçônicas, dúvidas litúrgicas, moderação de postagens e autocarga reativa de instrutores por CIM.
           </p>
           <div className="mt-auto">
-             <div className="text-[#D4AF37] font-bold text-lg">R$ 6.500,00</div>
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 8.000,00</div>
              <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Adicional Ativo</div>
           </div>
         </div>
@@ -500,7 +500,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight font-sans">R$ 266.000,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight font-sans">R$ 267.500,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>
