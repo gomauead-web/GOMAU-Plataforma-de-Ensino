@@ -5286,7 +5286,7 @@ export const TEST_USERS = [
 ```tsx
 import React, { createContext, useContext, useEffect, useState, useMemo, ReactNode } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, setPersistence, browserLocalPersistence, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { MASTER_ADMINS, TEST_USERS } from '../constants';
 
@@ -5374,6 +5374,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let unsubscribeDoc: (() => void) | null = null;
+    let unsubscribeDelegations: (() => void) | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log("Auth State Changed:", firebaseUser?.email || "null");
@@ -5420,8 +5421,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (firebaseUser) {
-        // Cancel existing doc listener
+        // Cancel existing doc and delegation listeners
         if (unsubscribeDoc) unsubscribeDoc();
+        if (unsubscribeDelegations) {
+          unsubscribeDelegations();
+          unsubscribeDelegations = null;
+        }
 
         // Inicializa o timer de sessão global
         const SESSION_DURATION = sessionTimeout * 60 * 1000;
@@ -5481,12 +5486,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (dbUser.cim) {
                   const cimStr = dbUser.cim.toString().trim();
                   const qDelegations = query(collection(db, 'adminPermissions'), where('cim', '==', cimStr));
-                  getDocs(qDelegations).then((delegationSnap) => {
+                  
+                  if (unsubscribeDelegations) {
+                    unsubscribeDelegations();
+                  }
+
+                  unsubscribeDelegations = onSnapshot(qDelegations, (delegationSnap) => {
                     const delegatedPastas = delegationSnap.docs.map(d => d.data().pasta);
                     updateUserWithCache({ ...baseUser, delegatedPastas });
                     setLoading(false);
-                  }).catch((err) => {
-                    console.warn("Erro ao buscar delegações:", err);
+                  }, (err) => {
+                    console.warn("Erro ao buscar delegações real-time:", err);
                     updateUserWithCache({ ...baseUser, delegatedPastas: [] });
                     setLoading(false);
                   });
@@ -5607,12 +5617,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   if (dbUser.cim) {
                     const cimStr = dbUser.cim.toString().trim();
                     const qDelegations = query(collection(db, 'adminPermissions'), where('cim', '==', cimStr));
-                    getDocs(qDelegations).then((delegationSnap) => {
+                    
+                    if (unsubscribeDelegations) {
+                      unsubscribeDelegations();
+                    }
+
+                    unsubscribeDelegations = onSnapshot(qDelegations, (delegationSnap) => {
                       const delegatedPastas = delegationSnap.docs.map(d => d.data().pasta);
                       updateUserWithCache({ ...baseUser, delegatedPastas });
                       setLoading(false);
-                    }).catch((err) => {
-                      console.warn("Erro ao buscar delegações:", err);
+                    }, (err) => {
+                      console.warn("Erro ao buscar delegações real-time:", err);
                       updateUserWithCache({ ...baseUser, delegatedPastas: [] });
                       setLoading(false);
                     });
@@ -5704,6 +5719,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         if (unsubscribeDoc) unsubscribeDoc();
+        if (unsubscribeDelegations) {
+          unsubscribeDelegations();
+          unsubscribeDelegations = null;
+        }
         setUser(null);
         setLoading(false);
       }
@@ -5712,6 +5731,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       unsubscribeAuth();
       if (unsubscribeDoc) unsubscribeDoc();
+      if (unsubscribeDelegations) unsubscribeDelegations();
     };
   }, []);
 
@@ -15123,13 +15143,68 @@ export function GestorDashboard() {
   const isMaster = ["gomau.ead@gmail.com", "calepi@gmail.com", "calepe@gmail.com"].includes(userEmail) || user?.role === "gestor";
   const isDelegatedUser = !isMaster && user?.role !== 'gestor' && !isRestrictedFaltas && user?.delegatedPastas && user.delegatedPastas.length > 0;
 
+  const baseTabs = [
+    { id: "dashboard", label: "Dashboard", icon: GraduationCap },
+    { id: "conteudos", label: "Arquivos", icon: FileText },
+    { id: "cursos", label: "Cursos", icon: BookOpen },
+    { id: "biblioteca", label: "Biblioteca", icon: Library },
+    { id: "solicitacoes", label: "Aprovações", icon: CheckCircle },
+    { id: "eventos", label: "Eventos", icon: Calendar },
+    { id: "membros", label: "Membros", icon: Users },
+    { id: "segundo_vigilante", label: "2° Vigilante", icon: Shield },
+    { id: "telemetria", label: "Telemetria", icon: Activity },
+    { id: "forum", label: "Fórum / Instrutores", icon: MessageSquare },
+    ...(isOwner || isMaster || user?.role === "gestor"
+      ? [
+          { id: "permissoes", label: "Permissões & Cargos", icon: Key },
+          { id: "configuracoes", label: "Configurações", icon: Settings },
+          { id: "developer_feedback", label: "Fale com o Dev", icon: MessageSquare },
+          { id: "avaliacao", label: "Valuation do Sistema", icon: BarChart3 }
+        ]
+      : []),
+  ];
+
+  const tabs = isRestrictedFaltas
+    ? baseTabs.filter((t) => t.id === "solicitacoes")
+    : isDelegatedUser
+    ? baseTabs.filter((t) => {
+        return (user?.delegatedPastas || []).some((pasta: string) => {
+          const lowerPasta = pasta.toLowerCase().trim();
+          
+          // Alias matching for flexible mapping
+          if (lowerPasta === "dashboard") return t.id === "dashboard";
+          if (lowerPasta === "arquivos" || lowerPasta === "conteudos" || lowerPasta === "arquivos (biblioteca geral)") return t.id === "conteudos";
+          if (lowerPasta === "cursos" || lowerPasta === "cursos (lms)") return t.id === "cursos";
+          if (lowerPasta === "biblioteca" || lowerPasta === "biblioteca digital") return t.id === "biblioteca";
+          if (lowerPasta === "aprovações" || lowerPasta === "aprovacoes" || lowerPasta === "solicitacoes" || lowerPasta.includes("aprova")) return t.id === "solicitacoes";
+          if (lowerPasta === "eventos" || lowerPasta === "calendário de eventos") return t.id === "eventos";
+          if (lowerPasta === "membros" || lowerPasta === "membros (cadastro geral)") return t.id === "membros";
+          if (lowerPasta.includes("2") || lowerPasta.includes("vigilante") || lowerPasta === "segundo_vigilante") return t.id === "segundo_vigilante";
+          if (lowerPasta === "telemetria" || lowerPasta === "telemetria de estudo") return t.id === "telemetria";
+          if (lowerPasta.includes("forum") || lowerPasta.includes("fórum")) return t.id === "forum";
+          if (lowerPasta.includes("dev") || lowerPasta.includes("fale") || lowerPasta === "developer_feedback") return t.id === "developer_feedback";
+          if (lowerPasta.includes("valuation") || lowerPasta.includes("avaliacao") || lowerPasta === "avaliacao") return t.id === "avaliacao";
+          
+          const mappedId = lowerPasta.replace(/\s+/g, "_");
+          return t.id === mappedId;
+        });
+      })
+    : baseTabs;
+
   const initialActiveTab = isRestrictedFaltas
     ? "solicitacoes"
     : isDelegatedUser
-    ? "segundo_vigilante"
+    ? (tabs[0]?.id || "segundo_vigilante")
     : "dashboard";
 
   const [activeTab, setActiveTab] = useState(initialActiveTab);
+
+  // Guard Effect to automatically set activeTab to a valid tab when list changes
+  useEffect(() => {
+    if (tabs.length > 0 && !tabs.some((t) => t.id === activeTab)) {
+      setActiveTab(tabs[0].id);
+    }
+  }, [tabs, activeTab]);
 
   // Filtros de Data para Relatório de Faltas
   const [dataInicioRelatorio, setDataInicioRelatorio] = useState("");
@@ -15486,33 +15561,7 @@ export function GestorDashboard() {
     "aprovar" | "rejeitar" | null
   >(null);
 
-  const baseTabs = [
-    { id: "dashboard", label: "Dashboard", icon: GraduationCap },
-    { id: "conteudos", label: "Arquivos", icon: FileText },
-    { id: "cursos", label: "Cursos", icon: BookOpen },
-    { id: "biblioteca", label: "Biblioteca", icon: Library },
-    { id: "solicitacoes", label: "Aprovações", icon: CheckCircle },
-    { id: "eventos", label: "Eventos", icon: Calendar },
-    { id: "membros", label: "Membros", icon: Users },
-    { id: "segundo_vigilante", label: "2° Vigilante", icon: Shield },
-    { id: "telemetria", label: "Telemetria", icon: Activity },
-    { id: "forum", label: "Fórum / Instrutores", icon: MessageSquare },
-    { id: "configuracoes", label: "Configurações", icon: Settings },
-    ...(isOwner || isMaster || user?.role === "gestor"
-      ? [{ id: "avaliacao", label: "Valuation do Sistema", icon: BarChart3 }]
-      : []),
-  ];
-
-  const tabs = isRestrictedFaltas
-    ? baseTabs.filter((t) => t.id === "solicitacoes")
-    : isDelegatedUser
-    ? baseTabs.filter((t) => {
-        return (user?.delegatedPastas || []).some((pasta: string) => {
-          const mappedId = pasta.toLowerCase().includes("2") ? "segundo_vigilante" : pasta.toLowerCase().replace(/\s+/g, "_");
-          return t.id === mappedId;
-        });
-      })
-    : baseTabs;
+  // Relocated tabs and baseTabs to top level for initial state computation
 
   useEffect(() => {
     loadContents();
@@ -22952,6 +23001,46 @@ service cloud.firestore {
       );
     }
 
+    function isDelegatedToSolicitacoes() {
+      return isDelegatedToPasta('solicitacoes') || isDelegatedToPasta('Aprovações') || isDelegatedToPasta('Aprovacoes') || isDelegatedToPasta('solicitações');
+    }
+
+    function isDelegatedToConteudos() {
+      return isDelegatedToPasta('conteudos') || isDelegatedToPasta('Arquivos') || isDelegatedToPasta('conteúdos') || isDelegatedToPasta('Arquivos (Biblioteca Geral)');
+    }
+
+    function isDelegatedToCursos() {
+      return isDelegatedToPasta('cursos') || isDelegatedToPasta('Cursos') || isDelegatedToPasta('Cursos (LMS)');
+    }
+
+    function isDelegatedToBiblioteca() {
+      return isDelegatedToPasta('biblioteca') || isDelegatedToPasta('Biblioteca') || isDelegatedToPasta('Biblioteca Digital');
+    }
+
+    function isDelegatedToEventos() {
+      return isDelegatedToPasta('eventos') || isDelegatedToPasta('Eventos') || isDelegatedToPasta('Calendário de Eventos');
+    }
+
+    function isDelegatedToMembros() {
+      return isDelegatedToPasta('membros') || isDelegatedToPasta('Membros') || isDelegatedToPasta('Membros (Cadastro Geral)');
+    }
+
+    function isDelegatedToSegundoVigilante() {
+      return isDelegatedToPasta('segundo_vigilante') || isDelegatedToPasta('2° Vigilante') || isDelegatedToPasta('2º Vigilante');
+    }
+
+    function isDelegatedToTelemetria() {
+      return isDelegatedToPasta('telemetria') || isDelegatedToPasta('Telemetria') || isDelegatedToPasta('Telemetria de Estudo');
+    }
+
+    function isDelegatedToForum() {
+      return isDelegatedToPasta('forum') || isDelegatedToPasta('Fórum') || isDelegatedToPasta('Fórum / Instrutores') || isDelegatedToPasta('forum_instrutores') || isDelegatedToPasta('fórum');
+    }
+
+    function isDelegatedToDeveloperFeedback() {
+      return isDelegatedToPasta('developer_feedback') || isDelegatedToPasta('Fale com o Dev');
+    }
+
     function isRestrictedFaltas() {
       return isSignedIn() && (
         (request.auth.token.email != null && (
@@ -22981,23 +23070,29 @@ service cloud.firestore {
       
       // Standard users cannot register their profiles as 'gestor'
       allow create: if isSignedIn() && (
-        isGestor() || (
+        isGestor() || isDelegatedToMembros() || (
           isOwner(userId) && request.resource.data.role == 'membro'
         )
       );
 
       // standard users cannot escalate their role, status, cim, email, or grado
       allow update: if isSignedIn() && (
-        isGestor() || (
+        isGestor() || isDelegatedToMembros() || (
           isOwner(userId) && 
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'grau', 'status', 'cim', 'email'])
         )
       );
 
-      allow delete: if isGestor() || (isSignedIn() && userId != request.auth.uid && request.auth.token.email != null && (
+      allow delete: if isGestor() || isDelegatedToMembros() || (isSignedIn() && userId != request.auth.uid && request.auth.token.email != null && (
         (resource.data.email != null && resource.data.email.lower() == request.auth.token.email.lower()) ||
         (resource.data.emailVinculado != null && resource.data.emailVinculado.lower() == request.auth.token.email.lower())
       ));
+    }
+
+    match /userMetrics/{userId} {
+      allow get, list: if isSignedIn() && (isGestor() || userId == request.auth.uid || isDelegatedToMembros() || isDelegatedToSegundoVigilante() || isDelegatedToTelemetria());
+      allow create, update: if isSignedIn() && (isGestor() || userId == request.auth.uid || isDelegatedToMembros() || isDelegatedToSegundoVigilante() || isDelegatedToTelemetria());
+      allow delete: if isGestor() || isDelegatedToMembros();
     }
 
     match /grades/{gradeId} {
@@ -23007,7 +23102,7 @@ service cloud.firestore {
 
     match /contents/{contentId} {
       allow read: if isSignedIn();
-      allow write: if isGestor();
+      allow write: if isGestor() || isDelegatedToConteudos();
     }
 
     function isPremiumAdmin() {
@@ -23024,78 +23119,78 @@ service cloud.firestore {
     }
 
     match /courses/{courseId} {
-      allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || (resource.data.status == 'publicado' && resource.data.grauPermitido <= getUserGrau()));
-      allow write: if isGestor() || isPremiumAdmin();
+      allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || isDelegatedToCursos() || (resource.data.status == 'publicado' && resource.data.grauPermitido <= getUserGrau()));
+      allow write: if isGestor() || isPremiumAdmin() || isDelegatedToCursos();
       
       match /modules/{moduleId} {
-        allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
-        allow write: if isGestor() || isPremiumAdmin();
+        allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || isDelegatedToCursos() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+        allow write: if isGestor() || isPremiumAdmin() || isDelegatedToCursos();
         
         match /units/{unitId} {
-          allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
-          allow write: if isGestor() || isPremiumAdmin();
+          allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || isDelegatedToCursos() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+          allow write: if isGestor() || isPremiumAdmin() || isDelegatedToCursos();
           
           match /lessons/{lessonId} {
-            allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
-            allow write: if isGestor() || isPremiumAdmin();
+            allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || isDelegatedToCursos() || (get(/databases/$(database)/documents/courses/$(courseId)).data.status == 'publicado' && get(/databases/$(database)/documents/courses/$(courseId)).data.grauPermitido <= getUserGrau()));
+            allow write: if isGestor() || isPremiumAdmin() || isDelegatedToCursos();
           }
         }
       }
     }
 
     match /attempts/{attemptId} {
-      allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || resource.data.userId == request.auth.uid);
+      allow read: if isSignedIn() && (isGestor() || isPremiumAdmin() || isDelegatedToCursos() || isDelegatedToSegundoVigilante() || resource.data.userId == request.auth.uid);
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isSignedIn() && (isGestor() || isPremiumAdmin());
+      allow update: if isSignedIn() && (isGestor() || isPremiumAdmin() || isDelegatedToCursos() || isDelegatedToSegundoVigilante());
     }
 
     match /progress/{progressId} {
-      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor() || isPremiumAdmin());
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor() || isPremiumAdmin());
+      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor() || isPremiumAdmin() || isDelegatedToCursos() || isDelegatedToSegundoVigilante());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor() || isPremiumAdmin() || isDelegatedToCursos() || isDelegatedToSegundoVigilante());
       
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if isSignedIn() && isValidId(progressId) && (
-        isGestor() || isPremiumAdmin() ||
+        isGestor() || isPremiumAdmin() || isDelegatedToCursos() || isDelegatedToSegundoVigilante() ||
         (resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId)
       );
     }
 
     match /requests/{requestId} {
-      allow get: if isSignedIn() && isValidId(requestId) && (resource.data.userId == request.auth.uid || isGestor() || isRestrictedFaltas());
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor() || isRestrictedFaltas());
+      allow get: if isSignedIn() && isValidId(requestId) && (resource.data.userId == request.auth.uid || isGestor() || isRestrictedFaltas() || isDelegatedToSolicitacoes());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor() || isRestrictedFaltas() || isDelegatedToSolicitacoes());
       
       // Prevent standard users from auto-approving their advancement requests
       allow create: if isSignedIn() && (
-        isGestor() || (
+        isGestor() || isDelegatedToSolicitacoes() || (
           request.resource.data.userId == request.auth.uid &&
           request.resource.data.status == 'pendente'
         )
       );
 
       // Prevent standard users from changing request statuses or editing someone else's document ID
-      allow update: if isGestor() || (
+      allow update: if isGestor() || isDelegatedToSolicitacoes() || (
         resource.data.userId == request.auth.uid && 
         resource.data.status == 'pendente' &&
         request.resource.data.status == 'pendente' &&
         request.resource.data.userId == resource.data.userId
       );
 
-      allow delete: if isGestor() || (resource.data.userId == request.auth.uid && (resource.data.status == 'pendente' || resource.data.status == 'rejeitado'));
+      allow delete: if isGestor() || isDelegatedToSolicitacoes() || (resource.data.userId == request.auth.uid && (resource.data.status == 'pendente' || resource.data.status == 'rejeitado'));
     }
 
     match /events/{eventId} {
       allow read: if isSignedIn();
-      allow write: if isGestor();
+      allow write: if isGestor() || isDelegatedToEventos();
     }
 
     match /sessions/{sessionId} {
       allow read: if isSignedIn();
-      allow write: if isGestor();
+      allow write: if isGestor() || isDelegatedToEventos() || isDelegatedToMembros() || isDelegatedToSegundoVigilante();
       
       match /attendance/{attendanceId} {
         allow read: if isSignedIn();
         allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-        allow update, delete: if isGestor();
+        allow update, delete: if isGestor() || isDelegatedToEventos() || isDelegatedToMembros() || isDelegatedToSegundoVigilante();
       }
     }
 
@@ -23105,50 +23200,50 @@ service cloud.firestore {
     }
 
     match /goals/{goalId} {
-      allow get: if isSignedIn() && isValidId(goalId) && (resource.data.userId == request.auth.uid || isGestor());
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      allow get: if isSignedIn() && isValidId(goalId) && (resource.data.userId == request.auth.uid || isGestor() || isDelegatedToSegundoVigilante());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor() || isDelegatedToSegundoVigilante());
       
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isDelegatedToSegundoVigilante());
       allow update: if isSignedIn() && isValidId(goalId) && (
-        isGestor() || 
+        isGestor() || isDelegatedToSegundoVigilante() ||
         (resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid)
       );
-      allow delete: if isSignedIn() && isValidId(goalId) && (isGestor() || resource.data.userId == request.auth.uid);
+      allow delete: if isSignedIn() && isValidId(goalId) && (isGestor() || isDelegatedToSegundoVigilante() || resource.data.userId == request.auth.uid);
     }
 
     match /evaluations/{evaluationId} {
-      allow get: if isSignedIn() && isValidId(evaluationId) && (resource.data.userId == request.auth.uid || isGestor());
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      allow get: if isSignedIn() && isValidId(evaluationId) && (resource.data.userId == request.auth.uid || isGestor() || isDelegatedToSegundoVigilante());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor() || isDelegatedToSegundoVigilante());
       
-      allow write: if isGestor();
+      allow write: if isGestor() || isDelegatedToSegundoVigilante();
     }
 
     match /history/{historyId} {
-      allow get: if isSignedIn() && isValidId(historyId) && (resource.data.userId == request.auth.uid || isGestor());
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      allow get: if isSignedIn() && isValidId(historyId) && (resource.data.userId == request.auth.uid || isGestor() || isDelegatedToSegundoVigilante());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor() || isDelegatedToSegundoVigilante());
       
-      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isGestor());
-      allow update: if isGestor();
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isGestor() || isDelegatedToSegundoVigilante());
+      allow update: if isGestor() || isDelegatedToSegundoVigilante();
     }
 
     match /courseProgress/{progressId} {
-      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor());
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor() || isDelegatedToCursos() || isDelegatedToSegundoVigilante());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor() || isDelegatedToCursos() || isDelegatedToSegundoVigilante());
       
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if isSignedIn() && isValidId(progressId) && (
-        isGestor() || 
+        isGestor() || isDelegatedToCursos() || isDelegatedToSegundoVigilante() ||
         (resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid)
       );
     }
 
     match /reading_progress/{progressId} {
-      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor());
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor());
+      allow get: if isSignedIn() && isValidId(progressId) && (resource.data.userId == request.auth.uid || isGestor() || isDelegatedToCursos() || isDelegatedToSegundoVigilante());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isGestor() || isDelegatedToCursos() || isDelegatedToSegundoVigilante());
       
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update: if isSignedIn() && isValidId(progressId) && (
-        isGestor() || 
+        isGestor() || isDelegatedToCursos() || isDelegatedToSegundoVigilante() ||
         (resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId)
       );
     }
@@ -23160,17 +23255,17 @@ service cloud.firestore {
 
     match /library_items/{itemId} {
       allow read: if isSignedIn();
-      allow write: if isGestor();
+      allow write: if isGestor() || isDelegatedToBiblioteca();
     }
 
     match /library_categories/{categoryId} {
       allow read: if isSignedIn();
-      allow write: if isGestor();
+      allow write: if isGestor() || isDelegatedToBiblioteca();
     }
 
     match /configs/{configId} {
       allow read: if isSignedIn();
-      allow write: if isGestor() || (configId == 'segundo_vigilante' && isDelegatedToPasta('2° Vigilante'));
+      allow write: if isGestor() || (configId == 'segundo_vigilante' && isDelegatedToSegundoVigilante());
     }
 
     match /forumTopics/{topicId} {
@@ -23180,26 +23275,26 @@ service cloud.firestore {
       
       // Author can update status/titles. Other users can ONLY increment replyCount
       allow update: if isSignedIn() && (
-        isGestor() || 
+        isGestor() || isDelegatedToForum() ||
         (resource.data.authorId == request.auth.uid && request.resource.data.authorId == resource.data.authorId) ||
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replyCount']))
       );
 
-      allow delete: if isGestor() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+      allow delete: if isGestor() || isDelegatedToForum() || (isSignedIn() && resource.data.authorId == request.auth.uid);
     }
 
     match /forumReplies/{replyId} {
       allow read: if isSignedIn();
       allow list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isSignedIn() && (isGestor() || resource.data.authorId == request.auth.uid);
-      allow delete: if isGestor() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+      allow update: if isSignedIn() && (isGestor() || isDelegatedToForum() || resource.data.authorId == request.auth.uid);
+      allow delete: if isGestor() || isDelegatedToForum() || (isSignedIn() && resource.data.authorId == request.auth.uid);
     }
 
     match /forumInstructors/{instructorId} {
       allow read: if isSignedIn();
       allow list: if isSignedIn();
-      allow write: if isGestor();
+      allow write: if isGestor() || isDelegatedToForum();
     }
 
     match /accessLogs/{logId} {
@@ -23259,7 +23354,7 @@ service cloud.firestore {
 
     match /officersNotifications/{notificationId} {
       allow read, list: if isSignedIn();
-      allow write: if isGestor() || isDelegatedToPasta('2° Vigilante');
+      allow write: if isGestor() || isDelegatedToSegundoVigilante();
     }
 
     match /tronco_doacoes/{doacaoId} {
@@ -23276,8 +23371,17 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow write: if isSignedIn();
     }
+
+    match /developerFeedback/{feedbackId} {
+      allow read, update, delete: if isGestor() || isDelegatedToDeveloperFeedback();
+      allow create: if isSignedIn() && 
+                    request.resource.data.senderUid == request.auth.uid &&
+                    request.resource.data.message is string &&
+                    request.resource.data.message.size() > 0 &&
+                    request.resource.data.message.size() <= 1000 &&
+                    request.resource.data.read == false;
+    }
   }
 }
-
 ```
 

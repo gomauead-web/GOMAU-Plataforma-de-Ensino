@@ -95,15 +95,72 @@ export function GestorDashboard() {
     userEmail !== "tazmaniacrvg@gmail.com";
 
   const isMaster = ["gomau.ead@gmail.com", "calepi@gmail.com", "calepe@gmail.com"].includes(userEmail) || user?.role === "gestor";
+  const isPremiumAdmin = userEmail === "tazmaniacrvg@gmail.com" || (user?.role as string) === "adminPremium";
   const isDelegatedUser = !isMaster && user?.role !== 'gestor' && !isRestrictedFaltas && user?.delegatedPastas && user.delegatedPastas.length > 0;
+
+  const baseTabs = [
+    { id: "dashboard", label: "Dashboard", icon: GraduationCap },
+    { id: "conteudos", label: "Arquivos", icon: FileText },
+    { id: "cursos", label: "Cursos", icon: BookOpen },
+    { id: "biblioteca", label: "Biblioteca", icon: Library },
+    { id: "solicitacoes", label: "Aprovações", icon: CheckCircle },
+    { id: "eventos", label: "Eventos", icon: Calendar },
+    { id: "membros", label: "Membros", icon: Users },
+    { id: "segundo_vigilante", label: "2° Vigilante", icon: Shield },
+    { id: "telemetria", label: "Telemetria", icon: Activity },
+    { id: "forum", label: "Fórum / Instrutores", icon: MessageSquare },
+    ...(isOwner || isMaster || user?.role === "gestor"
+      ? [
+          { id: "permissoes", label: "Permissões & Cargos", icon: Key },
+          { id: "configuracoes", label: "Configurações", icon: Settings },
+          { id: "developer_feedback", label: "Fale com o Dev", icon: MessageSquare },
+          { id: "avaliacao", label: "Valuation do Sistema", icon: BarChart3 }
+        ]
+      : []),
+  ];
+
+  const tabs = isRestrictedFaltas
+    ? baseTabs.filter((t) => t.id === "solicitacoes")
+    : isDelegatedUser
+    ? baseTabs.filter((t) => {
+        return (user?.delegatedPastas || []).some((pasta: string) => {
+          const lowerPasta = pasta.toLowerCase().trim();
+          
+          // Alias matching for flexible mapping
+          if (lowerPasta === "dashboard") return t.id === "dashboard";
+          if (lowerPasta === "arquivos" || lowerPasta === "conteudos" || lowerPasta === "arquivos (biblioteca geral)") return t.id === "conteudos";
+          if (lowerPasta === "cursos" || lowerPasta === "cursos (lms)") return t.id === "cursos";
+          if (lowerPasta === "biblioteca" || lowerPasta === "biblioteca digital") return t.id === "biblioteca";
+          if (lowerPasta === "aprovações" || lowerPasta === "aprovacoes" || lowerPasta === "solicitacoes" || lowerPasta.includes("aprova")) return t.id === "solicitacoes";
+          if (lowerPasta === "eventos" || lowerPasta === "calendário de eventos") return t.id === "eventos";
+          if (lowerPasta === "membros" || lowerPasta === "membros (cadastro geral)") return t.id === "membros";
+          if (lowerPasta.includes("2") || lowerPasta.includes("vigilante") || lowerPasta === "segundo_vigilante") return t.id === "segundo_vigilante";
+          if (lowerPasta === "telemetria" || lowerPasta === "telemetria de estudo") return t.id === "telemetria";
+          if (lowerPasta.includes("forum") || lowerPasta.includes("fórum")) return t.id === "forum";
+          if (lowerPasta.includes("dev") || lowerPasta.includes("fale") || lowerPasta === "developer_feedback") return t.id === "developer_feedback";
+          if (lowerPasta.includes("valuation") || lowerPasta.includes("avaliacao") || lowerPasta === "avaliacao") return t.id === "avaliacao";
+          
+          const mappedId = lowerPasta.replace(/\s+/g, "_");
+          return t.id === mappedId;
+        });
+      })
+    : baseTabs;
 
   const initialActiveTab = isRestrictedFaltas
     ? "solicitacoes"
     : isDelegatedUser
-    ? "segundo_vigilante"
+    ? (tabs[0]?.id || "segundo_vigilante")
     : "dashboard";
 
   const [activeTab, setActiveTab] = useState(initialActiveTab);
+
+  // Guard Effect to automatically set activeTab to a valid tab when list changes
+  useEffect(() => {
+    if (tabs.length > 0 && !tabs.some((t) => t.id === activeTab)) {
+      setActiveTab(tabs[0].id);
+    }
+  }, [tabs, activeTab]);
+
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
   const [selectedFeedbackFilter, setSelectedFeedbackFilter] = useState<string>("all");
 
@@ -479,166 +536,163 @@ export function GestorDashboard() {
     "aprovar" | "rejeitar" | null
   >(null);
 
-  const baseTabs = [
-    { id: "dashboard", label: "Dashboard", icon: GraduationCap },
-    { id: "conteudos", label: "Arquivos", icon: FileText },
-    { id: "cursos", label: "Cursos", icon: BookOpen },
-    { id: "biblioteca", label: "Biblioteca", icon: Library },
-    { id: "solicitacoes", label: "Aprovações", icon: CheckCircle },
-    { id: "eventos", label: "Eventos", icon: Calendar },
-    { id: "membros", label: "Membros", icon: Users },
-    { id: "segundo_vigilante", label: "2° Vigilante", icon: Shield },
-    { id: "telemetria", label: "Telemetria", icon: Activity },
-    { id: "forum", label: "Fórum / Instrutores", icon: MessageSquare },
-    ...(isOwner || isMaster || user?.role === "gestor"
-      ? [
-          { id: "permissoes", label: "Permissões & Cargos", icon: Key },
-          { id: "configuracoes", label: "Configurações", icon: Settings },
-          { id: "developer_feedback", label: "Fale com o Dev", icon: MessageSquare },
-          { id: "avaliacao", label: "Valuation do Sistema", icon: BarChart3 }
-        ]
-      : []),
-  ];
-
-  const tabs = isRestrictedFaltas
-    ? baseTabs.filter((t) => t.id === "solicitacoes")
-    : isDelegatedUser
-    ? baseTabs.filter((t) => {
-        return (user?.delegatedPastas || []).some((pasta: string) => {
-          const lowerPasta = pasta.toLowerCase().trim();
-          
-          // Alias matching for flexible mapping
-          if (lowerPasta === "dashboard") return t.id === "dashboard";
-          if (lowerPasta === "arquivos" || lowerPasta === "conteudos" || lowerPasta === "arquivos (biblioteca geral)") return t.id === "conteudos";
-          if (lowerPasta === "cursos" || lowerPasta === "cursos (lms)") return t.id === "cursos";
-          if (lowerPasta === "biblioteca" || lowerPasta === "biblioteca digital") return t.id === "biblioteca";
-          if (lowerPasta === "aprovações" || lowerPasta === "aprovacoes" || lowerPasta === "solicitacoes" || lowerPasta.includes("aprova")) return t.id === "solicitacoes";
-          if (lowerPasta === "eventos" || lowerPasta === "calendário de eventos") return t.id === "eventos";
-          if (lowerPasta === "membros" || lowerPasta === "membros (cadastro geral)") return t.id === "membros";
-          if (lowerPasta.includes("2") || lowerPasta.includes("vigilante") || lowerPasta === "segundo_vigilante") return t.id === "segundo_vigilante";
-          if (lowerPasta === "telemetria" || lowerPasta === "telemetria de estudo") return t.id === "telemetria";
-          if (lowerPasta.includes("forum") || lowerPasta.includes("fórum")) return t.id === "forum";
-          if (lowerPasta.includes("dev") || lowerPasta.includes("fale") || lowerPasta === "developer_feedback") return t.id === "developer_feedback";
-          if (lowerPasta.includes("valuation") || lowerPasta.includes("avaliacao") || lowerPasta === "avaliacao") return t.id === "avaliacao";
-          
-          const mappedId = lowerPasta.replace(/\s+/g, "_");
-          return t.id === mappedId;
-        });
-      })
-    : baseTabs;
+  // Relocated tabs and baseTabs to top level for initial state computation
 
   useEffect(() => {
-    loadContents();
-    loadCourses();
-    loadEvents();
-    loadEvolutionRules();
-    seedInitialSecurity();
+    // Determine user access capabilities for conditional fetching/subscribing
+    const delegatedPastas = user?.delegatedPastas || [];
+    const hasPasta = (id: string) => delegatedPastas.some((p: string) => {
+      const lp = p.toLowerCase().trim();
+      return lp === id ||
+             (id === "conteudos" && (lp === "conteudos" || lp === "arquivos" || lp === "arquivos (biblioteca geral)")) ||
+             (id === "cursos" && (lp === "cursos" || lp === "cursos (lms)")) ||
+             (id === "biblioteca" && (lp === "biblioteca" || lp === "biblioteca digital")) ||
+             (id === "solicitacoes" && (lp === "solicitacoes" || lp === "aprovações" || lp === "aprovacoes" || lp.includes("aprova"))) ||
+             (id === "eventos" && (lp === "eventos" || lp === "calendário de eventos")) ||
+             (id === "membros" && (lp === "membros" || lp === "membros (cadastro geral)")) ||
+             (id === "segundo_vigilante" && (lp === "segundo_vigilante" || lp.includes("2") || lp.includes("vigilante"))) ||
+             (id === "telemetria" && (lp === "telemetria" || lp === "telemetria de estudo")) ||
+             (id === "forum" && (lp === "forum" || lp === "fórum" || lp.includes("forum") || lp.includes("fórum"))) ||
+             (id === "developer_feedback" && (lp === "developer_feedback" || lp.includes("dev") || lp.includes("fale")));
+    });
+
+    const canReadContents = isMaster || hasPasta("conteudos");
+    const canReadCourses = isMaster || isPremiumAdmin || hasPasta("cursos");
+    const canReadEvents = isMaster || hasPasta("eventos");
+    const canReadEvolutionRules = isMaster || isRestrictedFaltas || hasPasta("segundo_vigilante");
+    const canSeedSecurity = isMaster || user?.role === "gestor";
+
+    if (canReadContents) loadContents();
+    if (canReadCourses) loadCourses();
+    if (canReadEvents) loadEvents();
+    if (canReadEvolutionRules) loadEvolutionRules();
+    if (canSeedSecurity) seedInitialSecurity();
     loadExcelEmails();
 
     // Listener em tempo real para solicitações
-    const unsubRequests = onSnapshot(query(collection(db, "requests"), where("status", "==", "pendente")), (snap) => {
-      let data = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
-      if (isRestrictedFaltas) {
-        data = data.filter((d) => d.tipo === "Justificativa de Falta");
-      }
-      setRequests(data);
-    }, (err) => console.error("Erro real-time requests:", err));
+    const canAccessRequests = isMaster || isRestrictedFaltas || hasPasta("solicitacoes");
+    let unsubRequests = () => {};
+    if (canAccessRequests) {
+      unsubRequests = onSnapshot(query(collection(db, "requests"), where("status", "==", "pendente")), (snap) => {
+        let data = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+        if (isRestrictedFaltas) {
+          data = data.filter((d) => d.tipo === "Justificativa de Falta");
+        }
+        setRequests(data);
+      }, (err) => console.error("Erro real-time requests:", err));
+    }
 
     // Listener em tempo real para accessLogs
-    const qLogs = query(
-      collection(db, "accessLogs"),
-      orderBy("timestamp", "desc"),
-      limit(150),
-    );
-    const unsubscribeLogs = onSnapshot(
-      qLogs,
-      (snap) => {
-        setAccessLogs(
-          snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })),
-        );
-      },
-      (err) => {
-        console.warn("Erro ao carregar accessLogs:", err);
-      },
-    );
+    const canAccessLogs = isMaster || hasPasta("telemetria") || hasPasta("dashboard");
+    let unsubscribeLogs = () => {};
+    if (canAccessLogs) {
+      const qLogs = query(
+        collection(db, "accessLogs"),
+        orderBy("timestamp", "desc"),
+        limit(150),
+      );
+      unsubscribeLogs = onSnapshot(
+        qLogs,
+        (snap) => {
+          setAccessLogs(
+            snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })),
+          );
+        },
+        (err) => {
+          console.warn("Erro ao carregar accessLogs:", err);
+        },
+      );
+    }
 
     // Listener em tempo real para membros
-    const qMembers = query(collection(db, "users"), orderBy("nome", "asc"));
-    const unsubscribeMembers = onSnapshot(
-      qMembers,
-      (snap) => {
-        const allDocs = snap.docs.map((d) => ({
-          id: d.id,
-          ...(d.data() as any),
-        }));
+    const canAccessMembers = isMaster || hasPasta("membros") || hasPasta("segundo_vigilante") || hasPasta("dashboard");
+    let unsubscribeMembers = () => {};
+    if (canAccessMembers) {
+      const qMembers = query(collection(db, "users"), orderBy("nome", "asc"));
+      unsubscribeMembers = onSnapshot(
+        qMembers,
+        (snap) => {
+          const allDocs = snap.docs.map((d) => ({
+            id: d.id,
+            ...(d.data() as any),
+          }));
 
-        // Deduplicação em tempo real por e-mail (normalizado)
-        // Prioriza registros com UID (logados) e com mais campos preenchidos
-        const seenEmails = new Set();
-        const uniqueList: any[] = [];
+          // Deduplicação em tempo real por e-mail (normalizado)
+          // Prioriza registros com UID (logados) e com mais campos preenchidos
+          const seenEmails = new Set();
+          const uniqueList: any[] = [];
 
-        const sortedDocs = [...allDocs].sort((a, b) => {
-          if (a.uid && !b.uid) return -1;
-          if (!a.uid && b.uid) return 1;
-          return Object.keys(b).length - Object.keys(a).length;
-        });
+          const sortedDocs = [...allDocs].sort((a, b) => {
+            if (a.uid && !b.uid) return -1;
+            if (!a.uid && b.uid) return 1;
+            return Object.keys(b).length - Object.keys(a).length;
+          });
 
-        sortedDocs.forEach((m) => {
-          const emailKey = (m.email || "").toLowerCase().trim();
-          if (
-            emailKey &&
-            !seenEmails.has(emailKey) &&
-            ![
-              "gomau.ead@gmail.com",
-              "calepi@gmail.com",
-              "calepe@gmail.com",
-            ].includes(emailKey)
-          ) {
-            seenEmails.add(emailKey);
-            uniqueList.push(m);
+          sortedDocs.forEach((m) => {
+            const emailKey = (m.email || "").toLowerCase().trim();
+            if (
+              emailKey &&
+              !seenEmails.has(emailKey) &&
+              ![
+                "gomau.ead@gmail.com",
+                "calepi@gmail.com",
+                "calepe@gmail.com",
+              ].includes(emailKey)
+            ) {
+              seenEmails.add(emailKey);
+              uniqueList.push(m);
+            }
+          });
+
+          // Reordenar por nome para exibição
+          uniqueList.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
+
+          setMembers(uniqueList);
+          setLoadingMembers(false);
+
+          // Acionamento automático da rotina de limpeza profunda se muitas duplicatas detectadas
+          if (allDocs.length > uniqueList.length + 3) {
+            setTimeout(() => handleGlobalCorrection(true), 5000);
           }
-        });
+        },
+        (err: any) => {
+          console.error("Error loading members:", err);
+          if (err?.code === "resource-exhausted") {
+            console.warn("Cota excedida no dashboard.");
+          }
+          setLoadingMembers(false);
+        },
+      );
+    } else {
+      setLoadingMembers(false);
+    }
 
-        // Reordenar por nome para exibição
-        uniqueList.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
-
-        setMembers(uniqueList);
-        setLoadingMembers(false);
-
-        // Acionamento automático da rotina de limpeza profunda se muitas duplicatas detectadas
-        if (allDocs.length > uniqueList.length + 3) {
-          setTimeout(() => handleGlobalCorrection(true), 5000);
-        }
-      },
-      (err: any) => {
-        console.error("Error loading members:", err);
-        if (err?.code === "resource-exhausted") {
-          console.warn("Cota excedida no dashboard.");
-        }
-        setLoadingMembers(false);
-      },
-    );
-
-    const unsubFeedbacks = onSnapshot(
-      collection(db, "developerFeedback"),
-      (snap) => {
-        const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
-        list.sort((a, b) => {
-          const tA = a.createdAt?.seconds || 0;
-          const tB = b.createdAt?.seconds || 0;
-          return tB - tA;
-        });
-        setFeedbacks(list);
-      },
-      (err) => console.error("Erro real-time feedbacks:", err)
-    );
+    // Listener em tempo real para feedbacks do desenvolvedor
+    const canAccessFeedbacks = isMaster || hasPasta("developer_feedback");
+    let unsubFeedbacks = () => {};
+    if (canAccessFeedbacks) {
+      unsubFeedbacks = onSnapshot(
+        collection(db, "developerFeedback"),
+        (snap) => {
+          const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+          list.sort((a, b) => {
+            const tA = a.createdAt?.seconds || 0;
+            const tB = b.createdAt?.seconds || 0;
+            return tB - tA;
+          });
+          setFeedbacks(list);
+        },
+        (err) => console.error("Erro real-time feedbacks:", err)
+      );
+    }
 
     return () => {
+      unsubRequests();
       unsubscribeMembers();
       unsubscribeLogs();
       unsubFeedbacks();
     };
-  }, []);
+  }, [user]);
 
   const [lastRefresh, setLastRefresh] = useState(new Date());
 

@@ -306,11 +306,27 @@ export function GestorValuation() {
              <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm font-sans">Matriz de Permissões & Delegações Granulares</h3>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed font-sans">
-             Matriz bidirecional de outorga de controle ("Por Membro" e "Por Pasta") com lookup síncrono de obreiros. Permite delegar o gerenciamento de qualquer pasta ou sub-opção a múltiplos CIMs individuais ou em lote (separados por vírgula), blindando configurações de acesso exclusivo do Owner.
+             Matriz bidirecional de outorga de controle ("Por Membro" e "Por Pasta") com sincronização em tempo real (onSnapshot) de permissões e resolução inteligente de abas ativas. Permite delegar o gerenciamento de qualquer pasta a múltiplos CIMs de forma imediata, blindando acessos exclusivos do Owner.
           </p>
           <div className="mt-auto">
-             <div className="text-[#D4AF37] font-bold text-lg">R$ 14.500,00</div>
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 18.500,00</div>
              <div className="text-[10px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Adicional Ativo</div>
+          </div>
+        </div>
+
+        <div className="bg-[#0A0E1A] p-6 rounded-xl border border-[#D4AF37]/35 flex flex-col gap-4 shadow-xl hover:border-[#D4AF37]/55 transition-colors">
+          <div className="flex items-center gap-3">
+             <div className="p-3 rounded-lg bg-[#1e293b] text-[#D4AF37]">
+                <ShieldCheck size={24} />
+             </div>
+             <h3 className="font-bold text-gray-200 uppercase tracking-wide text-sm font-sans">Resoluções Síncronas no Firestore (Rules Delegation)</h3>
+          </div>
+          <p className="text-xs text-gray-400 leading-relaxed font-sans">
+             Implementação de regras robustas no Firestore Security Rules (`firestore.rules`) cobrindo 10 coleções para habilitar leituras e escritas condicionadas a permissões ativas delegadas (inclusive para instrutores do Fórum e Solicitações de Avanço). Impede privilégios e vazamentos.
+          </p>
+          <div className="mt-auto">
+             <div className="text-[#D4AF37] font-bold text-lg">R$ 6.000,00</div>
+             <div className="text-[10px] text-[#D4AF37] font-bold uppercase mt-1 tracking-widest font-sans">Módulo Ativo</div>
           </div>
         </div>
 
@@ -484,7 +500,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight font-sans">R$ 256.000,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight font-sans">R$ 266.000,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>

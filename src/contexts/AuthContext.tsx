@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, ReactNode } from 'react';
 import { onAuthStateChanged, User as FirebaseUser, setPersistence, browserLocalPersistence, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { MASTER_ADMINS, TEST_USERS } from '../constants';
 
@@ -96,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let unsubscribeDoc: (() => void) | null = null;
+    let unsubscribeDelegations: (() => void) | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log("Auth State Changed:", firebaseUser?.email || "null");
@@ -142,8 +143,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (firebaseUser) {
-        // Cancel existing doc listener
+        // Cancel existing doc and delegation listeners
         if (unsubscribeDoc) unsubscribeDoc();
+        if (unsubscribeDelegations) {
+          unsubscribeDelegations();
+          unsubscribeDelegations = null;
+        }
 
         // Inicializa o timer de sessão global
         const SESSION_DURATION = sessionTimeout * 60 * 1000;
@@ -203,12 +208,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (dbUser.cim) {
                   const cimStr = dbUser.cim.toString().trim();
                   const qDelegations = query(collection(db, 'adminPermissions'), where('cim', '==', cimStr));
-                  getDocs(qDelegations).then((delegationSnap) => {
+                  
+                  if (unsubscribeDelegations) {
+                    unsubscribeDelegations();
+                  }
+
+                  unsubscribeDelegations = onSnapshot(qDelegations, (delegationSnap) => {
                     const delegatedPastas = delegationSnap.docs.map(d => d.data().pasta);
                     updateUserWithCache({ ...baseUser, delegatedPastas });
                     setLoading(false);
-                  }).catch((err) => {
-                    console.warn("Erro ao buscar delegações:", err);
+                  }, (err) => {
+                    console.warn("Erro ao buscar delegações real-time:", err);
                     updateUserWithCache({ ...baseUser, delegatedPastas: [] });
                     setLoading(false);
                   });
@@ -329,12 +339,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   if (dbUser.cim) {
                     const cimStr = dbUser.cim.toString().trim();
                     const qDelegations = query(collection(db, 'adminPermissions'), where('cim', '==', cimStr));
-                    getDocs(qDelegations).then((delegationSnap) => {
+                    
+                    if (unsubscribeDelegations) {
+                      unsubscribeDelegations();
+                    }
+
+                    unsubscribeDelegations = onSnapshot(qDelegations, (delegationSnap) => {
                       const delegatedPastas = delegationSnap.docs.map(d => d.data().pasta);
                       updateUserWithCache({ ...baseUser, delegatedPastas });
                       setLoading(false);
-                    }).catch((err) => {
-                      console.warn("Erro ao buscar delegações:", err);
+                    }, (err) => {
+                      console.warn("Erro ao buscar delegações real-time:", err);
                       updateUserWithCache({ ...baseUser, delegatedPastas: [] });
                       setLoading(false);
                     });
@@ -426,6 +441,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         if (unsubscribeDoc) unsubscribeDoc();
+        if (unsubscribeDelegations) {
+          unsubscribeDelegations();
+          unsubscribeDelegations = null;
+        }
         setUser(null);
         setLoading(false);
       }
@@ -434,6 +453,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       unsubscribeAuth();
       if (unsubscribeDoc) unsubscribeDoc();
+      if (unsubscribeDelegations) unsubscribeDelegations();
     };
   }, []);
 

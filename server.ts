@@ -4,11 +4,16 @@ import { createServer as createViteServer } from "vite";
 import admin from 'firebase-admin';
 
 // Initialize Firebase Admin (Only once)
-if (!admin.apps.length) {
-  admin.initializeApp();
+let adminDb: any = null;
+try {
+  if (!admin.apps.length) {
+    admin.initializeApp();
+  }
+  adminDb = admin.firestore();
+  console.log("Firebase Admin successfully initialized.");
+} catch (error) {
+  console.warn("Firebase Admin failed to initialize. Server will continue without Admin SDK.", error);
 }
-
-const db = admin.firestore();
 
 async function startServer() {
   const app = express();
