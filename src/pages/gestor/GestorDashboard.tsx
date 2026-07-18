@@ -119,31 +119,29 @@ export function GestorDashboard() {
       : []),
   ];
 
+  const checkPastaMatch = (pasta: string, tabId: string) => {
+    const lowerPasta = pasta.toLowerCase().trim();
+    if (lowerPasta === "dashboard") return tabId === "dashboard";
+    if (lowerPasta === "arquivos" || lowerPasta === "conteudos" || lowerPasta === "arquivos (biblioteca geral)") return tabId === "conteudos";
+    if (lowerPasta === "cursos" || lowerPasta === "cursos (lms)") return tabId === "cursos";
+    if (lowerPasta === "biblioteca" || lowerPasta === "biblioteca digital") return tabId === "biblioteca";
+    if (lowerPasta === "aprovações" || lowerPasta === "aprovacoes" || lowerPasta === "solicitacoes" || lowerPasta.includes("aprova")) return tabId === "solicitacoes";
+    if (lowerPasta === "eventos" || lowerPasta === "calendário de eventos") return tabId === "eventos";
+    if (lowerPasta === "membros" || lowerPasta === "membros (cadastro geral)") return tabId === "membros";
+    if (lowerPasta.includes("2") || lowerPasta.includes("vigilante") || lowerPasta === "segundo_vigilante") return tabId === "segundo_vigilante";
+    if (lowerPasta === "telemetria" || lowerPasta === "telemetria de estudo") return tabId === "telemetria";
+    if (lowerPasta.includes("forum") || lowerPasta.includes("fórum")) return tabId === "forum";
+    if (lowerPasta.includes("dev") || lowerPasta.includes("fale") || lowerPasta === "developer_feedback") return tabId === "developer_feedback";
+    if (lowerPasta.includes("valuation") || lowerPasta.includes("avaliacao") || lowerPasta === "avaliacao") return tabId === "avaliacao";
+    
+    const mappedId = lowerPasta.replace(/\s+/g, "_");
+    return tabId === mappedId;
+  };
+
   const tabs = isRestrictedFaltas
-    ? baseTabs.filter((t) => t.id === "solicitacoes")
+    ? baseTabs.filter((t) => t.id === "solicitacoes" || (user?.delegatedPastas || []).some((pasta: string) => checkPastaMatch(pasta, t.id)))
     : isDelegatedUser
-    ? baseTabs.filter((t) => {
-        return (user?.delegatedPastas || []).some((pasta: string) => {
-          const lowerPasta = pasta.toLowerCase().trim();
-          
-          // Alias matching for flexible mapping
-          if (lowerPasta === "dashboard") return t.id === "dashboard";
-          if (lowerPasta === "arquivos" || lowerPasta === "conteudos" || lowerPasta === "arquivos (biblioteca geral)") return t.id === "conteudos";
-          if (lowerPasta === "cursos" || lowerPasta === "cursos (lms)") return t.id === "cursos";
-          if (lowerPasta === "biblioteca" || lowerPasta === "biblioteca digital") return t.id === "biblioteca";
-          if (lowerPasta === "aprovações" || lowerPasta === "aprovacoes" || lowerPasta === "solicitacoes" || lowerPasta.includes("aprova")) return t.id === "solicitacoes";
-          if (lowerPasta === "eventos" || lowerPasta === "calendário de eventos") return t.id === "eventos";
-          if (lowerPasta === "membros" || lowerPasta === "membros (cadastro geral)") return t.id === "membros";
-          if (lowerPasta.includes("2") || lowerPasta.includes("vigilante") || lowerPasta === "segundo_vigilante") return t.id === "segundo_vigilante";
-          if (lowerPasta === "telemetria" || lowerPasta === "telemetria de estudo") return t.id === "telemetria";
-          if (lowerPasta.includes("forum") || lowerPasta.includes("fórum")) return t.id === "forum";
-          if (lowerPasta.includes("dev") || lowerPasta.includes("fale") || lowerPasta === "developer_feedback") return t.id === "developer_feedback";
-          if (lowerPasta.includes("valuation") || lowerPasta.includes("avaliacao") || lowerPasta === "avaliacao") return t.id === "avaliacao";
-          
-          const mappedId = lowerPasta.replace(/\s+/g, "_");
-          return t.id === mappedId;
-        });
-      })
+    ? baseTabs.filter((t) => (user?.delegatedPastas || []).some((pasta: string) => checkPastaMatch(pasta, t.id)))
     : baseTabs;
 
   const initialActiveTab = isRestrictedFaltas

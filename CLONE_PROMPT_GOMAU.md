@@ -15141,6 +15141,7 @@ export function GestorDashboard() {
     userEmail !== "tazmaniacrvg@gmail.com";
 
   const isMaster = ["gomau.ead@gmail.com", "calepi@gmail.com", "calepe@gmail.com"].includes(userEmail) || user?.role === "gestor";
+  const isPremiumAdmin = userEmail === "tazmaniacrvg@gmail.com" || (user?.role as string) === "adminPremium";
   const isDelegatedUser = !isMaster && user?.role !== 'gestor' && !isRestrictedFaltas && user?.delegatedPastas && user.delegatedPastas.length > 0;
 
   const baseTabs = [
@@ -15164,31 +15165,29 @@ export function GestorDashboard() {
       : []),
   ];
 
+  const checkPastaMatch = (pasta: string, tabId: string) => {
+    const lowerPasta = pasta.toLowerCase().trim();
+    if (lowerPasta === "dashboard") return tabId === "dashboard";
+    if (lowerPasta === "arquivos" || lowerPasta === "conteudos" || lowerPasta === "arquivos (biblioteca geral)") return tabId === "conteudos";
+    if (lowerPasta === "cursos" || lowerPasta === "cursos (lms)") return tabId === "cursos";
+    if (lowerPasta === "biblioteca" || lowerPasta === "biblioteca digital") return tabId === "biblioteca";
+    if (lowerPasta === "aprovações" || lowerPasta === "aprovacoes" || lowerPasta === "solicitacoes" || lowerPasta.includes("aprova")) return tabId === "solicitacoes";
+    if (lowerPasta === "eventos" || lowerPasta === "calendário de eventos") return tabId === "eventos";
+    if (lowerPasta === "membros" || lowerPasta === "membros (cadastro geral)") return tabId === "membros";
+    if (lowerPasta.includes("2") || lowerPasta.includes("vigilante") || lowerPasta === "segundo_vigilante") return tabId === "segundo_vigilante";
+    if (lowerPasta === "telemetria" || lowerPasta === "telemetria de estudo") return tabId === "telemetria";
+    if (lowerPasta.includes("forum") || lowerPasta.includes("fórum")) return tabId === "forum";
+    if (lowerPasta.includes("dev") || lowerPasta.includes("fale") || lowerPasta === "developer_feedback") return tabId === "developer_feedback";
+    if (lowerPasta.includes("valuation") || lowerPasta.includes("avaliacao") || lowerPasta === "avaliacao") return tabId === "avaliacao";
+    
+    const mappedId = lowerPasta.replace(/\s+/g, "_");
+    return tabId === mappedId;
+  };
+
   const tabs = isRestrictedFaltas
-    ? baseTabs.filter((t) => t.id === "solicitacoes")
+    ? baseTabs.filter((t) => t.id === "solicitacoes" || (user?.delegatedPastas || []).some((pasta: string) => checkPastaMatch(pasta, t.id)))
     : isDelegatedUser
-    ? baseTabs.filter((t) => {
-        return (user?.delegatedPastas || []).some((pasta: string) => {
-          const lowerPasta = pasta.toLowerCase().trim();
-          
-          // Alias matching for flexible mapping
-          if (lowerPasta === "dashboard") return t.id === "dashboard";
-          if (lowerPasta === "arquivos" || lowerPasta === "conteudos" || lowerPasta === "arquivos (biblioteca geral)") return t.id === "conteudos";
-          if (lowerPasta === "cursos" || lowerPasta === "cursos (lms)") return t.id === "cursos";
-          if (lowerPasta === "biblioteca" || lowerPasta === "biblioteca digital") return t.id === "biblioteca";
-          if (lowerPasta === "aprovações" || lowerPasta === "aprovacoes" || lowerPasta === "solicitacoes" || lowerPasta.includes("aprova")) return t.id === "solicitacoes";
-          if (lowerPasta === "eventos" || lowerPasta === "calendário de eventos") return t.id === "eventos";
-          if (lowerPasta === "membros" || lowerPasta === "membros (cadastro geral)") return t.id === "membros";
-          if (lowerPasta.includes("2") || lowerPasta.includes("vigilante") || lowerPasta === "segundo_vigilante") return t.id === "segundo_vigilante";
-          if (lowerPasta === "telemetria" || lowerPasta === "telemetria de estudo") return t.id === "telemetria";
-          if (lowerPasta.includes("forum") || lowerPasta.includes("fórum")) return t.id === "forum";
-          if (lowerPasta.includes("dev") || lowerPasta.includes("fale") || lowerPasta === "developer_feedback") return t.id === "developer_feedback";
-          if (lowerPasta.includes("valuation") || lowerPasta.includes("avaliacao") || lowerPasta === "avaliacao") return t.id === "avaliacao";
-          
-          const mappedId = lowerPasta.replace(/\s+/g, "_");
-          return t.id === mappedId;
-        });
-      })
+    ? baseTabs.filter((t) => (user?.delegatedPastas || []).some((pasta: string) => checkPastaMatch(pasta, t.id)))
     : baseTabs;
 
   const initialActiveTab = isRestrictedFaltas
@@ -15205,6 +15204,26 @@ export function GestorDashboard() {
       setActiveTab(tabs[0].id);
     }
   }, [tabs, activeTab]);
+
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [selectedFeedbackFilter, setSelectedFeedbackFilter] = useState<string>("all");
+
+  const handleMarkFeedbackRead = async (id: string, currentRead: boolean) => {
+    try {
+      await updateDoc(doc(db, "developerFeedback", id), { read: !currentRead });
+    } catch (err) {
+      console.error("Erro ao alternar leitura do feedback:", err);
+    }
+  };
+
+  const handleDeleteFeedback = async (id: string) => {
+    if (!window.confirm("Deseja realmente remover esta mensagem permanentemente?")) return;
+    try {
+      await deleteDoc(doc(db, "developerFeedback", id));
+    } catch (err) {
+      console.error("Erro ao deletar feedback:", err);
+    }
+  };
 
   // Filtros de Data para Relatório de Faltas
   const [dataInicioRelatorio, setDataInicioRelatorio] = useState("");
@@ -15564,94 +15583,160 @@ export function GestorDashboard() {
   // Relocated tabs and baseTabs to top level for initial state computation
 
   useEffect(() => {
-    loadContents();
-    loadCourses();
-    loadRequests();
-    loadEvents();
-    loadEvolutionRules();
-    seedInitialSecurity();
+    // Determine user access capabilities for conditional fetching/subscribing
+    const delegatedPastas = user?.delegatedPastas || [];
+    const hasPasta = (id: string) => delegatedPastas.some((p: string) => {
+      const lp = p.toLowerCase().trim();
+      return lp === id ||
+             (id === "conteudos" && (lp === "conteudos" || lp === "arquivos" || lp === "arquivos (biblioteca geral)")) ||
+             (id === "cursos" && (lp === "cursos" || lp === "cursos (lms)")) ||
+             (id === "biblioteca" && (lp === "biblioteca" || lp === "biblioteca digital")) ||
+             (id === "solicitacoes" && (lp === "solicitacoes" || lp === "aprovações" || lp === "aprovacoes" || lp.includes("aprova"))) ||
+             (id === "eventos" && (lp === "eventos" || lp === "calendário de eventos")) ||
+             (id === "membros" && (lp === "membros" || lp === "membros (cadastro geral)")) ||
+             (id === "segundo_vigilante" && (lp === "segundo_vigilante" || lp.includes("2") || lp.includes("vigilante"))) ||
+             (id === "telemetria" && (lp === "telemetria" || lp === "telemetria de estudo")) ||
+             (id === "forum" && (lp === "forum" || lp === "fórum" || lp.includes("forum") || lp.includes("fórum"))) ||
+             (id === "developer_feedback" && (lp === "developer_feedback" || lp.includes("dev") || lp.includes("fale")));
+    });
+
+    const canReadContents = isMaster || hasPasta("conteudos");
+    const canReadCourses = isMaster || isPremiumAdmin || hasPasta("cursos");
+    const canReadEvents = isMaster || hasPasta("eventos");
+    const canReadEvolutionRules = isMaster || isRestrictedFaltas || hasPasta("segundo_vigilante");
+    const canSeedSecurity = isMaster || user?.role === "gestor";
+
+    if (canReadContents) loadContents();
+    if (canReadCourses) loadCourses();
+    if (canReadEvents) loadEvents();
+    if (canReadEvolutionRules) loadEvolutionRules();
+    if (canSeedSecurity) seedInitialSecurity();
     loadExcelEmails();
 
+    // Listener em tempo real para solicitações
+    const canAccessRequests = isMaster || isRestrictedFaltas || hasPasta("solicitacoes");
+    let unsubRequests = () => {};
+    if (canAccessRequests) {
+      unsubRequests = onSnapshot(query(collection(db, "requests"), where("status", "==", "pendente")), (snap) => {
+        let data = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+        if (isRestrictedFaltas) {
+          data = data.filter((d) => d.tipo === "Justificativa de Falta");
+        }
+        setRequests(data);
+      }, (err) => console.error("Erro real-time requests:", err));
+    }
+
     // Listener em tempo real para accessLogs
-    const qLogs = query(
-      collection(db, "accessLogs"),
-      orderBy("timestamp", "desc"),
-      limit(150),
-    );
-    const unsubscribeLogs = onSnapshot(
-      qLogs,
-      (snap) => {
-        setAccessLogs(
-          snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })),
-        );
-      },
-      (err) => {
-        console.warn("Erro ao carregar accessLogs:", err);
-      },
-    );
+    const canAccessLogs = isMaster || hasPasta("telemetria") || hasPasta("dashboard");
+    let unsubscribeLogs = () => {};
+    if (canAccessLogs) {
+      const qLogs = query(
+        collection(db, "accessLogs"),
+        orderBy("timestamp", "desc"),
+        limit(150),
+      );
+      unsubscribeLogs = onSnapshot(
+        qLogs,
+        (snap) => {
+          setAccessLogs(
+            snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })),
+          );
+        },
+        (err) => {
+          console.warn("Erro ao carregar accessLogs:", err);
+        },
+      );
+    }
 
     // Listener em tempo real para membros
-    const qMembers = query(collection(db, "users"), orderBy("nome", "asc"));
-    const unsubscribeMembers = onSnapshot(
-      qMembers,
-      (snap) => {
-        const allDocs = snap.docs.map((d) => ({
-          id: d.id,
-          ...(d.data() as any),
-        }));
+    const canAccessMembers = isMaster || hasPasta("membros") || hasPasta("segundo_vigilante") || hasPasta("dashboard");
+    let unsubscribeMembers = () => {};
+    if (canAccessMembers) {
+      const qMembers = query(collection(db, "users"), orderBy("nome", "asc"));
+      unsubscribeMembers = onSnapshot(
+        qMembers,
+        (snap) => {
+          const allDocs = snap.docs.map((d) => ({
+            id: d.id,
+            ...(d.data() as any),
+          }));
 
-        // Deduplicação em tempo real por e-mail (normalizado)
-        // Prioriza registros com UID (logados) e com mais campos preenchidos
-        const seenEmails = new Set();
-        const uniqueList: any[] = [];
+          // Deduplicação em tempo real por e-mail (normalizado)
+          // Prioriza registros com UID (logados) e com mais campos preenchidos
+          const seenEmails = new Set();
+          const uniqueList: any[] = [];
 
-        const sortedDocs = [...allDocs].sort((a, b) => {
-          if (a.uid && !b.uid) return -1;
-          if (!a.uid && b.uid) return 1;
-          return Object.keys(b).length - Object.keys(a).length;
-        });
+          const sortedDocs = [...allDocs].sort((a, b) => {
+            if (a.uid && !b.uid) return -1;
+            if (!a.uid && b.uid) return 1;
+            return Object.keys(b).length - Object.keys(a).length;
+          });
 
-        sortedDocs.forEach((m) => {
-          const emailKey = (m.email || "").toLowerCase().trim();
-          if (
-            emailKey &&
-            !seenEmails.has(emailKey) &&
-            ![
-              "gomau.ead@gmail.com",
-              "calepi@gmail.com",
-              "calepe@gmail.com",
-            ].includes(emailKey)
-          ) {
-            seenEmails.add(emailKey);
-            uniqueList.push(m);
+          sortedDocs.forEach((m) => {
+            const emailKey = (m.email || "").toLowerCase().trim();
+            if (
+              emailKey &&
+              !seenEmails.has(emailKey) &&
+              ![
+                "gomau.ead@gmail.com",
+                "calepi@gmail.com",
+                "calepe@gmail.com",
+              ].includes(emailKey)
+            ) {
+              seenEmails.add(emailKey);
+              uniqueList.push(m);
+            }
+          });
+
+          // Reordenar por nome para exibição
+          uniqueList.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
+
+          setMembers(uniqueList);
+          setLoadingMembers(false);
+
+          // Acionamento automático da rotina de limpeza profunda se muitas duplicatas detectadas
+          if (allDocs.length > uniqueList.length + 3) {
+            setTimeout(() => handleGlobalCorrection(true), 5000);
           }
-        });
+        },
+        (err: any) => {
+          console.error("Error loading members:", err);
+          if (err?.code === "resource-exhausted") {
+            console.warn("Cota excedida no dashboard.");
+          }
+          setLoadingMembers(false);
+        },
+      );
+    } else {
+      setLoadingMembers(false);
+    }
 
-        // Reordenar por nome para exibição
-        uniqueList.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
-
-        setMembers(uniqueList);
-        setLoadingMembers(false);
-
-        // Acionamento automático da rotina de limpeza profunda se muitas duplicatas detectadas
-        if (allDocs.length > uniqueList.length + 3) {
-          setTimeout(() => handleGlobalCorrection(true), 5000);
-        }
-      },
-      (err: any) => {
-        console.error("Error loading members:", err);
-        if (err?.code === "resource-exhausted") {
-          console.warn("Cota excedida no dashboard.");
-        }
-        setLoadingMembers(false);
-      },
-    );
+    // Listener em tempo real para feedbacks do desenvolvedor
+    const canAccessFeedbacks = isMaster || hasPasta("developer_feedback");
+    let unsubFeedbacks = () => {};
+    if (canAccessFeedbacks) {
+      unsubFeedbacks = onSnapshot(
+        collection(db, "developerFeedback"),
+        (snap) => {
+          const list = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
+          list.sort((a, b) => {
+            const tA = a.createdAt?.seconds || 0;
+            const tB = b.createdAt?.seconds || 0;
+            return tB - tA;
+          });
+          setFeedbacks(list);
+        },
+        (err) => console.error("Erro real-time feedbacks:", err)
+      );
+    }
 
     return () => {
+      unsubRequests();
       unsubscribeMembers();
       unsubscribeLogs();
+      unsubFeedbacks();
     };
-  }, []);
+  }, [user]);
 
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
@@ -17548,20 +17633,7 @@ export function GestorDashboard() {
     }
   };
 
-  const loadRequests = async () => {
-    try {
-      const snap = await getDocs(
-        query(collection(db, "requests"), where("status", "==", "pendente")),
-      );
-      let data = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
-      if (isRestrictedFaltas) {
-        data = data.filter((d) => d.tipo === "Justificativa de Falta");
-      }
-      setRequests(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const loadRequests = () => {};
 
   const handleAddContent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17673,7 +17745,6 @@ export function GestorDashboard() {
         criadoEm: serverTimestamp(),
       });
 
-      loadRequests();
       setEvaluatingRequest(null);
     } catch (err) {
       console.error(err);
@@ -17694,40 +17765,97 @@ export function GestorDashboard() {
         </div>
       </header>
 
+      {/* Global Developer Feedback Notification */}
+      {activeTab !== "developer_feedback" && feedbacks.filter((f) => !f.read).length > 0 && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center justify-between gap-4 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center shrink-0 animate-pulse">
+              <MessageSquare size={16} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white uppercase tracking-wider">Mensagens de Obreiros pendentes no Canal Dev</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">Há <strong>{feedbacks.filter((f) => !f.read).length}</strong> nova(s) mensagem(ns) (sugestões, erros ou críticas) enviadas pelo aplicativo.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setActiveTab("developer_feedback")}
+            className="px-3 py-1.5 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-extrabold text-[10px] uppercase tracking-wider rounded-lg transition-all cursor-pointer"
+          >
+            Acessar
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar Nav */}
         <div className="lg:w-64 shrink-0 flex flex-col gap-1.5 p-3 rounded-xl bg-[#0A0E1A]/50 border border-[#1e293b] h-fit">
           <h3 className="text-[10px] uppercase font-bold text-gray-500 mb-2 px-3 tracking-widest">
             Navegação
           </h3>
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "px-3 py-3 flex items-center gap-3 font-semibold text-xs uppercase tracking-wider rounded-lg transition-all w-full text-left font-sans outline-none",
-                activeTab === tab.id
-                  ? "bg-[#D4AF37] text-black shadow-md border border-[#D4AF37]"
-                  : "text-gray-400 hover:bg-[#1e293b] border border-transparent hover:border-[#334155]",
-              )}
-            >
-              <tab.icon
-                size={16}
-                className={
+          {tabs.map((tab) => {
+            const isDevFeedbackTab = tab.id === "developer_feedback";
+            const unreadCount = isDevFeedbackTab ? feedbacks.filter((f) => !f.read).length : 0;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "px-3 py-3 flex items-center justify-between font-semibold text-xs uppercase tracking-wider rounded-lg transition-all w-full text-left font-sans outline-none cursor-pointer",
                   activeTab === tab.id
-                    ? "text-black"
-                    : "text-[#D4AF37]/70 shrink-0"
-                }
-              />
-              <span className="truncate">{tab.label}</span>
-            </button>
-          ))}
+                    ? "bg-[#D4AF37] text-black shadow-md border border-[#D4AF37]"
+                    : "text-gray-400 hover:bg-[#1e293b] border border-transparent hover:border-[#334155]",
+                )}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <tab.icon
+                    size={16}
+                    className={
+                      activeTab === tab.id
+                        ? "text-black"
+                        : "text-[#D4AF37]/70 shrink-0"
+                    }
+                  />
+                  <span className="truncate">{tab.label}</span>
+                </div>
+                {unreadCount > 0 && (
+                  <span className={cn(
+                    "flex items-center justify-center h-5 min-w-[20px] px-1.5 text-[10px] font-black rounded-full animate-pulse shrink-0",
+                    activeTab === tab.id
+                      ? "bg-black text-[#D4AF37]"
+                      : "bg-red-500 text-white"
+                  )}>
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Tab Content */}
         <div className="flex-1 min-w-0 bg-[#0F172A] border border-[#1e293b] rounded-xl p-4 sm:p-8 min-h-[500px] shadow-xl">
           {activeTab === "dashboard" && (
             <div className="space-y-8">
+              {/* Notificação Fale com o Dev */}
+              {feedbacks.filter((f) => !f.read).length > 0 && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-[0_0_20px_rgba(239,68,68,0.1)]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center animate-bounce">
+                      <MessageSquare size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white uppercase tracking-wider" style={{ fontFamily: 'Cinzel' }}>Mensagem ao Desenvolvedor</h4>
+                      <p className="text-xs text-gray-300">Você possui <strong>{feedbacks.filter((f) => !f.read).length}</strong> nova(s) mensagem(ns) não lida(s) de crítica, sugestão ou bug.</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab("developer_feedback")}
+                    className="px-4 py-2 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-[#D4AF37]/10 cursor-pointer shrink-0"
+                  >
+                    Abrir Canal Dev
+                  </button>
+                </div>
+              )}
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                 <div className="flex flex-col gap-1">
                   <h2 className="text-xl font-medium text-gray-200">
@@ -21966,14 +22094,155 @@ export function GestorDashboard() {
 
           {activeTab === "telemetria" && <TelemetryView />}
 
+          {activeTab === "developer_feedback" && (
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#1e293b]">
+                <div>
+                  <h2 className="text-xl font-bold text-[#D4AF37] font-serif" style={{ fontFamily: 'Cinzel' }}>Mensagens ao Desenvolvedor</h2>
+                  <p className="text-xs text-gray-400 mt-1">Críticas, sugestões, bugs e acessos enviados pelos obreiros da oficina</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">Filtrar Categoria:</span>
+                  <select
+                    value={selectedFeedbackFilter}
+                    onChange={(e) => setSelectedFeedbackFilter(e.target.value)}
+                    className="bg-[#0A0E1A] text-xs text-gray-300 border border-[#1e293b] rounded-lg p-2 focus:outline-none focus:border-[#D4AF37]"
+                  >
+                    <option value="all">Todas as Mensagens</option>
+                    <option value="critica">Críticas</option>
+                    <option value="sugestao">Sugestões</option>
+                    <option value="dica">Dicas</option>
+                    <option value="bug">Erros / Bugs</option>
+                    <option value="acesso">Dificuldade de Acesso</option>
+                    <option value="unread">Não Lidas</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Feedbacks Stats Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-[#0A0E1A] border border-[#1e293b] p-4 rounded-xl">
+                  <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Total de Mensagens</p>
+                  <p className="text-xl font-bold text-[#D4AF37] mt-1">{feedbacks.length}</p>
+                </div>
+                <div className="bg-[#0A0E1A] border border-red-500/20 p-4 rounded-xl shadow-[inset_0_0_10px_rgba(239,68,68,0.05)]">
+                  <p className="text-[10px] uppercase font-bold text-red-400 tracking-wider">Não Lidas / Novas</p>
+                  <p className="text-xl font-bold text-red-400 mt-1">{feedbacks.filter(f => !f.read).length}</p>
+                </div>
+                <div className="bg-[#0A0E1A] border border-orange-500/20 p-4 rounded-xl">
+                  <p className="text-[10px] uppercase font-bold text-orange-400 tracking-wider">Bugs & Erros</p>
+                  <p className="text-xl font-bold text-orange-400 mt-1">{feedbacks.filter(f => f.category === 'bug').length}</p>
+                </div>
+                <div className="bg-[#0A0E1A] border border-emerald-500/20 p-4 rounded-xl">
+                  <p className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Sugestões & Dicas</p>
+                  <p className="text-xl font-bold text-emerald-400 mt-1">
+                    {feedbacks.filter(f => f.category === 'sugestao' || f.category === 'dica').length}
+                  </p>
+                </div>
+              </div>
+
+              {/* Feedback list */}
+              <div className="space-y-4">
+                {feedbacks.filter(f => {
+                  if (selectedFeedbackFilter === 'all') return true;
+                  if (selectedFeedbackFilter === 'unread') return !f.read;
+                  return f.category === selectedFeedbackFilter;
+                }).length === 0 ? (
+                  <div className="text-center py-12 bg-[#0A0E1A] border border-[#1e293b] rounded-2xl">
+                    <p className="text-sm text-gray-500">Nenhuma mensagem encontrada para este filtro.</p>
+                  </div>
+                ) : (
+                  feedbacks
+                    .filter(f => {
+                      if (selectedFeedbackFilter === 'all') return true;
+                      if (selectedFeedbackFilter === 'unread') return !f.read;
+                      return f.category === selectedFeedbackFilter;
+                    })
+                    .map((fb) => {
+                      const categoryLabels: { [key: string]: { label: string, color: string } } = {
+                        critica: { label: 'Crítica', color: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
+                        sugestao: { label: 'Sugestão', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+                        dica: { label: 'Dica', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+                        bug: { label: 'Erro / Bug', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
+                        acesso: { label: 'Acesso', color: 'bg-violet-500/10 text-violet-400 border-violet-500/20' }
+                      };
+                      const catInfo = categoryLabels[fb.category] || { label: fb.category, color: 'bg-gray-500/10 text-gray-400 border-gray-500/20' };
+
+                      return (
+                        <div
+                          key={fb.id}
+                          className={cn(
+                            "bg-[#0A0E1A] border rounded-2xl p-6 transition-all space-y-4",
+                            fb.read 
+                              ? "border-[#1e293b]" 
+                              : "border-[#D4AF37]/40 shadow-[0_0_15px_rgba(212,175,55,0.05)] bg-[#0A0E1A]/95"
+                          )}
+                        >
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className={cn("px-2.5 py-1 text-[9px] font-black uppercase tracking-widest border rounded-full", catInfo.color)}>
+                                {catInfo.label}
+                              </span>
+                              {!fb.read && (
+                                <span className="bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full animate-pulse uppercase tracking-wider">
+                                  Nova
+                                </span>
+                              )}
+                              <span className="text-[10px] text-gray-500 font-mono">
+                                {fb.createdAt?.toDate ? fb.createdAt.toDate().toLocaleString('pt-BR') : 'Agora mesmo'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 w-full sm:w-auto">
+                              <button
+                                onClick={() => handleMarkFeedbackRead(fb.id, fb.read)}
+                                className={cn(
+                                  "flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border transition-all cursor-pointer",
+                                  fb.read
+                                    ? "bg-slate-900 border-[#1e293b] text-gray-400 hover:text-white"
+                                    : "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
+                                )}
+                              >
+                                {fb.read ? "Marcar não Lida" : "Marcar como Lida"}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteFeedback(fb.id)}
+                                className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
+                                title="Excluir mensagem permanentemente"
+                              >
+                                Excluir
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="bg-[#0F172A] border border-[#1e293b]/75 rounded-xl p-4 text-sm text-gray-200 leading-relaxed break-words whitespace-pre-wrap font-sans">
+                            {fb.message}
+                          </div>
+
+                          <div className="text-xs text-gray-500 flex flex-wrap gap-x-4 gap-y-1 font-sans">
+                            <span>Autor: <strong className="text-gray-300 font-medium">{fb.senderName}</strong></span>
+                            {fb.senderCim && <span>CIM: <strong className="text-gray-300 font-medium">{fb.senderCim}</strong></span>}
+                            <span>E-mail: <strong className="text-gray-300 font-medium">{fb.senderEmail}</strong></span>
+                            {fb.senderLoja && <span>Loja: <strong className="text-gray-300 font-medium">{fb.senderLoja}</strong></span>}
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
+              </div>
+            </div>
+          )}
+
           {activeTab === "segundo_vigilante" && (
             <SegundoVigilanteView members={members} currentUser={user} />
           )}
 
+          {activeTab === "permissoes" && (
+            <AdminPermissionsManager members={members} />
+          )}
+
           {activeTab === "configuracoes" && (
             <div className="flex flex-col gap-8">
-              <AdminPermissionsManager members={members} />
-
               <DataManagement />
 
               <div className="flex justify-between items-center mb-6">
@@ -22779,7 +23048,6 @@ export function GestorDashboard() {
     </div>
   );
 }
-
 ```
 
 ### Arquivo: `package.json`
