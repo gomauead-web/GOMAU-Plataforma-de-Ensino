@@ -42,7 +42,7 @@ O sistema possui uma barreira de entrada chamada "Os Portais", criada para barra
 3. **Enigma da Idade (2º Portal):** Se o usuário já passou do Grau de Aprendiz (ex: Companheiro, Mestre), uma pergunta dinâmica maçônica é exibida, baseada no campo `grau`. Ex: "Mestre, qual a sua idade?". O usuário precisa digitar a idade simbólica correta (3, 5, 7, etc.) com variação de segurança.
 4. **Validação de CPF (3º Portal):** O usuário deve digitar os 3 primeiros dígitos do seu CPF cadastrado.
 5. **A Palavra Sagrada Corrente:** O sistema busca em `settings` (no Firestore) uma palavra sagrada dinâmica que o Gestor troca periodicamente. O usuário precisa digitá-la para finalmente acessar a plataforma (o token de sessão é gerado e salvo).
-6. **Bypass:** Os emails masters (`gomau.ead@gmail.com`, `calepi@gmail.com`, `calepe@gmail.com`, `tazmaniacrvg@gmail.com`, `diogo.mourapedroso@gmail.com` ou CIMs `331`, `3330`) entram direto sem passar pelas validações profanas.
+6. **Bypass:** Os emails masters (`gomau.ead@gmail.com`, `calepi@gmail.com`, `calepe@gmail.com`) entram direto sem passar pelas validações profanas.
 
 ---
 

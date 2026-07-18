@@ -85,14 +85,11 @@ export function GestorDashboard() {
     "calepe@gmail.com",
   ].includes(userEmail);
   const userCimStr = user?.cim?.toString().trim();
-  const isRestrictedFaltas = false;
 
-  const isMaster = ["gomau.ead@gmail.com", "calepi@gmail.com", "calepe@gmail.com", "tazmaniacrvg@gmail.com", "diogo.mourapedroso@gmail.com"].includes(userEmail) || 
-                   userCimStr === "331" || 
-                   userCimStr === "3330" || 
+  const isMaster = ["gomau.ead@gmail.com", "calepi@gmail.com", "calepe@gmail.com"].includes(userEmail) || 
                    user?.role === "gestor";
   const isPremiumAdmin = userEmail === "tazmaniacrvg@gmail.com" || (user?.role as string) === "adminPremium";
-  const isDelegatedUser = !isMaster && user?.role !== 'gestor' && user?.delegatedPastas && user.delegatedPastas.length > 0;
+  const isDelegatedUser = !isMaster && user?.role !== 'gestor';
 
   const baseTabs = [
     { id: "dashboard", label: "Dashboard", icon: GraduationCap },
@@ -134,15 +131,11 @@ export function GestorDashboard() {
     return tabId === mappedId;
   };
 
-  const tabs = isRestrictedFaltas
-    ? baseTabs.filter((t) => t.id === "solicitacoes" || (user?.delegatedPastas || []).some((pasta: string) => checkPastaMatch(pasta, t.id)))
-    : isDelegatedUser
+  const tabs = isDelegatedUser
     ? baseTabs.filter((t) => (user?.delegatedPastas || []).some((pasta: string) => checkPastaMatch(pasta, t.id)))
     : baseTabs;
 
-  const initialActiveTab = isRestrictedFaltas
-    ? "solicitacoes"
-    : isDelegatedUser
+  const initialActiveTab = isDelegatedUser
     ? (tabs[0]?.id || "segundo_vigilante")
     : "dashboard";
 
@@ -553,7 +546,7 @@ export function GestorDashboard() {
     const canReadContents = isMaster || hasPasta("conteudos");
     const canReadCourses = isMaster || isPremiumAdmin || hasPasta("cursos");
     const canReadEvents = isMaster || hasPasta("eventos");
-    const canReadEvolutionRules = isMaster || isRestrictedFaltas || hasPasta("segundo_vigilante");
+    const canReadEvolutionRules = isMaster || hasPasta("segundo_vigilante");
     const canSeedSecurity = isMaster || user?.role === "gestor";
 
     if (canReadContents) loadContents();
@@ -564,14 +557,11 @@ export function GestorDashboard() {
     loadExcelEmails();
 
     // Listener em tempo real para solicitações
-    const canAccessRequests = isMaster || isRestrictedFaltas || hasPasta("solicitacoes");
+    const canAccessRequests = isMaster || hasPasta("solicitacoes");
     let unsubRequests = () => {};
     if (canAccessRequests) {
       unsubRequests = onSnapshot(query(collection(db, "requests"), where("status", "==", "pendente")), (snap) => {
-        let data = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
-        if (isRestrictedFaltas) {
-          data = data.filter((d) => d.tipo === "Justificativa de Falta");
-        }
+        const data = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
         setRequests(data);
       }, (err) => console.error("Erro real-time requests:", err));
     }

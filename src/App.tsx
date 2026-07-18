@@ -60,10 +60,7 @@ function ProtectedRoute({ children, requireGestor = false }: { children: React.R
   
   // Ritual Security Check
   const ritualDone = sessionStorage.getItem('ritual_completed') === 'true';
-  const isMaster = MASTER_ADMINS.includes(user.email || '') || 
-                   ['tazmaniacrvg@gmail.com', 'diogo.mourapedroso@gmail.com'].includes(user.email?.toLowerCase() || '') ||
-                   user.cim?.toString().trim() === '331' || 
-                   user.cim?.toString().trim() === '3330';
+  const isMaster = MASTER_ADMINS.includes(user.email || '');
   
   // If ritual not done, redirect to login unless it's a bypass
   if (!ritualDone) {

@@ -151,10 +151,7 @@ export function Layout({ children }: { children: ReactNode }) {
     setShowOnboarding(false);
   }, [user]);
 
-  const isMaster = MASTER_ADMINS.includes(user?.email || '') || 
-                   ['tazmaniacrvg@gmail.com', 'diogo.mourapedroso@gmail.com'].includes(user?.email || '') ||
-                   user?.cim?.toString().trim() === '331' || 
-                   user?.cim?.toString().trim() === '3330';
+  const isMaster = MASTER_ADMINS.includes(user?.email || '');
 
   const handleLogout = async () => {
     try { await contextLogout(); } catch(e) {}

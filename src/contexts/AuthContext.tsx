@@ -183,8 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         const originalEmail = firebaseUser.email || '';
         const cleanEmail = originalEmail.toLowerCase().trim();
-        const isMaster = MASTER_ADMINS.includes(cleanEmail) || 
-                         ['tazmaniacrvg@gmail.com', 'diogo.mourapedroso@gmail.com'].includes(cleanEmail);
+        const isMaster = MASTER_ADMINS.includes(cleanEmail);
 
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -202,9 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const handleUpdate: AuthUpdateHandler = (docSnap) => {
               if (docSnap.exists()) {
                 const dbUser = docSnap.data();
-                const userCimStr = dbUser.cim?.toString().trim();
-                const isUserMaster = isMaster || userCimStr === '331' || userCimStr === '3330';
-                const role = (isUserMaster || dbUser.role === 'gestor') ? 'gestor' : 'membro';
+                const role = (isMaster || dbUser.role === 'gestor') ? 'gestor' : 'membro';
                 
                 const baseUser = { email: cleanEmail || dbUser.email || dbUser.emailVinculado || '', ...dbUser, uid: firebaseUser.uid, role } as AppUser;
                 
@@ -336,9 +333,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               unsubscribeDoc = firestoreOnSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                   const dbUser = docSnap.data();
-                  const userCimStr = dbUser.cim?.toString().trim();
-                  const isUserMaster = isMaster || userCimStr === '331' || userCimStr === '3330';
-                  const role = (isUserMaster || dbUser.role === 'gestor') ? 'gestor' : 'membro';
+                  const role = (isMaster || dbUser.role === 'gestor') ? 'gestor' : 'membro';
                   const baseUser = { email: cleanEmail || dbUser.email || dbUser.emailVinculado || '', ...dbUser, uid: firebaseUser.uid, role } as AppUser;
 
                   if (dbUser.cim) {
