@@ -42,7 +42,7 @@ O sistema possui uma barreira de entrada chamada "Os Portais", criada para barra
 3. **Enigma da Idade (2º Portal):** Se o usuário já passou do Grau de Aprendiz (ex: Companheiro, Mestre), uma pergunta dinâmica maçônica é exibida, baseada no campo `grau`. Ex: "Mestre, qual a sua idade?". O usuário precisa digitar a idade simbólica correta (3, 5, 7, etc.) com variação de segurança.
 4. **Validação de CPF (3º Portal):** O usuário deve digitar os 3 primeiros dígitos do seu CPF cadastrado.
 5. **A Palavra Sagrada Corrente:** O sistema busca em `settings` (no Firestore) uma palavra sagrada dinâmica que o Gestor troca periodicamente. O usuário precisa digitá-la para finalmente acessar a plataforma (o token de sessão é gerado e salvo).
-6. **Bypass:** Os emails masters (`gomau.ead@gmail.com`, `calepi@gmail.com`, `calepe@gmail.com`) entram direto sem passar pelas validações profanas.
+6. **Bypass:** Os emails masters (`gomau.ead@gmail.com`, `calepi@gmail.com`, `calepe@gmail.com`, `tazmaniacrvg@gmail.com`, `diogo.mourapedroso@gmail.com` ou CIMs `331`, `3330`) entram direto sem passar pelas validações profanas.
 
 ---
 
@@ -330,6 +330,7 @@ import { RequestsPage } from './pages/RequestsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { GestorDashboard } from './pages/gestor/GestorDashboard';
 import { CursosExternos } from './pages/CursosExternos';
+import { WorkshopPresentation } from './pages/WorkshopPresentation';
 import { CursoDetail } from './pages/CursoDetail';
 import { LibraryPage } from './pages/LibraryPage';
 
@@ -341,6 +342,7 @@ import { CadeiaUniaoPage } from './pages/CadeiaUniaoPage';
 import { Forum } from './pages/Forum';
 import { MASTER_ADMINS } from './constants';
 import { NotificationManager } from './components/NotificationManager';
+import { FirebaseSetup } from './pages/FirebaseSetup';
 
 function ProtectedRoute({ children, requireGestor = false }: { children: React.ReactNode, requireGestor?: boolean }) {
 
@@ -388,55 +390,60 @@ function ProtectedRoute({ children, requireGestor = false }: { children: React.R
   }
 
   const userEmail = (user.email || auth.currentUser?.email || '').toLowerCase().trim();
-  const hasRestrictedAccess = (user.cim === '3330' || user.cim === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user.delegatedPastas && user.delegatedPastas.length > 0)) && userEmail !== 'tazmaniacrvg@gmail.com';
+  const userCimStr = user.cim?.toString().trim();
+  const hasRestrictedAccess = (userCimStr === '3330' || userCimStr === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user.delegatedPastas && user.delegatedPastas.length > 0));
   if (requireGestor && user.role !== 'gestor' && !isMaster && !hasRestrictedAccess) return <Navigate to="/" replace />;
   
   return children;
 }
 
 import { Toaster } from 'react-hot-toast';
+import { SecurityWrapper } from './components/SecurityWrapper';
 
 export default function App() {
   return (
     <AuthProvider>
-      <Toaster position="top-right" toastOptions={{
-        style: {
-          background: '#1e293b',
-          color: '#fff',
-          border: '1px solid #D4AF3733',
-        }
-      }} />
-      <NotificationManager />
-      <WelcomePopup />
-      <PWAInstallPrompt />
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-          <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />
-          <Route path="/contents" element={<ProtectedRoute><Layout><ContentPage /></Layout></ProtectedRoute>} />
-          <Route path="/cursos" element={<ProtectedRoute><Layout><CursosExternos /></Layout></ProtectedRoute>} />
-          <Route path="/cursos/:courseId" element={<ProtectedRoute><Layout><CursoDetail /></Layout></ProtectedRoute>} />
-          <Route path="/forum" element={<ProtectedRoute><Layout><Forum /></Layout></ProtectedRoute>} />
-          <Route path="/requests" element={<ProtectedRoute><Layout><RequestsPage /></Layout></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
-          <Route path="/calendar" element={<ProtectedRoute><Layout><CalendarPage /></Layout></ProtectedRoute>} />
-          <Route path="/mensalidade" element={<ProtectedRoute><Layout><TreasuryPage /></Layout></ProtectedRoute>} />
-          <Route path="/cadeia-uniao" element={<ProtectedRoute><Layout><CadeiaUniaoPage /></Layout></ProtectedRoute>} />
-          <Route path="/history" element={<ProtectedRoute><Layout><HistoryPage /></Layout></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Layout><div className="p-8 text-gray-200"><h1 className="text-3xl text-[#D4AF37] mb-4">Configurações</h1><p>Em breve.</p></div></Layout></ProtectedRoute>} />
-          <Route path="/help" element={<ProtectedRoute><Layout><div className="p-8 text-gray-200"><h1 className="text-3xl text-[#D4AF37] mb-4">Ajuda</h1><p>Em breve.</p></div></Layout></ProtectedRoute>} />
-          
-          <Route path="/gestor/*" element={<ProtectedRoute requireGestor={true}><Layout><GestorDashboard /></Layout></ProtectedRoute>} />
-          
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
+      <SecurityWrapper>
+        <Toaster position="top-right" toastOptions={{
+          style: {
+            background: '#1e293b',
+            color: '#fff',
+            border: '1px solid #D4AF3733',
+          }
+        }} />
+        <NotificationManager />
+        <WelcomePopup />
+        <PWAInstallPrompt />
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/setup" element={<FirebaseSetup />} />
+            
+            <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+            <Route path="/library" element={<ProtectedRoute><LibraryPage /></ProtectedRoute>} />
+            <Route path="/contents" element={<ProtectedRoute><Layout><ContentPage /></Layout></ProtectedRoute>} />
+            <Route path="/cursos" element={<ProtectedRoute><Layout><CursosExternos /></Layout></ProtectedRoute>} />
+            <Route path="/workshop" element={<ProtectedRoute><WorkshopPresentation /></ProtectedRoute>} />
+            <Route path="/cursos/:courseId" element={<ProtectedRoute><Layout><CursoDetail /></Layout></ProtectedRoute>} />
+            <Route path="/forum" element={<ProtectedRoute><Layout><Forum /></Layout></ProtectedRoute>} />
+            <Route path="/requests" element={<ProtectedRoute><Layout><RequestsPage /></Layout></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
+            <Route path="/calendar" element={<ProtectedRoute><Layout><CalendarPage /></Layout></ProtectedRoute>} />
+            <Route path="/mensalidade" element={<ProtectedRoute><Layout><TreasuryPage /></Layout></ProtectedRoute>} />
+            <Route path="/cadeia-uniao" element={<ProtectedRoute><Layout><CadeiaUniaoPage /></Layout></ProtectedRoute>} />
+            <Route path="/history" element={<ProtectedRoute><Layout><HistoryPage /></Layout></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Layout><div className="p-8 text-gray-200"><h1 className="text-3xl text-[#D4AF37] mb-4">Configurações</h1><p>Em breve.</p></div></Layout></ProtectedRoute>} />
+            <Route path="/help" element={<ProtectedRoute><Layout><div className="p-8 text-gray-200"><h1 className="text-3xl text-[#D4AF37] mb-4">Ajuda</h1><p>Em breve.</p></div></Layout></ProtectedRoute>} />
+            
+            <Route path="/gestor/*" element={<ProtectedRoute requireGestor={true}><Layout><GestorDashboard /></Layout></ProtectedRoute>} />
+            
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </SecurityWrapper>
     </AuthProvider>
   );
 }
-
 ```
 
 ### Arquivo: `src/components/CIMCard.tsx`
@@ -716,17 +723,46 @@ export const CIMCard: React.FC<CIMCardProps> = ({
 import React, { ReactNode, useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useSessionTelemetry } from '../hooks/useSessionTelemetry';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, BookOpen, FileText, Calendar, Target, User, History, Settings, HelpCircle, LogOut, Shield, GraduationCap, Clock, Video, MessageSquare, DollarSign, Library, Sparkles, Menu, X, Heart } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { auth } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { MASTER_ADMINS } from '../constants';
+
+const HexagramIcon = () => (
+  <div className="text-[#D4AF37] animate-pulse drop-shadow-[0_0_8px_rgba(212,175,55,0.8)] mr-1">
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      stroke="#D4AF37"
+      strokeWidth="2.2"
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polygon points="12,3 20,17 4,17" />
+      <polygon points="12,21 20,7 4,7" />
+    </svg>
+  </div>
+);
 
 export function SessionTimer() {
   const [timeLeft, setTimeLeft] = useState<string>('--:--');
-  const { logout, sessionTimeout } = useAuth();
+  const { logout, sessionTimeout, user } = useAuth();
   const navigate = useNavigate();
+
+  const userEmail = (user?.email || auth.currentUser?.email || '').toLowerCase().trim();
+  const isOwner = ['gomau.ead@gmail.com', 'calepi@gmail.com', 'calepe@gmail.com'].includes(userEmail);
+  const userCim = user?.cim?.toString().trim();
+  const hasDelegated2Vig = user?.delegatedPastas?.some(
+    (pasta: string) => pasta === '2° Vigilante' || pasta === '2º Vigilante'
+  );
+  const is2Vig = userCim === '3324' || hasDelegated2Vig;
+  const showHexagram = isOwner || is2Vig;
 
   useEffect(() => {
     // Garantir que o timer exista se o usuário estiver logado
@@ -775,6 +811,7 @@ export function SessionTimer() {
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-[#D4AF37]/20 border-2 border-[#D4AF37] rounded-xl text-xs sm:text-sm font-mono text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.3)] animate-pulse">
+      {showHexagram && <HexagramIcon />}
       <div className="bg-[#D4AF37] text-black rounded p-0.5">
         <Clock size={14} />
       </div>
@@ -787,32 +824,67 @@ export function SessionTimer() {
 }
 
 export function Layout({ children }: { children: ReactNode }) {
+  useSessionTelemetry();
   const { user, logout: contextLogout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      const dismissed = localStorage.getItem('gomau_onboarding_v4_dismissed');
-      if (!dismissed) {
-        setShowOnboarding(true);
-      }
+  // Fale com o Dev state
+  const [isDevModalOpen, setIsDevModalOpen] = useState(false);
+  const [devFeedbackCategory, setDevFeedbackCategory] = useState('sugestao');
+  const [devFeedbackMessage, setDevFeedbackMessage] = useState('');
+  const [isSendingDevFeedback, setIsSendingDevFeedback] = useState(false);
+
+  const handleSubmitDevFeedback = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!devFeedbackMessage.trim()) {
+      alert("Por favor, digite sua reflexão ou mensagem.");
+      return;
     }
+    setIsSendingDevFeedback(true);
+    try {
+      await addDoc(collection(db, 'developerFeedback'), {
+        senderName: user?.nome || 'Nobre Irmão',
+        senderEmail: (user?.email || '').toLowerCase().trim(),
+        senderUid: user?.uid || '',
+        senderCim: user?.cim || '',
+        senderLoja: user?.loja || '',
+        category: devFeedbackCategory,
+        message: devFeedbackMessage.trim(),
+        createdAt: serverTimestamp(),
+        read: false
+      });
+      alert("Mensagem enviada com sucesso ao desenvolvedor! Obrigado por colaborar com o G∴O∴M∴A∴U∴.");
+      setDevFeedbackMessage('');
+      setDevFeedbackCategory('sugestao');
+      setIsDevModalOpen(false);
+    } catch (err) {
+      console.error("Erro ao enviar feedback ao desenvolvedor:", err);
+      alert("Erro ao enviar sua mensagem. Tente novamente.");
+    } finally {
+      setIsSendingDevFeedback(false);
+    }
+  };
+
+  useEffect(() => {
+    // Onboarding popup disabled per user request
+    setShowOnboarding(false);
   }, [user]);
 
   const isMaster = MASTER_ADMINS.includes(user?.email || '');
 
   const handleLogout = async () => {
-    await contextLogout();
-    navigate('/login');
+    try { await contextLogout(); } catch(e) {}
+    window.location.href = '/login';
   };
 
   const userEmail = (user?.email || auth.currentUser?.email || '').toLowerCase().trim();
   const isOwner = ['gomau.ead@gmail.com', 'calepi@gmail.com', 'calepe@gmail.com'].includes(userEmail);
-  const isPremiumAdmin = (userEmail === 'tazmaniacrvg@gmail.com' ? false : true) && (userEmail === 'tazmaniacrvg@gmail.com' || (user?.role as string) === 'adminPremium' || isOwner);
-  const canAccessGestor = (isMaster || user?.role === 'gestor' || user?.cim === '3330' || user?.cim === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user?.delegatedPastas && user.delegatedPastas.length > 0)) && userEmail !== 'tazmaniacrvg@gmail.com';
+  const isPremiumAdmin = (user?.role as string) === 'adminPremium' || isOwner;
+  const userCimStr = user?.cim?.toString().trim();
+  const canAccessGestor = (isMaster || user?.role === 'gestor' || userCimStr === '3330' || userCimStr === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user?.delegatedPastas && user.delegatedPastas.length > 0));
 
   const categories = [
     {
@@ -842,7 +914,6 @@ export function Layout({ children }: { children: ReactNode }) {
       title: "Secretaria & Tesouraria",
       items: [
         { icon: FileText, label: 'Solicitações', path: '/requests' },
-        { icon: DollarSign, label: 'Mensalidade', path: '/mensalidade' },
         { icon: History, label: 'Histórico', path: '/history' },
       ]
     }
@@ -914,6 +985,15 @@ export function Layout({ children }: { children: ReactNode }) {
           )}
 
           <div className="mt-auto pt-4 border-t border-[#D4AF37]/15 flex flex-col gap-1">
+            {/* Fale com o Desenvolvedor */}
+            <button
+              onClick={() => setIsDevModalOpen(true)}
+              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-300 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-lg transition-colors cursor-pointer"
+            >
+              <MessageSquare size={18} className="text-[#D4AF37] shrink-0" />
+              <span>Fale com o Dev</span>
+            </button>
+
             <button 
               onClick={handleLogout}
               className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-lg transition-colors cursor-pointer"
@@ -1085,6 +1165,18 @@ export function Layout({ children }: { children: ReactNode }) {
 
               {/* Logout & Footer */}
               <div className="border-t border-[#1e293b] pt-4 mt-auto flex flex-col gap-3">
+                {/* Fale com o Desenvolvedor */}
+                <button
+                  onClick={() => {
+                    setIsDevModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 hover:bg-[#D4AF37]/20 py-3 rounded-xl flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  <MessageSquare size={16} />
+                  Fale com o Dev
+                </button>
+
                 <button
                   onClick={() => {
                     handleLogout();
@@ -1215,6 +1307,115 @@ export function Layout({ children }: { children: ReactNode }) {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Fale com o Desenvolvedor Modal */}
+      <AnimatePresence>
+        {isDevModalOpen && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 30 }}
+              className="relative w-full max-w-lg bg-[#0A0E1A] border-2 border-[#D4AF37] rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(212,175,55,0.25)] overflow-y-auto max-h-[90vh] font-sans"
+            >
+              {/* Corner gold highlights */}
+              <div className="absolute top-4 left-4 w-3 h-3 border-t-2 border-l-2 border-[#D4AF37]"></div>
+              <div className="absolute top-4 right-4 w-3 h-3 border-t-2 border-r-2 border-[#D4AF37]"></div>
+              <div className="absolute bottom-4 left-4 w-3 h-3 border-b-2 border-l-2 border-[#D4AF37]"></div>
+              <div className="absolute bottom-4 right-4 w-3 h-3 border-b-2 border-r-2 border-[#D4AF37]"></div>
+
+              <button
+                onClick={() => setIsDevModalOpen(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="w-12 h-12 bg-[#D4AF37]/10 rounded-full flex items-center justify-center text-[#D4AF37] mx-auto mb-3 border border-[#D4AF37]/25 shadow-[0_0_15px_rgba(212,175,55,0.15)] animate-pulse">
+                  <MessageSquare size={22} />
+                </div>
+                <h3 className="text-xl font-bold text-[#D4AF37] uppercase tracking-wider" style={{ fontFamily: 'Cinzel' }}>Fale com o Desenvolvedor</h3>
+                <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Críticas, Sugestões, Dicas ou Relatos de Bugs</p>
+                <div className="w-20 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent mx-auto mt-2"></div>
+              </div>
+
+              <form onSubmit={handleSubmitDevFeedback} className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-[#D4AF37]/80 tracking-widest block">Tipo de Mensagem</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      { id: 'critica', label: 'Crítica', color: 'border-rose-500/30 text-rose-400 hover:bg-rose-500/5' },
+                      { id: 'sugestao', label: 'Sugestão', color: 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/5' },
+                      { id: 'dica', label: 'Dica', color: 'border-amber-500/30 text-amber-400 hover:bg-amber-500/5' },
+                      { id: 'bug', label: 'Erro / Bug', color: 'border-red-500/30 text-red-400 hover:bg-red-500/5' },
+                      { id: 'acesso', label: 'Acesso', color: 'border-violet-500/30 text-violet-400 hover:bg-violet-500/5' }
+                    ].map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setDevFeedbackCategory(cat.id)}
+                        className={cn(
+                          "py-2 px-3 text-[11px] font-bold uppercase tracking-wider rounded-xl border transition-all cursor-pointer",
+                          devFeedbackCategory === cat.id
+                            ? "bg-[#D4AF37] text-black border-[#D4AF37] shadow-lg shadow-[#D4AF37]/10"
+                            : cat.color + " bg-[#0F172A]"
+                        )}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-[#D4AF37]/80 tracking-widest block">Mensagem ou Relato</label>
+                  <textarea
+                    value={devFeedbackMessage}
+                    onChange={(e) => setDevFeedbackMessage(e.target.value)}
+                    rows={4}
+                    placeholder="Descreva detalhadamente sua sugestão, crítica ou relato de problema para o desenvolvedor..."
+                    className="w-full bg-[#0F172A] border border-[#1e293b] rounded-xl p-4 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-[#D4AF37] transition-colors resize-none"
+                    maxLength={1000}
+                  />
+                  <div className="flex justify-between text-[10px] text-gray-500">
+                    <span>O desenvolvedor analisará sua mensagem diretamente.</span>
+                    <span>{devFeedbackMessage.length}/1000</span>
+                  </div>
+                </div>
+
+                <div className="bg-[#0F172A] border border-[#1e293b] p-3 rounded-2xl flex flex-col gap-1 text-center text-xs text-gray-400">
+                  <p>Enviando identificado como:</p>
+                  <p className="font-bold text-white text-sm">
+                    {user?.nome || 'Nobre Irmão'} 
+                    {user?.cim ? ` (CIM ${user.cim})` : ''}
+                  </p>
+                  <p className="text-[10px] text-[#D4AF37] font-medium">
+                    Loja: {user?.loja || 'Oficina Geral'}
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsDevModalOpen(false)}
+                    className="flex-1 py-3 bg-[#1e293b] hover:bg-slate-800 text-gray-300 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSendingDevFeedback}
+                    className="flex-1 py-3 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-[#D4AF37]/20 disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSendingDevFeedback ? 'Transmitindo...' : 'Enviar Mensagem'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -1239,7 +1440,6 @@ function NavItem({ item, ...props }: { item: any } & React.HTMLAttributes<HTMLAn
     </NavLink>
   );
 }
-
 ```
 
 ### Arquivo: `src/components/NotificationManager.tsx`
@@ -15130,15 +15330,15 @@ export function GestorDashboard() {
     "calepi@gmail.com",
     "calepe@gmail.com",
   ].includes(userEmail);
+  const userCimStr = user?.cim?.toString().trim();
   const isRestrictedFaltas =
-    (user?.cim === "3330" ||
-      user?.cim === "331" ||
+    (userCimStr === "3330" ||
+      userCimStr === "331" ||
       ["diogo.mourapedroso@gmail.com", "tazmaniacrvg@gmail.com"].includes(
         userEmail,
       )) &&
     user?.role !== "gestor" &&
-    !isOwner &&
-    userEmail !== "tazmaniacrvg@gmail.com";
+    !isOwner;
 
   const isMaster = ["gomau.ead@gmail.com", "calepi@gmail.com", "calepe@gmail.com"].includes(userEmail) || user?.role === "gestor";
   const isPremiumAdmin = userEmail === "tazmaniacrvg@gmail.com" || (user?.role as string) === "adminPremium";

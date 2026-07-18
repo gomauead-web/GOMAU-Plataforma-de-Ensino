@@ -151,7 +151,10 @@ export function Layout({ children }: { children: ReactNode }) {
     setShowOnboarding(false);
   }, [user]);
 
-  const isMaster = MASTER_ADMINS.includes(user?.email || '');
+  const isMaster = MASTER_ADMINS.includes(user?.email || '') || 
+                   ['tazmaniacrvg@gmail.com', 'diogo.mourapedroso@gmail.com'].includes(user?.email || '') ||
+                   user?.cim?.toString().trim() === '331' || 
+                   user?.cim?.toString().trim() === '3330';
 
   const handleLogout = async () => {
     try { await contextLogout(); } catch(e) {}
@@ -160,8 +163,9 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const userEmail = (user?.email || auth.currentUser?.email || '').toLowerCase().trim();
   const isOwner = ['gomau.ead@gmail.com', 'calepi@gmail.com', 'calepe@gmail.com'].includes(userEmail);
-  const isPremiumAdmin = (userEmail === 'tazmaniacrvg@gmail.com' ? false : true) && (userEmail === 'tazmaniacrvg@gmail.com' || (user?.role as string) === 'adminPremium' || isOwner);
-  const canAccessGestor = (isMaster || user?.role === 'gestor' || user?.cim === '3330' || user?.cim === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user?.delegatedPastas && user.delegatedPastas.length > 0)) && userEmail !== 'tazmaniacrvg@gmail.com';
+  const isPremiumAdmin = (user?.role as string) === 'adminPremium' || isOwner;
+  const userCimStr = user?.cim?.toString().trim();
+  const canAccessGestor = (isMaster || user?.role === 'gestor' || userCimStr === '3330' || userCimStr === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user?.delegatedPastas && user.delegatedPastas.length > 0));
 
   const categories = [
     {

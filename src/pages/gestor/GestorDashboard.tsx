@@ -84,19 +84,15 @@ export function GestorDashboard() {
     "calepi@gmail.com",
     "calepe@gmail.com",
   ].includes(userEmail);
-  const isRestrictedFaltas =
-    (user?.cim === "3330" ||
-      user?.cim === "331" ||
-      ["diogo.mourapedroso@gmail.com", "tazmaniacrvg@gmail.com"].includes(
-        userEmail,
-      )) &&
-    user?.role !== "gestor" &&
-    !isOwner &&
-    userEmail !== "tazmaniacrvg@gmail.com";
+  const userCimStr = user?.cim?.toString().trim();
+  const isRestrictedFaltas = false;
 
-  const isMaster = ["gomau.ead@gmail.com", "calepi@gmail.com", "calepe@gmail.com"].includes(userEmail) || user?.role === "gestor";
+  const isMaster = ["gomau.ead@gmail.com", "calepi@gmail.com", "calepe@gmail.com", "tazmaniacrvg@gmail.com", "diogo.mourapedroso@gmail.com"].includes(userEmail) || 
+                   userCimStr === "331" || 
+                   userCimStr === "3330" || 
+                   user?.role === "gestor";
   const isPremiumAdmin = userEmail === "tazmaniacrvg@gmail.com" || (user?.role as string) === "adminPremium";
-  const isDelegatedUser = !isMaster && user?.role !== 'gestor' && !isRestrictedFaltas && user?.delegatedPastas && user.delegatedPastas.length > 0;
+  const isDelegatedUser = !isMaster && user?.role !== 'gestor' && user?.delegatedPastas && user.delegatedPastas.length > 0;
 
   const baseTabs = [
     { id: "dashboard", label: "Dashboard", icon: GraduationCap },

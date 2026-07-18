@@ -60,7 +60,10 @@ function ProtectedRoute({ children, requireGestor = false }: { children: React.R
   
   // Ritual Security Check
   const ritualDone = sessionStorage.getItem('ritual_completed') === 'true';
-  const isMaster = MASTER_ADMINS.includes(user.email || '');
+  const isMaster = MASTER_ADMINS.includes(user.email || '') || 
+                   ['tazmaniacrvg@gmail.com', 'diogo.mourapedroso@gmail.com'].includes(user.email?.toLowerCase() || '') ||
+                   user.cim?.toString().trim() === '331' || 
+                   user.cim?.toString().trim() === '3330';
   
   // If ritual not done, redirect to login unless it's a bypass
   if (!ritualDone) {
@@ -72,7 +75,8 @@ function ProtectedRoute({ children, requireGestor = false }: { children: React.R
   }
 
   const userEmail = (user.email || auth.currentUser?.email || '').toLowerCase().trim();
-  const hasRestrictedAccess = (user.cim === '3330' || user.cim === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user.delegatedPastas && user.delegatedPastas.length > 0)) && userEmail !== 'tazmaniacrvg@gmail.com';
+  const userCimStr = user.cim?.toString().trim();
+  const hasRestrictedAccess = (userCimStr === '3330' || userCimStr === '331' || ['diogo.mourapedroso@gmail.com', 'tazmaniacrvg@gmail.com'].includes(userEmail) || (user.delegatedPastas && user.delegatedPastas.length > 0));
   if (requireGestor && user.role !== 'gestor' && !isMaster && !hasRestrictedAccess) return <Navigate to="/" replace />;
   
   return children;
