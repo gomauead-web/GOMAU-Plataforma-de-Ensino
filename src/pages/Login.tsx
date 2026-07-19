@@ -6,6 +6,7 @@ import { LogIn, Shield, Key, UserCheck, HelpCircle, Eye, EyeOff, ExternalLink, S
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { MASTER_ADMINS } from '../constants';
+import { getAppLogo } from '../utils/logo';
 
 type LoginPhase = 'google' | 'age' | 'cpf' | 'word';
 
@@ -491,7 +492,7 @@ export function Login() {
 
         <div className="w-48 h-48 mb-6 text-[#D4AF37] flex items-center justify-center relative">
             <div className="absolute inset-0 rounded-full bg-gradient-to-b from-[#D4AF37]/15 to-transparent blur-3xl opacity-60"></div>
-            <img src="/logotrad.png" alt="Logo" className="relative z-10 w-full h-full object-contain drop-shadow-[0_0_30px_rgba(212,175,55,0.45)]" />
+            <img src={getAppLogo(tempUser || user)} alt="Logo" className="relative z-10 w-full h-full object-contain drop-shadow-[0_0_30px_rgba(212,175,55,0.45)]" />
         </div>
         
         <div className="text-center mb-8">

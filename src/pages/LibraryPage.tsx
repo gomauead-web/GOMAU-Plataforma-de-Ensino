@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../lib/firebase';
 import { collection, query, getDocs, orderBy, doc, getDoc, addDoc, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import { getAppLogo } from '../utils/logo';
 import { BookOpen, Search, Lock, Unlock, ExternalLink, Sparkles, Filter, CheckCircle, DollarSign, Bookmark, ArrowLeft, Shield, Award, Landmark, HelpCircle, Copy, Check, ChevronDown, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import toast from 'react-hot-toast';
@@ -353,7 +354,7 @@ export function LibraryPage() {
         <div className="text-center max-w-3xl mx-auto space-y-4 py-6">
           <div className="inline-flex items-center justify-center p-4 bg-white/60 rounded-full border border-[#D4AF37]/30 mb-2 shadow-[0_15px_40px_rgba(212,175,55,0.15)] relative">
             <div className="absolute inset-0 bg-[#D4AF37]/5 blur-xl rounded-full"></div>
-            <img src="/logotrad.png" alt="Logo GOMAU" className="w-24 h-24 sm:w-32 sm:h-32 object-contain relative z-10 drop-shadow-md" />
+            <img src={getAppLogo(user)} alt="Logo GOMAU" className="w-24 h-24 sm:w-32 sm:h-32 object-contain relative z-10 drop-shadow-md" />
           </div>
           <h1 className="text-4xl sm:text-6xl font-extrabold uppercase tracking-widest text-[#785303]" style={{ fontFamily: 'Cinzel', textShadow: '0 2px 10px rgba(120,83,3,0.15)' }}>
             BIBLIOTECA SECRETA

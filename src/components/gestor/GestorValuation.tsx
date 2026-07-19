@@ -500,7 +500,7 @@ export function GestorValuation() {
                </p>
             </div>
             <div className="text-right shrink-0">
-               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight font-sans">R$ 267.500,00</div>
+               <div className="text-4xl font-extrabold text-[#D4AF37] tracking-tight font-sans">R$ 269.500,00</div>
                <div className="text-xs text-gray-500 mt-2 font-bold uppercase tracking-widest">Investimento Calculado</div>
             </div>
          </div>

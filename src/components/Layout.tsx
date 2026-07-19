@@ -9,6 +9,7 @@ import { auth, db } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { MASTER_ADMINS } from '../constants';
+import { getAppLogo } from '../utils/logo';
 
 const HexagramIcon = () => (
   <div className="text-[#D4AF37] animate-pulse drop-shadow-[0_0_8px_rgba(212,175,55,0.8)] mr-1">
@@ -207,7 +208,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <header className="lg:hidden sticky top-0 flex items-center justify-between p-4 border-b border-[#D4AF37]/15 bg-[#05070A]/95 backdrop-blur-md z-[60] w-full shadow-lg">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-            <img src="/logotrad.png" alt="Logo" className="max-w-full max-h-full object-contain drop-shadow-[0_0_10px_rgba(212,175,55,0.3)]" />
+            <img src={getAppLogo(user)} alt="Logo" className="max-w-full max-h-full object-contain drop-shadow-[0_0_10px_rgba(212,175,55,0.3)]" />
           </div>
           <div className="min-w-0">
              <h1 className="text-xs font-bold text-[#D4AF37] truncate" style={{fontFamily: 'Cinzel'}}>G∴O∴M∴A∴U∴</h1>
@@ -232,7 +233,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className="p-8 flex flex-col items-center border-b border-[#D4AF37]/15">
           <div className="w-52 h-52 mb-6 flex items-center justify-center relative">
             <div className="absolute inset-0 rounded-full bg-gradient-to-b from-[#D4AF37]/5 to-transparent blur-3xl opacity-50"></div>
-            <img src="/logotrad.png" alt="Logo Plataforma Maçônica" className="relative z-10 w-full h-full object-contain drop-shadow-[0_0_25px_rgba(212,175,55,0.4)]" />
+            <img src={getAppLogo(user)} alt="Logo Plataforma Maçônica" className="relative z-10 w-full h-full object-contain drop-shadow-[0_0_25px_rgba(212,175,55,0.4)]" />
           </div>
           <h1 className="text-2xl font-semibold tracking-wider text-[#D4AF37] text-center mb-1 animate-pulse" style={{fontFamily: 'Cinzel'}}>G∴O∴M∴A∴U∴</h1>
           <p className="text-[10px] tracking-[0.2em] text-gray-400 text-center uppercase leading-tight font-sans font-black">Grande Oriente Maçônico Universal</p>

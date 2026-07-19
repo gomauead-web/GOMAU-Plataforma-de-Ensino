@@ -3,6 +3,8 @@ import { Play, Pause, X, Lock, ShieldAlert, BookOpen, Volume2, Maximize, AlertCi
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { SessionTimer } from './Layout';
+import { useAuth } from '../contexts/AuthContext';
+import { getAppLogo } from '../utils/logo';
 
 interface SafeVideoPlayerProps {
   url: string;
@@ -31,6 +33,7 @@ export function SafeVideoPlayer({
   onSaveNote,
   savingNoteId
 }: SafeVideoPlayerProps) {
+  const { user } = useAuth();
   const [isPlaying, setIsPlaying] = useState(false);
   const [showNoteSidebar, setShowNoteSidebar] = useState(true);
   const [localNoteText, setLocalNoteText] = useState(initialNoteText);
@@ -138,7 +141,7 @@ export function SafeVideoPlayer({
                 
                 <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-2 border-[#D4AF37]/30 p-4 bg-[#0A0E1A]/80 backdrop-blur-md flex items-center justify-center transition-all duration-500 group-hover:border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.15)] group-hover:shadow-[0_0_40px_rgba(212,175,55,0.3)] relative z-10">
                   <img 
-                    src="/logotrad.png" 
+                    src={getAppLogo(user)} 
                     alt="GOMAU Logo" 
                     className="w-24 h-24 md:w-28 md:h-28 object-contain pointer-events-none select-none transition-transform duration-700 group-hover:scale-105"
                     onError={(e) => {
